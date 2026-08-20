@@ -30,6 +30,13 @@ export const DungeonView: React.FC = () => {
     }
   };
 
+  const getWallBorder = (wall: string) => {
+    if (wall === 'door') return '2px solid #f59e0b';
+    if (wall === 'locked_door') return '2px solid #f97316';
+    if (wall === 'wall') return '2px solid #9ca3af';
+    return '1px solid #374151';
+  };
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: '8px', height: '320px' }}>
       {/* 3Dビューエリア */}
@@ -78,10 +85,10 @@ export const DungeonView: React.FC = () => {
               return (
                 <div key={`${x}-${y}`} style={{
                   backgroundColor: isPlayerHere ? '#1e3a8a' : '#1f2937',
-                  borderTop: tile.walls.N !== 'none' ? '2px solid #9ca3af' : '1px solid #374151',
-                  borderRight: tile.walls.E !== 'none' ? '2px solid #9ca3af' : '1px solid #374151',
-                  borderBottom: tile.walls.S !== 'none' ? '2px solid #9ca3af' : '1px solid #374151',
-                  borderLeft: tile.walls.W !== 'none' ? '2px solid #9ca3af' : '1px solid #374151',
+                  borderTop: getWallBorder(tile.walls.N),
+                  borderRight: getWallBorder(tile.walls.E),
+                  borderBottom: getWallBorder(tile.walls.S),
+                  borderLeft: getWallBorder(tile.walls.W),
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',

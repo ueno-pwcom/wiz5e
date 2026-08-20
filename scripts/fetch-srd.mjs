@@ -36,11 +36,11 @@ const translationMap = {
   // 属性・ダメージ種別
   "slashing": "斬撃",
   "piercing": "刺突",
-  "bludgeoning": "打撃",
-  "fire": "炎",
+  "bludgeoning": "殴打",
+  "fire": "火",
   "force": "力場",
   "poison": "毒",
-  "radiant": "光"
+  "radiant": "光輝"
 };
 
 // ヘルパー関数: テキスト翻訳

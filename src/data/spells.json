@@ -10,7 +10,7 @@
     ],
     "damage_dice": "3d6",
     "heal_dice": null,
-    "damage_type": "炎",
+    "damage_type": "火",
     "save_type": "dex",
     "save_effect": "half",
     "requires_concentration": false

@@ -50,7 +50,7 @@
     "name": "メイス",
     "cost_gp": 5,
     "damage_dice": "1d6",
-    "damage_type": "打撃",
+    "damage_type": "殴打",
     "properties": [
       "monk"
     ]
