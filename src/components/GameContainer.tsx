@@ -3,6 +3,7 @@ import { useGameStore } from '../store/useGameStore';
 import { DungeonView } from './DungeonView';
 import { BattleView } from './BattleView';
 import { TownView } from './TownView';
+import { CampView } from './CampView';
 import { StatusPanel } from './StatusPanel';
 import { MessageLog } from './MessageLog';
 
@@ -21,13 +22,15 @@ export const GameContainer: React.FC = () => {
         <button onClick={() => setScene('dungeon')}>ダンジョン画面</button>
         <button onClick={() => setScene('battle')}>戦闘画面</button>
         <button onClick={() => setScene('town')}>街画面</button>
+        <button onClick={() => setScene('camp')}>キャンプ画面</button>
       </div>
 
       {/* メイン画面ビュー切り替え */}
-      <div style={{ marginBottom: '8px' }}>
+      <div style={{ marginBottom: '16px' }}>
         {scene === 'dungeon' && <DungeonView />}
         {scene === 'battle' && <BattleView />}
         {scene === 'town' && <TownView />}
+        {scene === 'camp' && <CampView />}
       </div>
 
       {/* メッセージログ */}

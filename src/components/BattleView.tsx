@@ -19,7 +19,7 @@ export const BattleView: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '320px' }}>
       {/* ★ 行動順（イニシアチブ）リストバー */}
       <div style={{
         backgroundColor: '#111827',

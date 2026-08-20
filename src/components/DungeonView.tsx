@@ -6,6 +6,7 @@ export const DungeonView: React.FC = () => {
   const playerPosition = useGameStore((state) => state.playerPosition);
   const currentMap = useGameStore((state) => state.currentMap);
   const movePlayer = useGameStore((state) => state.movePlayer);
+  const enterCamp = useGameStore((state) => state.enterCamp);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -107,7 +108,15 @@ export const DungeonView: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '4px' }}>
           <button style={{ ...btnStyle, flex: 1 }}>調べる</button>
-          <button style={{ ...btnStyle, flex: 1 }}>キャンプ</button>
+          <button
+            style={{ ...btnStyle, flex: 1 }}
+            onClick={() => {
+              console.log('DungeonView: キャンプボタンが押されました');
+              enterCamp();
+            }}
+          >
+            キャンプ
+          </button>
         </div>
       </div>
     </div>

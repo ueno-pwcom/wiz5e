@@ -25,11 +25,9 @@ export const MessageLog: React.FC<Props> = ({ logs }) => {
       padding: '8px 12px',
       fontFamily: 'monospace',
       fontSize: '14px',
-      overflowY: 'auto',
-      display: 'flex',
-      flexDirection: 'column-reverse'
+      overflowY: 'auto'
     }}>
-      {[...logs].reverse().map((log) => (
+      {logs.map((log) => (
         <div key={log.id} style={{ color: getLogColor(log.type), marginBottom: '2px' }}>
           &gt; {log.text}
         </div>

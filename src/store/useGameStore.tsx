@@ -4,7 +4,7 @@ import { map1Data } from '../data/map1';
 import { monsterList } from '../data/monsters';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
-type GameScene = 'town' | 'dungeon' | 'battle';
+type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
 
 interface GameState {
   scene: GameScene;
@@ -29,6 +29,10 @@ interface GameState {
   processEnemyTurn: () => void;
   nextTurn: () => void;
   checkBattleStatus: () => boolean;
+  enterCamp: () => void;
+
+  shortRest: () => void;
+  longRest: () => void;
 }
 
 // テスト用初期パーティデータ
@@ -303,6 +307,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     return false;
   },
 
+  enterCamp: () => {
+    const { addLog } = get();
+    set({ scene: 'camp', combatants: [], currentTurnIndex: 0 });
+    addLog('キャンプ地に移動した。', 'info');
+  },
+
   movePlayer: (action) => {
     const { playerPosition, currentMap, addLog, startBattle } = get();
     const directions: Direction[] = ['N', 'E', 'S', 'W'];
@@ -367,5 +377,68 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (Math.random() < currentMap.encounter_table.rate) {
       startBattle();
     }
+  },
+
+  // ★ 小休憩 (Short Rest): ヒット・ダイスを1つ消費してHP回復
+  shortRest: () => {
+    const { party, addLog } = get();
+    let restedAny = false;
+
+    const updatedParty = party.map((member) => {
+      if (!member.is_alive || member.hp.current >= member.hp.max) return member;
+
+      if (member.hit_dice_remaining > 0) {
+        restedAny = true;
+        const conMod = Math.floor((member.stats.con - 10) / 2);
+        const healAmount = Math.max(1, Math.floor(Math.random() * 8) + 1 + conMod);
+        const newHp = Math.min(member.hp.max, member.hp.current + healAmount);
+
+        addLog(`${member.name} は小休憩をとり、HPが ${healAmount} 回復した。`, 'heal');
+
+        return {
+          ...member,
+          hp: { ...member.hp, current: newHp },
+          hit_dice_remaining: member.hit_dice_remaining - 1
+        };
+      }
+      return member;
+    });
+
+    if (!restedAny) {
+      addLog('小休憩をとれるメンバー（ヒット・ダイス残あり＆HP減）がいません。', 'system');
+      return;
+    }
+
+    set({ party: updatedParty });
+  },
+
+  // ★ 大休憩 (Long Rest): 全HP回復・ヒットダイス全回復・呪文スロット全回復
+  longRest: () => {
+    const { party, addLog } = get();
+
+    const updatedParty = party.map((member) => {
+      if (!member.is_alive) return member;
+
+      const restoredSlots: Record<number, { current: number; max: number }> = {};
+      if (member.spell_slots) {
+        Object.keys(member.spell_slots).forEach((levelStr) => {
+          const level = Number(levelStr);
+          restoredSlots[level] = {
+            current: member.spell_slots[level].max,
+            max: member.spell_slots[level].max
+          };
+        });
+      }
+
+      return {
+        ...member,
+        hp: { ...member.hp, current: member.hp.max },
+        hit_dice_remaining: member.level,
+        spell_slots: restoredSlots
+      };
+    });
+
+    set({ party: updatedParty });
+    addLog('パーティは大休憩をとり、HP・ヒットダイス・呪文スロットが全回復した！', 'heal');
   }
 }));
