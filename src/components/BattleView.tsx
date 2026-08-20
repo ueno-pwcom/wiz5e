@@ -13,6 +13,7 @@ export const BattleView: React.FC = () => {
 
   const currentCombatant = combatants[currentTurnIndex];
   const isPlayerTurn = currentCombatant?.is_player ?? false;
+  const players = combatants.filter((c) => c.is_player && c.hp.current > 0);
   const enemies = combatants.filter((c) => !c.is_player && c.hp.current > 0);
 
   // 攻撃実行時の処理
@@ -36,20 +37,22 @@ export const BattleView: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
           {enemies.map((enemy) => {
             const isTargetable = isPlayerTurn && selectedAction === 'attack';
+            const isCurrentEnemy = currentCombatant?.id === enemy.id;
             return (
               <div
                 key={enemy.id}
                 onClick={() => isTargetable && handleAttackTarget(enemy.id)}
                 style={{
                   backgroundColor: '#1f2937',
-                  border: isTargetable ? '2px solid #ef4444' : '1px solid #4b5563',
+                  border: isCurrentEnemy ? '2px solid #38bdf8' : isTargetable ? '2px solid #ef4444' : '1px solid #4b5563',
                   borderRadius: '8px',
                   padding: '12px',
                   textAlign: 'center',
                   width: '110px',
                   cursor: isTargetable ? 'pointer' : 'default',
-                  boxShadow: isTargetable ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none',
-                  transition: 'all 0.2s'
+                  boxShadow: isCurrentEnemy ? '0 0 0 4px rgba(56, 189, 248, 0.25)' : isTargetable ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none',
+                  transition: 'all 0.2s',
+                  position: 'relative'
                 }}
               >
                 <div style={{ fontSize: '28px' }}>👾</div>
@@ -131,7 +134,7 @@ export const BattleView: React.FC = () => {
           {/* 2. 防御ボタン */}
           <button
             disabled={!isPlayerTurn}
-            style={{ ...cmdBtnStyle, opacity: isPlayerTurn ? 1 : 0.5 }}
+            style={{ ...cmdBtnStyle, backgroundColor: '#047857', opacity: isPlayerTurn ? 1 : 0.5 }}
             onClick={() => {
               setSelectedAction('none');
               executePlayerDefend();

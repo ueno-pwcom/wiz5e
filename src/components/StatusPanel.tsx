@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Character } from '../types/game';
+import { useGameStore } from '../store/useGameStore';
 
 interface Props {
   party: Character[];
@@ -7,6 +8,11 @@ interface Props {
 }
 
 export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
+  const combatants = useGameStore((state) => state.combatants);
+  const currentTurnIndex = useGameStore((state) => state.currentTurnIndex);
+  const currentCombatant = combatants[currentTurnIndex];
+  const currentTurnId = currentCombatant?.is_player ? currentCombatant.id : null;
+
   return (
     <div style={{
       display: 'grid',
@@ -18,24 +24,28 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
       color: '#fff',
       fontFamily: 'monospace'
     }}>
-      {party.map((char, idx) => (
-        <div key={char.id} style={{
-          backgroundColor: '#111827',
-          padding: '6px',
-          borderRadius: '4px',
-          border: char.position === 'front' ? '1px solid #3b82f6' : '1px solid #6b7280'
-        }}>
-          <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-            [{char.position === 'front' ? `前衛 ${idx + 1}` : `後衛 ${idx + 1}`}]
+      {party.map((char, idx) => {
+        const isCurrentTurn = char.id === currentTurnId;
+        return (
+          <div key={char.id} style={{
+            backgroundColor: '#111827',
+            padding: '6px',
+            borderRadius: '4px',
+            border: isCurrentTurn ? '2px solid #38bdf8' : char.position === 'front' ? '1px solid #3b82f6' : '1px solid #6b7280',
+            boxShadow: isCurrentTurn ? '0 0 0 4px rgba(56, 189, 248, 0.18)' : 'none'
+          }}>
+            <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+              [{char.position === 'front' ? `前衛 ${idx + 1}` : `後衛 ${idx + 1}`}]
+            </div>
+            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{char.name}</div>
+            <div style={{ fontSize: '12px' }}>HP: {char.hp.current}/{char.hp.max}</div>
+            <div style={{ fontSize: '12px' }}>AC: {char.ac}</div>
+            <div style={{ fontSize: '11px', color: char.is_alive ? '#4ade80' : '#ef4444' }}>
+              {char.is_alive ? '[正常]' : '[死亡]'}
+            </div>
           </div>
-          <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{char.name}</div>
-          <div style={{ fontSize: '12px' }}>HP: {char.hp.current}/{char.hp.max}</div>
-          <div style={{ fontSize: '12px' }}>AC: {char.ac}</div>
-          <div style={{ fontSize: '11px', color: char.is_alive ? '#4ade80' : '#ef4444' }}>
-            {char.is_alive ? '[正常]' : '[死亡]'}
-          </div>
-        </div>
-      ))}
+        );
+      })}
       <div style={{
         backgroundColor: '#111827',
         padding: '6px',
