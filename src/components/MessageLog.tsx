@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { LogMessage } from '../types/game';
 
 interface Props {
@@ -6,6 +6,14 @@ interface Props {
 }
 
 export const MessageLog: React.FC<Props> = ({ logs }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [logs]);
+
   const getLogColor = (type: LogMessage['type']) => {
     switch (type) {
       case 'player_action': return '#60a5fa'; // 青（味方行動・命中）
@@ -18,7 +26,7 @@ export const MessageLog: React.FC<Props> = ({ logs }) => {
   };
 
   return (
-    <div style={{
+    <div ref={containerRef} style={{
       height: '100px',
       backgroundColor: '#111827',
       border: '1px solid #374151',
