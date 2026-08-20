@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterData, WallType } from '../types/game';
 import { map1Data } from '../data/map1';
+import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
@@ -26,6 +27,7 @@ interface GameState {
   startBattle: () => void;
   executePlayerAttack: (targetId: string) => void;
   executePlayerDefend: () => void;
+  executePlayerSpell: (spellId: string, targetId: string) => void;
   processEnemyTurn: () => void;
   nextTurn: () => void;
   checkBattleStatus: () => boolean;
@@ -207,6 +209,77 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // ターンを進行
     nextTurn();
+  },
+
+  executePlayerSpell: (spellId: string, targetId: string) => {
+    const { combatants, currentTurnIndex, party, addLog, nextTurn, checkBattleStatus } = get();
+    const attacker = combatants[currentTurnIndex];
+    if (!attacker || !attacker.is_player) return;
+
+    const playerChar = attacker.ref as Character;
+    const spell = spellList[spellId];
+
+    if (!spell) {
+      addLog('指定された呪文が存在しません。', 'system');
+      return;
+    }
+
+    // 呪文スロットの確認と消費
+    const spellLevel = spell.level;
+    const currentSlots = playerChar.spell_slots?.[spellLevel]?.current ?? 0;
+
+    if (currentSlots <= 0) {
+      addLog(`レベル ${spellLevel} の呪文スロットが不足しています！`, 'system');
+      return;
+    }
+
+    // 呪文スロットを1消費
+    const updatedSpellSlots = {
+      ...playerChar.spell_slots,
+      [spellLevel]: {
+        ...playerChar.spell_slots[spellLevel],
+        current: currentSlots - 1
+      }
+    };
+
+    playerChar.spell_slots = updatedSpellSlots;
+
+    // 回復呪文の場合
+    if (spell.heal_dice) {
+      const target = combatants.find((c) => c.id === targetId && c.is_player);
+      if (!target) return;
+
+      const healAmount = rollDiceString(spell.heal_dice);
+      target.hp.current = Math.min(target.hp.max, target.hp.current + healAmount);
+
+      // パーティデータへの同期
+      const partyMember = party.find((p) => p.id === target.id);
+      if (partyMember) {
+        partyMember.hp.current = target.hp.current;
+      }
+
+      addLog(`${attacker.name} は ${spell.name} を唱えた！ ${target.name} のHPが ${healAmount} 回復！`, 'heal');
+    } 
+    // 攻撃呪文の場合（マジック・ミサイル等：必中）
+    else if (spell.damage_dice) {
+      const target = combatants.find((c) => c.id === targetId && !c.is_player);
+      if (!target) return;
+
+      const damage = rollDiceString(spell.damage_dice);
+      target.hp.current = Math.max(0, target.hp.current - damage);
+
+      addLog(`${attacker.name} は ${spell.name} を唱えた！ ${target.name} に ${damage} の${spell.damage_type || ''}ダメージ！`, 'critical');
+
+      if (target.hp.current === 0) {
+        addLog(`${target.name} を倒した！`, 'info');
+      }
+    }
+
+    set({ combatants: [...combatants], party: [...party] });
+
+    if (!checkBattleStatus()) {
+      nextTurn();
+    }
   },
 
   // 3. 敵の行動ロジック
