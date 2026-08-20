@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Character, Direction, DungeonMap, LogMessage, MonsterData, WallType } from '../types/game';
 import { map1Data } from '../data/map1';
+import { monsterList } from '../data/monsters';
 
 type GameScene = 'town' | 'dungeon' | 'battle';
 
@@ -16,11 +17,11 @@ interface GameState {
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
   movePlayer: (action: 'forward' | 'backward' | 'turnLeft' | 'turnRight') => void;
+  startBattle: () => void;
   damageCharacter: (characterId: string, amount: number) => void;
   healCharacter: (characterId: string, amount: number) => void;
   restParty: () => void;
 }
-
 
 // テスト用初期パーティデータ
 const initialParty: Character[] = [
@@ -36,7 +37,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   gold: 150,
   party: initialParty,
   logs: [
-    { id: '1', text: '地下迷宮 1階に入った。', type: 'system' }
+    { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '地下迷宮 1階に入った。', type: 'system' }
   ],
   currentMap: map1Data,
   playerPosition: map1Data.start_position,
@@ -44,7 +45,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   setScene: (scene) => set({ scene }),
 
-  // useGameStore.ts の addLog 部分を修正
   addLog: (text, type = 'info') =>
     set((state) => ({
       logs: [
@@ -53,13 +53,50 @@ export const useGameStore = create<GameState>((set, get) => ({
       ]
     })),
 
-  // 壁判定を含む移動処理
+  startBattle: () => {
+    const { currentMap, addLog } = get();
+    const table = currentMap.encounter_table;
+
+    // 出現モンスターの抽選（重み付けドロップ）
+    const totalWeight = table.monsters.reduce((acc, cur) => acc + cur.weight, 0);
+    let randomVal = Math.random() * totalWeight;
+    let selectedMonsterId = table.monsters[0].id;
+
+    for (const monster of table.monsters) {
+      if (randomVal < monster.weight) {
+        selectedMonsterId = monster.id;
+        break;
+      }
+      randomVal -= monster.weight;
+    }
+
+    // 出現数の決定（1〜3体）
+    const enemyCount = Math.floor(Math.random() * 3) + 1;
+    const baseMonster = monsterList[selectedMonsterId];
+
+    const generatedEnemies: MonsterData[] = [];
+    for (let i = 0; i < enemyCount; i++) {
+      generatedEnemies.push({
+        ...baseMonster,
+        id: `${baseMonster.id}_${Date.now()}_${i}`,
+        name: `${baseMonster.name} ${String.fromCharCode(65 + i)}`,
+        hp: { ...baseMonster.hp }
+      });
+    }
+
+    set({
+      scene: 'battle',
+      activeEnemies: generatedEnemies
+    });
+
+    addLog(`モンスターが現れた！ (${generatedEnemies.map(e => e.name).join(', ')})`, 'critical');
+  },
+
   movePlayer: (action) => {
-    const { playerPosition, currentMap, addLog } = get();
+    const { playerPosition, currentMap, addLog, startBattle } = get();
     const directions: Direction[] = ['N', 'E', 'S', 'W'];
     let { x, y, facing } = playerPosition;
 
-    // 方向転換
     if (action === 'turnLeft') {
       const idx = (directions.indexOf(facing) + 3) % 4;
       set({ playerPosition: { x, y, facing: directions[idx] } });
@@ -71,16 +108,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // 移動方向の決定（前進 / 後退）
     const checkDirection: Direction = action === 'forward'
       ? facing
       : directions[(directions.indexOf(facing) + 2) % 4];
 
-    // 現在地のタイル情報を取得
     const currentTile = currentMap.grid[y]?.[x];
     if (!currentTile) return;
 
-    // 前方/後方の壁判定
     const wallStatus: WallType = currentTile.walls[checkDirection];
 
     if (wallStatus === 'wall' || wallStatus === 'locked_door') {
@@ -88,7 +122,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // 次の移動先座標の計算
     let nextX = x;
     let nextY = y;
     if (checkDirection === 'N') nextY -= 1;
@@ -96,13 +129,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (checkDirection === 'E') nextX += 1;
     if (checkDirection === 'W') nextX -= 1;
 
-    // マップ範囲外チェック
     if (nextX < 0 || nextX >= currentMap.width || nextY < 0 || nextY >= currentMap.height) {
       addLog('これ以上先へは進めない。', 'system');
       return;
     }
 
-    // 移動成功
     if (wallStatus === 'door') {
       addLog('扉を開けて進んだ。', 'info');
     } else {
@@ -111,14 +142,19 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ playerPosition: { x: nextX, y: nextY, facing } });
 
-    // イベントチェック
     const nextTile = currentMap.grid[nextY][nextX];
     if (nextTile.event) {
       if (nextTile.event.type === 'chest') {
         addLog('宝箱を発見した！', 'critical');
+        return;
       } else if (nextTile.event.type === 'stairs_up') {
         addLog('地上へ続く階段がある。', 'info');
+        return;
       }
+    }
+
+    if (Math.random() < currentMap.encounter_table.rate) {
+      startBattle();
     }
   },
 

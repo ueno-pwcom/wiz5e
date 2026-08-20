@@ -1,69 +1,92 @@
 import React from 'react';
+import { useGameStore } from '../store/useGameStore';
 
 export const BattleView: React.FC = () => {
+  const activeEnemies = useGameStore((state) => state.activeEnemies);
+  const setScene = useGameStore((state) => state.setScene);
+  const addLog = useGameStore((state) => state.addLog);
+
+  // 逃走試行（仮実装）
+  const handleRun = () => {
+    if (Math.random() > 0.5) {
+      addLog('うまく逃げ切れた！', 'info');
+      setScene('dungeon');
+    } else {
+      addLog('逃げ切れなかった！', 'critical');
+    }
+  };
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '8px', height: '320px' }}>
-      {/* 戦闘メインエリア（モンスター表示） */}
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: '8px', height: '320px' }}>
+      {/* 敵モンスター表示エリア */}
       <div style={{
-        backgroundColor: '#0f172a',
+        backgroundColor: '#111827',
         border: '1px solid #374151',
         padding: '16px',
         display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center'
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        position: 'relative'
       }}>
-        <div style={{ color: '#ef4444', fontWeight: 'bold', marginBottom: '12px' }}>[敵 前衛]</div>
-        <div style={{ display: 'flex', gap: '24px' }}>
-          <div style={monsterStyle}>
-            <div>ゴブリンA</div>
-            <div style={{ fontSize: '11px', color: '#9ca3af' }}>HP: 7/7</div>
-          </div>
-          <div style={monsterStyle}>
-            <div>ゴブリンB</div>
-            <div style={{ fontSize: '11px', color: '#9ca3af' }}>HP: 7/7</div>
-          </div>
-        </div>
+        {activeEnemies.length === 0 ? (
+          <div style={{ color: '#9ca3af' }}>敵はいません。</div>
+        ) : (
+          activeEnemies.map((enemy) => (
+            <div key={enemy.id} style={{
+              backgroundColor: '#1f2937',
+              border: '1px solid #4b5563',
+              borderRadius: '8px',
+              padding: '16px',
+              textAlign: 'center',
+              width: '120px'
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>👾</div>
+              <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '14px', marginBottom: '4px' }}>
+                {enemy.name}
+              </div>
+              <div style={{ color: '#ef4444', fontSize: '12px' }}>
+                HP: {enemy.hp.current} / {enemy.hp.max}
+              </div>
+              <div style={{ color: '#9ca3af', fontSize: '10px', marginTop: '4px' }}>
+                AC: {enemy.ac}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* 戦闘コマンド & 行動順 */}
+      {/* 戦闘コマンドパネル */}
       <div style={{ backgroundColor: '#111827', border: '1px solid #374151', padding: '12px', color: '#fff' }}>
-        <div style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#60a5fa' }}>COMMAND</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '16px' }}>
-          <button style={actionBtnStyle}>▶ 攻撃 (Attack)</button>
-          <button style={actionBtnStyle}>  呪文 (Cast)</button>
-          <button style={actionBtnStyle}>  道具 (Item)</button>
-          <button style={actionBtnStyle}>  回避 (Dodge)</button>
-          <button style={actionBtnStyle}>  逃亡 (Flee)</button>
+        <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #374151', paddingBottom: '4px' }}>
+          戦闘コマンド
         </div>
 
-        <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px' }}>イニシアチブ順:</div>
-        <div style={{ fontSize: '12px', color: '#cbd5e1' }}>
-          1. シオン<br />
-          2. ゴブリンA<br />
-          3. バルド
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <button style={cmdBtnStyle} onClick={() => addLog('攻撃処理は次のステップで実装します。', 'info')}>
+            ⚔️ 攻撃
+          </button>
+          <button style={cmdBtnStyle} onClick={() => addLog('呪文処理は次のステップで実装します。', 'info')}>
+            🪄 呪文
+          </button>
+          <button style={cmdBtnStyle} onClick={() => addLog('防御した。', 'info')}>
+            🛡️ 防御
+          </button>
+          <button style={cmdBtnStyle} onClick={handleRun}>
+            🏃 逃げる
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-const monsterStyle: React.CSSProperties = {
-  border: '1px dashed #ef4444',
-  padding: '16px 24px',
-  borderRadius: '8px',
-  textAlign: 'center',
+const cmdBtnStyle: React.CSSProperties = {
+  backgroundColor: '#374151',
   color: '#fff',
-  backgroundColor: '#1e293b'
-};
-
-const actionBtnStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937',
-  color: '#fff',
-  border: '1px solid #374151',
+  border: 'none',
   borderRadius: '4px',
-  padding: '6px',
-  textAlign: 'left',
+  padding: '10px',
   cursor: 'pointer',
-  fontSize: '12px'
+  fontSize: '13px',
+  textAlign: 'left'
 };
