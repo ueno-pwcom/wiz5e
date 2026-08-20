@@ -1,0 +1,58 @@
+{
+  "dagger": {
+    "id": "dagger",
+    "name": "ダガー",
+    "cost_gp": 2,
+    "damage_dice": "1d4",
+    "damage_type": "刺突",
+    "properties": [
+      "finesse",
+      "light",
+      "thrown",
+      "monk"
+    ]
+  },
+  "shortsword": {
+    "id": "shortsword",
+    "name": "ショートソード",
+    "cost_gp": 10,
+    "damage_dice": "1d6",
+    "damage_type": "刺突",
+    "properties": [
+      "finesse",
+      "light",
+      "monk"
+    ]
+  },
+  "longsword": {
+    "id": "longsword",
+    "name": "ロングソード",
+    "cost_gp": 15,
+    "damage_dice": "1d8",
+    "damage_type": "斬撃",
+    "properties": [
+      "versatile"
+    ]
+  },
+  "shortbow": {
+    "id": "shortbow",
+    "name": "ショートボウ",
+    "cost_gp": 25,
+    "damage_dice": "1d6",
+    "damage_type": "刺突",
+    "properties": [
+      "ammunition",
+      "two-handed"
+    ]
+  },
+  "mace": {
+    "id": "mace",
+    "name": "メイス",
+    "cost_gp": 5,
+    "damage_dice": "1d6",
+    "damage_type": "打撃",
+    "properties": [
+      "monk"
+    ]
+  }
+}

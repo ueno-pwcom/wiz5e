@@ -1,0 +1,82 @@
+{
+  "fighter": {
+    "id": "fighter",
+    "name": "ファイター",
+    "hit_die": 10,
+    "hp_static_increase": 6,
+    "proficiencies": [
+      "All armor",
+      "Shields",
+      "Simple Weapons",
+      "Martial Weapons",
+      "Saving Throw: STR",
+      "Saving Throw: CON"
+    ],
+    "saving_throws": [
+      "str",
+      "con"
+    ],
+    "spellcasting_ability": null
+  },
+  "rogue": {
+    "id": "rogue",
+    "name": "ローグ",
+    "hit_die": 8,
+    "hp_static_increase": 5,
+    "proficiencies": [
+      "Light Armor",
+      "Simple Weapons",
+      "Longswords",
+      "Rapiers",
+      "Shortswords",
+      "Hand crossbows",
+      "Thieves' Tools",
+      "Saving Throw: DEX",
+      "Saving Throw: INT"
+    ],
+    "saving_throws": [
+      "dex",
+      "int"
+    ],
+    "spellcasting_ability": null
+  },
+  "cleric": {
+    "id": "cleric",
+    "name": "クレリック",
+    "hit_die": 8,
+    "hp_static_increase": 5,
+    "proficiencies": [
+      "Light Armor",
+      "Medium Armor",
+      "Shields",
+      "Simple Weapons",
+      "Saving Throw: WIS",
+      "Saving Throw: CHA"
+    ],
+    "saving_throws": [
+      "wis",
+      "cha"
+    ],
+    "spellcasting_ability": "wis"
+  },
+  "wizard": {
+    "id": "wizard",
+    "name": "ウィザード",
+    "hit_die": 6,
+    "hp_static_increase": 4,
+    "proficiencies": [
+      "Daggers",
+      "Darts",
+      "Slings",
+      "Quarterstaffs",
+      "Crossbows, light",
+      "Saving Throw: INT",
+      "Saving Throw: WIS"
+    ],
+    "saving_throws": [
+      "int",
+      "wis"
+    ],
+    "spellcasting_ability": "int"
+  }
+}

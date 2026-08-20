@@ -1,0 +1,85 @@
+{
+  "burning-hands": {
+    "id": "burning-hands",
+    "name": "バーニング・ハンズ",
+    "level": 1,
+    "school": "evocation",
+    "classes": [
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": "3d6",
+    "heal_dice": null,
+    "damage_type": "炎",
+    "save_type": "dex",
+    "save_effect": "half",
+    "requires_concentration": false
+  },
+  "magic-missile": {
+    "id": "magic-missile",
+    "name": "マジック・ミサイル",
+    "level": 1,
+    "school": "evocation",
+    "classes": [
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": "3d4 + 3",
+    "heal_dice": null,
+    "damage_type": "力場",
+    "save_type": null,
+    "save_effect": null,
+    "requires_concentration": false
+  },
+  "cure-wounds": {
+    "id": "cure-wounds",
+    "name": "キュア・ウーンズ",
+    "level": 1,
+    "school": "evocation",
+    "classes": [
+      "bard",
+      "cleric",
+      "druid",
+      "paladin",
+      "ranger"
+    ],
+    "damage_dice": null,
+    "heal_dice": "1d8 + MOD",
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "requires_concentration": false
+  },
+  "bless": {
+    "id": "bless",
+    "name": "ブレス",
+    "level": 1,
+    "school": "enchantment",
+    "classes": [
+      "cleric",
+      "paladin"
+    ],
+    "damage_dice": null,
+    "heal_dice": null,
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "requires_concentration": true
+  },
+  "shield": {
+    "id": "shield",
+    "name": "シールド",
+    "level": 1,
+    "school": "abjuration",
+    "classes": [
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": null,
+    "heal_dice": null,
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "requires_concentration": false
+  }
+}
