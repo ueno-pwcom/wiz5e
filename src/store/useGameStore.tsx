@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { Character, Direction, DungeonMap, LogMessage, MonsterData, WallType } from '../types/game';
+import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterData, WallType } from '../types/game';
 import { map1Data } from '../data/map1';
 import { monsterList } from '../data/monsters';
+import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
 type GameScene = 'town' | 'dungeon' | 'battle';
 
@@ -12,15 +13,22 @@ interface GameState {
   logs: LogMessage[];
   currentMap: DungeonMap;
   playerPosition: { x: number; y: number; facing: Direction };
-  activeEnemies: MonsterData[];
+
+  // 戦闘用状態
+  combatants: Combatant[];
+  currentTurnIndex: number;
 
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
   movePlayer: (action: 'forward' | 'backward' | 'turnLeft' | 'turnRight') => void;
+
+  // 戦闘用アクション
   startBattle: () => void;
-  damageCharacter: (characterId: string, amount: number) => void;
-  healCharacter: (characterId: string, amount: number) => void;
-  restParty: () => void;
+  executePlayerAttack: (targetId: string) => void;
+  executePlayerDefend: () => void;
+  processEnemyTurn: () => void;
+  nextTurn: () => void;
+  checkBattleStatus: () => boolean;
 }
 
 // テスト用初期パーティデータ
@@ -41,7 +49,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   ],
   currentMap: map1Data,
   playerPosition: map1Data.start_position,
-  activeEnemies: [],
+  combatants: [],
+  currentTurnIndex: 0,
 
   setScene: (scene) => set({ scene }),
 
@@ -53,11 +62,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       ]
     })),
 
+  // 1. 戦闘開始＆イニシアチブ決定
   startBattle: () => {
-    const { currentMap, addLog } = get();
+    const { currentMap, party, addLog } = get();
     const table = currentMap.encounter_table;
+    if (!table || table.monsters.length === 0) return;
 
-    // 出現モンスターの抽選（重み付けドロップ）
+    // 出現モンスター選択
     const totalWeight = table.monsters.reduce((acc, cur) => acc + cur.weight, 0);
     let randomVal = Math.random() * totalWeight;
     let selectedMonsterId = table.monsters[0].id;
@@ -70,26 +81,226 @@ export const useGameStore = create<GameState>((set, get) => ({
       randomVal -= monster.weight;
     }
 
-    // 出現数の決定（1〜3体）
-    const enemyCount = Math.floor(Math.random() * 3) + 1;
+    const enemyCount = Math.floor(Math.random() * 2) + 1; // 1〜2体
     const baseMonster = monsterList[selectedMonsterId];
+    if (!baseMonster) return;
 
-    const generatedEnemies: MonsterData[] = [];
+    // 参加ユニット（Combatant）の生成とイニシアチブ（d20 + DEX修正値）の算出
+    const newCombatants: Combatant[] = [];
+
+    // 生存しているプレイヤーキャラクターを追加
+    party.filter(p => p.is_alive).forEach(p => {
+      const dexMod = getAbilityModifier(p.stats.dex);
+      const initRoll = rollD20(dexMod);
+      newCombatants.push({
+        id: p.id,
+        name: p.name,
+        is_player: true,
+        initiative: initRoll.total,
+        ac: p.ac,
+        hp: { ...p.hp },
+        position: p.position,
+        ref: p
+      });
+    });
+
+    // モンスターを追加
     for (let i = 0; i < enemyCount; i++) {
-      generatedEnemies.push({
+      const monsterInstance: MonsterData = {
         ...baseMonster,
         id: `${baseMonster.id}_${Date.now()}_${i}`,
         name: `${baseMonster.name} ${String.fromCharCode(65 + i)}`,
         hp: { ...baseMonster.hp }
+      };
+
+      const dexMod = getAbilityModifier(monsterInstance.stats.dex);
+      const initRoll = rollD20(dexMod);
+
+      newCombatants.push({
+        id: monsterInstance.id,
+        name: monsterInstance.name,
+        is_player: false,
+        initiative: initRoll.total,
+        ac: monsterInstance.ac,
+        hp: monsterInstance.hp,
+        position: 'front',
+        ref: monsterInstance
       });
     }
 
+    // イニシアチブが高い順にソート
+    newCombatants.sort((a, b) => b.initiative - a.initiative);
+
     set({
       scene: 'battle',
-      activeEnemies: generatedEnemies
+      combatants: newCombatants,
+      currentTurnIndex: 0
     });
 
-    addLog(`モンスターが現れた！ (${generatedEnemies.map(e => e.name).join(', ')})`, 'critical');
+    addLog(`モンスターが現れた！ (${newCombatants.filter(c => !c.is_player).map(c => c.name).join(', ')})`, 'critical');
+
+    // 最初のターンが敵の場合は自動で敵の行動を実行
+    if (!newCombatants[0].is_player) {
+      setTimeout(() => get().processEnemyTurn(), 1000);
+    }
+  },
+
+  // 2. プレイヤーの攻撃実行
+  executePlayerAttack: (targetId: string) => {
+    const { combatants, currentTurnIndex, addLog, nextTurn } = get();
+    const attacker = combatants[currentTurnIndex];
+    const target = combatants.find(c => c.id === targetId);
+
+    if (!attacker || !target || !attacker.is_player) return;
+
+    const playerChar = attacker.ref as Character;
+    const strMod = getAbilityModifier(playerChar.stats.str);
+    const attackBonus = strMod + 2;
+
+    const attackRoll = rollD20(attackBonus);
+    addLog(`${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`, 'player_action');
+
+    let isHit = false;
+    if (attackRoll.isCritical) {
+      addLog('クリティカルヒット！', 'critical');
+      isHit = true;
+    } else if (attackRoll.isFumble) {
+      addLog('ファンブル！ 攻撃は大きく外れた。', 'system');
+      isHit = false;
+    } else if (attackRoll.total >= target.ac) {
+      isHit = true;
+    } else {
+      addLog(`ミス！ ${target.name} の AC ${target.ac} に届かなかった。`, 'system');
+    }
+
+    if (isHit) {
+      const weaponDice = '1d8+2';
+      const damage = rollDiceString(weaponDice, attackRoll.isCritical);
+      target.hp.current = Math.max(0, target.hp.current - damage);
+
+      addLog(`${target.name} に ${damage} のダメージ！`, 'critical');
+
+      if (target.hp.current === 0) {
+        addLog(`${target.name} を倒した！`, 'info');
+      }
+    }
+
+    if (!get().checkBattleStatus()) {
+      nextTurn();
+    }
+  },
+
+  executePlayerDefend: () => {
+    const { combatants, currentTurnIndex, addLog, nextTurn } = get();
+    const attacker = combatants[currentTurnIndex];
+
+    if (!attacker || !attacker.is_player) return;
+
+    addLog(`${attacker.name} は身構えた（防御）。`, 'player_action');
+
+    // ターンを進行
+    nextTurn();
+  },
+
+  // 3. 敵の行動ロジック
+  processEnemyTurn: () => {
+    const { combatants, currentTurnIndex, addLog, nextTurn } = get();
+    const attacker = combatants[currentTurnIndex];
+
+    if (!attacker || attacker.is_player || attacker.hp.current <= 0) {
+      nextTurn();
+      return;
+    }
+
+    const alivePlayers = combatants.filter(c => c.is_player && c.hp.current > 0);
+    if (alivePlayers.length === 0) return;
+
+    const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+    const enemyData = attacker.ref as MonsterData;
+    const action = enemyData.actions[0] || { name: '攻撃', to_hit: 2, damage_dice: '1d6' };
+
+    addLog(`${attacker.name} の ${action.name}！`, 'enemy_action');
+
+    const attackRoll = rollD20(action.to_hit);
+
+    let isHit = false;
+    if (attackRoll.isCritical) {
+      addLog('痛恨の一撃！ (クリティカル)', 'critical');
+      isHit = true;
+    } else if (attackRoll.isFumble) {
+      addLog('攻撃は空を切った。', 'system');
+      isHit = false;
+    } else if (attackRoll.total >= target.ac) {
+      isHit = true;
+    } else {
+      addLog(`${target.name} は攻撃をかわした。`, 'system');
+    }
+
+    if (isHit) {
+      const damage = rollDiceString(action.damage_dice, attackRoll.isCritical);
+      target.hp.current = Math.max(0, target.hp.current - damage);
+
+      const partyMember = get().party.find(p => p.id === target.id);
+      if (partyMember) {
+        partyMember.hp.current = target.hp.current;
+        if (partyMember.hp.current === 0) {
+          partyMember.is_alive = false;
+        }
+      }
+
+      addLog(`${target.name} は ${damage} のダメージを受けた！`, 'critical');
+
+      if (target.hp.current === 0) {
+        addLog(`${target.name} は倒れた！`, 'critical');
+      }
+    }
+
+    set({ combatants: [...combatants], party: [...get().party] });
+
+    if (!get().checkBattleStatus()) {
+      nextTurn();
+    }
+  },
+
+  // ターン進行
+  nextTurn: () => {
+    const { combatants, currentTurnIndex } = get();
+
+    let nextIndex = (currentTurnIndex + 1) % combatants.length;
+
+    while (combatants[nextIndex].hp.current <= 0) {
+      nextIndex = (nextIndex + 1) % combatants.length;
+    }
+
+    set({ currentTurnIndex: nextIndex });
+
+    const nextCombatant = combatants[nextIndex];
+    if (!nextCombatant.is_player) {
+      setTimeout(() => get().processEnemyTurn(), 1000);
+    }
+  },
+
+  // 勝敗チェック
+  checkBattleStatus: () => {
+    const { combatants, addLog, setScene } = get();
+
+    const aliveEnemies = combatants.filter(c => !c.is_player && c.hp.current > 0);
+    const alivePlayers = combatants.filter(c => c.is_player && c.hp.current > 0);
+
+    if (aliveEnemies.length === 0) {
+      addLog('戦闘に勝利した！', 'info');
+      setTimeout(() => {
+        setScene('dungeon');
+      }, 1500);
+      return true;
+    }
+
+    if (alivePlayers.length === 0) {
+      addLog('パーティは全滅した...', 'critical');
+      return true;
+    }
+
+    return false;
   },
 
   movePlayer: (action) => {
@@ -156,46 +367,5 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (Math.random() < currentMap.encounter_table.rate) {
       startBattle();
     }
-  },
-
-  damageCharacter: (characterId, amount) =>
-    set((state) => ({
-      party: state.party.map((character) => {
-        if (character.id !== characterId || !character.is_alive) return character;
-
-        const currentHp = Math.max(0, character.hp.current - Math.max(0, amount));
-        return {
-          ...character,
-          hp: { ...character.hp, current: currentHp },
-          is_alive: currentHp > 0
-        };
-      })
-    })),
-
-  healCharacter: (characterId, amount) =>
-    set((state) => ({
-      party: state.party.map((character) => {
-        if (character.id !== characterId || !character.is_alive) return character;
-
-        return {
-          ...character,
-          hp: {
-            ...character.hp,
-            current: Math.min(
-              character.hp.max,
-              character.hp.current + Math.max(0, amount)
-            )
-          }
-        };
-      })
-    })),
-
-  restParty: () =>
-    set((state) => ({
-      party: state.party.map((character) => ({
-        ...character,
-        hp: { ...character.hp, current: character.hp.max },
-        is_alive: true
-      }))
-    }))
+  }
 }));
