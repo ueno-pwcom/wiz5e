@@ -14,6 +14,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
   const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
   const currentCombatant = combatants[currentTurnIndex];
   const currentTurnId = currentCombatant?.is_player ? currentCombatant.id : null;
+  const showFocus = scene === 'battle' && Boolean(currentTurnId);
 
   return (
     <div style={{
@@ -27,7 +28,9 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
       fontFamily: 'monospace'
     }}>
       {party.map((char, idx) => {
-        const isCurrentTurn = char.id === currentTurnId;
+        const isCurrentTurn = showFocus && char.id === currentTurnId;
+        const hpHalfDown = char.hp.current > 0 && char.hp.current <= Math.floor(char.hp.max / 2);
+        const isDown = char.hp.current <= 0;
         return (
           <div
             key={char.id}
@@ -35,7 +38,15 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
               backgroundColor: '#111827',
               padding: '6px',
               borderRadius: '4px',
-              border: isCurrentTurn ? '2px solid #38bdf8' : char.position === 'front' ? '1px solid #3b82f6' : '1px solid #6b7280',
+              border: isCurrentTurn
+                ? '2px solid #38bdf8'
+                : isDown
+                ? '1px solid #ef4444'
+                : hpHalfDown
+                ? '1px solid #f59e0b'
+                : char.position === 'front'
+                ? '1px solid #3b82f6'
+                : '1px solid #6b7280',
               boxShadow: isCurrentTurn ? '0 0 0 4px rgba(56, 189, 248, 0.18)' : 'none',
               cursor: scene === 'camp' ? 'pointer' : 'default'
             }}

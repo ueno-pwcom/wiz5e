@@ -60,12 +60,12 @@ export const DungeonView: React.FC = () => {
 
         {/* 動的グリッドミニマップ */}
         <div style={{
-          width: '100%',
+          width: '80%',
           aspectRatio: '1 / 1',
-          maxWidth: '100%',
+          maxWidth: '220px',
           backgroundColor: '#000',
           border: '1px solid #374151',
-          marginBottom: '12px',
+          margin: '0 auto 12px',
           padding: '4px',
           display: 'grid',
           gridTemplateColumns: `repeat(${currentMap.width}, 1fr)`,
@@ -128,7 +128,7 @@ const btnStyle: React.CSSProperties = {
   color: '#fff',
   border: 'none',
   borderRadius: '4px',
-  padding: '6px',
+  padding: '4px 6px',
   cursor: 'pointer',
-  fontSize: '12px'
+  fontSize: '11px'
 };
