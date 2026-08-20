@@ -59,13 +59,16 @@ export const DungeonView: React.FC = () => {
 
         {/* 動的グリッドミニマップ */}
         <div style={{
-          height: '120px',
+          width: '100%',
+          aspectRatio: '1 / 1',
+          maxWidth: '100%',
           backgroundColor: '#000',
           border: '1px solid #374151',
           marginBottom: '12px',
           padding: '4px',
           display: 'grid',
           gridTemplateColumns: `repeat(${currentMap.width}, 1fr)`,
+          gridTemplateRows: `repeat(${currentMap.height}, 1fr)`,
           gap: '2px'
         }}>
           {currentMap.grid.map((row, y) =>
