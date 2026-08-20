@@ -10,6 +10,8 @@ interface Props {
 export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
   const combatants = useGameStore((state) => state.combatants);
   const currentTurnIndex = useGameStore((state) => state.currentTurnIndex);
+  const scene = useGameStore((state) => state.scene);
+  const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
   const currentCombatant = combatants[currentTurnIndex];
   const currentTurnId = currentCombatant?.is_player ? currentCombatant.id : null;
 
@@ -27,13 +29,22 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
       {party.map((char, idx) => {
         const isCurrentTurn = char.id === currentTurnId;
         return (
-          <div key={char.id} style={{
-            backgroundColor: '#111827',
-            padding: '6px',
-            borderRadius: '4px',
-            border: isCurrentTurn ? '2px solid #38bdf8' : char.position === 'front' ? '1px solid #3b82f6' : '1px solid #6b7280',
-            boxShadow: isCurrentTurn ? '0 0 0 4px rgba(56, 189, 248, 0.18)' : 'none'
-          }}>
+          <div
+            key={char.id}
+            style={{
+              backgroundColor: '#111827',
+              padding: '6px',
+              borderRadius: '4px',
+              border: isCurrentTurn ? '2px solid #38bdf8' : char.position === 'front' ? '1px solid #3b82f6' : '1px solid #6b7280',
+              boxShadow: isCurrentTurn ? '0 0 0 4px rgba(56, 189, 248, 0.18)' : 'none',
+              cursor: scene === 'camp' ? 'pointer' : 'default'
+            }}
+            onClick={() => {
+              if (scene === 'camp') {
+                setSelectedCharacterId(char.id);
+              }
+            }}
+          >
             <div style={{ fontSize: '11px', color: '#9ca3af' }}>
               [{char.position === 'front' ? `前衛 ${idx + 1}` : `後衛 ${idx + 1}`}]
             </div>

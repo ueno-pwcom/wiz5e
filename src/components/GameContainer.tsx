@@ -6,6 +6,7 @@ import { TownView } from './TownView';
 import { CampView } from './CampView';
 import { StatusPanel } from './StatusPanel';
 import { MessageLog } from './MessageLog';
+import { CharacterDetailModal } from './CharacterDetailModal';
 
 export const GameContainer: React.FC = () => {
   // Zustand ストアから状態とアクションを取得
@@ -40,6 +41,7 @@ export const GameContainer: React.FC = () => {
 
       {/* パーティステータス */}
       <StatusPanel party={party} gold={gold} />
+      <CharacterDetailModal />
     </div>
   );
 };

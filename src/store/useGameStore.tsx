@@ -33,6 +33,9 @@ interface GameState {
 
   shortRest: () => void;
   longRest: () => void;
+
+  selectedCharacterId: string | null;
+  setSelectedCharacterId: (id: string | null) => void;
 }
 
 // テスト用初期パーティデータ
@@ -440,5 +443,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ party: updatedParty });
     addLog('パーティは大休憩をとり、HP・ヒットダイス・呪文スロットが全回復した！', 'heal');
-  }
+  },
+
+  selectedCharacterId: null,
+  setSelectedCharacterId: (id) => set({ selectedCharacterId: id }),
 }));
