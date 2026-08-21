@@ -3,6 +3,7 @@ import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterDa
 import { map1Data } from '../data/map1';
 import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
+import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
 type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
@@ -40,6 +41,7 @@ interface GameState {
   processEnemyTurn: () => void;
   nextTurn: () => void;
   checkBattleStatus: () => boolean;
+  checkLevelUp: (character: Character) => Character;
   claimBattleReward: () => void;
   enterCamp: () => void;
 
@@ -404,8 +406,49 @@ export const useGameStore = create<GameState>((set, get) => ({
     return false;
   },
 
+  // ★ キャラクターのレベルアップチェック & ステータス更新
+  checkLevelUp: (character: Character) => {
+    const currentLevel = character.level;
+    const currentXp = character.xp || 0;
+    const nextLevelXp = XP_TABLE[currentLevel + 1];
+
+    if (nextLevelXp && currentXp >= nextLevelXp) {
+      const newLevel = currentLevel + 1;
+      const conMod = getAbilityModifier(character.stats.con);
+      const hdValue = character.class_id === 'wizard' ? 4 : character.class_id === 'fighter' ? 6 : 5;
+      const hpIncrease = Math.max(1, hdValue + conMod);
+      const newMaxHp = character.hp.max + hpIncrease;
+
+      const classSpellSlots = SPELL_SLOTS_TABLE[character.class_id]?.[newLevel];
+      let updatedSpellSlots = character.spell_slots;
+
+      if (classSpellSlots) {
+        updatedSpellSlots = {};
+        Object.entries(classSpellSlots).forEach(([lvlStr, maxCount]) => {
+          const lvl = Number(lvlStr);
+          updatedSpellSlots![lvl] = {
+            current: maxCount,
+            max: maxCount
+          };
+        });
+      }
+
+      get().addLog(`🎉 ${character.name} は Level ${newLevel} にレベルアップした！ (最大HP +${hpIncrease})`, 'heal');
+
+      return {
+        ...character,
+        level: newLevel,
+        hp: { current: newMaxHp, max: newMaxHp },
+        hit_dice_remaining: newLevel,
+        spell_slots: updatedSpellSlots
+      };
+    }
+
+    return character;
+  },
+
   claimBattleReward: () => {
-    const { party, battleReward, setScene } = get();
+    const { party, battleReward, checkLevelUp, setScene } = get();
     if (!battleReward) return;
 
     const aliveMembers = party.filter((m) => m.is_alive);
@@ -413,10 +456,13 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const updatedParty = party.map((member) => {
       if (!member.is_alive) return member;
-      return {
+
+      const updatedXpMember = {
         ...member,
         xp: (member.xp || 0) + xpPerMember
       };
+
+      return checkLevelUp(updatedXpMember);
     });
 
     set({

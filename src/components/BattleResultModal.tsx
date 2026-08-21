@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGameStore } from '../store/useGameStore';
+import { XP_TABLE } from '../data/levelTable';
 
 export const BattleResultModal: React.FC = () => {
   const showResultModal = useGameStore((state) => state.showResultModal);
@@ -46,6 +47,32 @@ export const BattleResultModal: React.FC = () => {
               <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#facc15' }}>
                 +{battleReward.gold} GP
               </span>
+            </div>
+          </div>
+
+          {/* パーティの獲得XPとレベルアップ状況 */}
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', marginBottom: '6px' }}>
+              パーティの成長
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {party.filter(m => m.is_alive).map((m) => {
+                const nextXp = XP_TABLE[m.level + 1];
+                const willLevelUp = nextXp && ((m.xp || 0) + xpPerMember) >= nextXp;
+
+                return (
+                  <div key={m.id} style={{ backgroundColor: '#111827', padding: '6px 8px', borderRadius: '4px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{m.name} (Lv.{m.level})</span>
+                    {willLevelUp ? (
+                      <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>✨ LEVEL UP!</span>
+                    ) : (
+                      <span style={{ color: '#6b7280' }}>
+                        次Lvまで: {nextXp ? nextXp - ((m.xp || 0) + xpPerMember) : 'MAX'} XP
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
