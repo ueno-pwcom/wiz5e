@@ -65,6 +65,8 @@ interface GameState {
   restAtInn: (cost: number) => boolean;
   buyItem: (itemId: string, price: number) => boolean;
   sellItem: (itemId: string, price: number) => void;
+  healCharacter: (characterId: string, cost: number) => boolean;
+  reviveCharacter: (characterId: string, cost: number) => boolean;
   triggerEvent: (eventId: string) => void;
   setSelectedActor: (characterId: string) => void;
   resolveEventOption: (option: EventOption) => void;
@@ -764,6 +766,45 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     addLog(`アイテムを売却した (+${price} G)`, 'info');
+  },
+
+  // ⛪ 単体手当て・回復
+  healCharacter: (characterId: string, cost: number) => {
+    const { gold, party, addLog } = get();
+    if (gold < cost) return false;
+
+    const updatedParty = party.map((m) => {
+      if (m.id !== characterId) return m;
+      return {
+        ...m,
+        hp: { ...m.hp, current: m.hp.max }
+      };
+    });
+
+    const target = party.find((m) => m.id === characterId);
+    set({ gold: gold - cost, party: updatedParty });
+    addLog(`神殿で ${target?.name} の傷を治療した！ (-${cost} G)`, 'heal');
+    return true;
+  },
+
+  // ⛪ 蘇生処理（HP 1 で復活）
+  reviveCharacter: (characterId: string, cost: number) => {
+    const { gold, party, addLog } = get();
+    if (gold < cost) return false;
+
+    const updatedParty = party.map((m) => {
+      if (m.id !== characterId) return m;
+      return {
+        ...m,
+        is_alive: true,
+        hp: { ...m.hp, current: Math.floor(m.hp.max * 0.5) }
+      };
+    });
+
+    const target = party.find((m) => m.id === characterId);
+    set({ gold: gold - cost, party: updatedParty });
+    addLog(`奇跡の祈りにより ${target?.name} が蘇生した！ (-${cost} G)`, 'heal');
+    return true;
   },
 
   enterCamp: () => {

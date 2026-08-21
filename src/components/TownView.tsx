@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { ShopModal } from './ShopModal';
+import { TempleModal } from './TempleModal';
 
 export const TownView: React.FC = () => {
   const party = useGameStore((state) => state.party);
@@ -10,6 +11,7 @@ export const TownView: React.FC = () => {
   const restAtInn = useGameStore((state) => state.restAtInn);
 
   const [showShop, setShowShop] = useState(false);
+  const [showTemple, setShowTemple] = useState(false);
   const innCost = 10; // 宿泊代金
 
   return (
@@ -57,6 +59,14 @@ export const TownView: React.FC = () => {
           </div>
         </button>
 
+        {/* 神殿 (Temple)  */}
+        <button onClick={() => setShowTemple(true)} style={{ ...menuButtonStyle, backgroundColor: '#1e1b4b' }}>
+          <div style={{ fontSize: '16px' }}>⛪ 慈愛の神殿</div>
+          <div style={{ fontSize: '11px', color: '#c7d2fe', marginTop: '2px' }}>
+            個別治療・倒れた仲間の蘇生
+          </div>
+        </button>
+
         {/* ダンジョンへ出発 */}
         <button onClick={() => setScene('dungeon')} style={{ ...menuButtonStyle, backgroundColor: '#991b1b', marginTop: '8px' }}>
           <div style={{ fontSize: '16px' }}>⚔️ ダンジョンへ出発する</div>
@@ -66,8 +76,9 @@ export const TownView: React.FC = () => {
         </button>
       </div>
 
-      {/* ショップモーダル */}
+      {/* モーダル表示 */}
       {showShop && <ShopModal onClose={() => setShowShop(false)} />}
+      {showTemple && <TempleModal onClose={() => setShowTemple(false)} />}
     </div>
   );
 };
