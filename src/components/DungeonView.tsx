@@ -7,6 +7,10 @@ export const DungeonView: React.FC = () => {
   const currentMap = useGameStore((state) => state.currentMap);
   const movePlayer = useGameStore((state) => state.movePlayer);
   const enterCamp = useGameStore((state) => state.enterCamp);
+  const returnToTown = useGameStore((state) => state.returnToTown); // 街に戻るアクションを取得
+
+  // 現在プレイヤーが足元に置いているタイルの情報を取得
+  const currentTile = currentMap.grid[playerPosition.y]?.[playerPosition.x];
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,6 +48,7 @@ export const DungeonView: React.FC = () => {
         backgroundColor: '#000',
         border: '1px solid #374151',
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         color: '#4b5563',
@@ -53,10 +58,49 @@ export const DungeonView: React.FC = () => {
           width: '200px',
           height: '180px',
           border: '2px solid #fff',
-          boxShadow: 'inset 0 0 20px #555'
+          boxShadow: 'inset 0 0 20px #555',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center'
         }}>
-          <div style={{ textAlign: 'center', marginTop: '70px', color: '#fff' }}>[ 3D View Area ]</div>
+          <div style={{ textAlign: 'center', color: '#fff' }}>[ 3D View Area ]</div>
         </div>
+
+        {/* 階上への階段（stairs_up）イベントオーバーレイ */}
+        {currentTile?.event?.type === 'stairs_up' && (
+          <div style={{
+            position: 'absolute',
+            bottom: '12px',
+            backgroundColor: 'rgba(17, 24, 39, 0.9)',
+            border: '1px solid #f59e0b',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 'bold' }}>
+              🧗 地上へ続く階段がある
+            </div>
+            <button
+              onClick={returnToTown}
+              style={{
+                backgroundColor: '#d97706',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 12px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              🏰 街へ帰還する
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ミニマップ & コマンド */}
@@ -96,7 +140,7 @@ export const DungeonView: React.FC = () => {
                   color: isPlayerHere ? '#60a5fa' : '#4b5563',
                   fontWeight: 'bold'
                 }}>
-                  {isPlayerHere ? getFacingIcon(playerPosition.facing) : (tile.event ? '?' : '')}
+                  {isPlayerHere ? getFacingIcon(playerPosition.facing) : (tile.event?.type === 'stairs_up' ? '▲' : tile.event ? '?' : '')}
                 </div>
               );
             })

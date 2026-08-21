@@ -78,6 +78,8 @@ interface GameState {
   shortRest: () => void;
   longRest: () => void;
 
+  returnToTown: () => void;
+
   selectedCharacterId: string | null;
   setSelectedCharacterId: (id: string | null) => void;
 }
@@ -1012,6 +1014,20 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ party: updatedParty });
     addLog('パーティは大休憩をとり、HP・ヒットダイス・呪文スロットが全回復した！', 'heal');
+  },
+
+  // 🏰 地上（街）へ帰還する
+  returnToTown: () => {
+    const { addLog } = get();
+    addLog('🏰 階段を上り、無事に地上（街）へ帰還した。', 'info');
+
+    set({
+      scene: 'town',
+      combatants: [],
+      currentTurnIndex: 0,
+      battleReward: null,
+      showResultModal: false,
+    });
   },
 
   selectedCharacterId: null,
