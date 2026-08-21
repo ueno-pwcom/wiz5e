@@ -4,17 +4,29 @@ import { useGameStore } from '../store/useGameStore';
 import { InventoryView } from './InventoryView';
 import { itemList } from '../data/items';
 import { getAbilityModifier } from '../utils/dice';
+import type { Character } from '../types/game';
 
-export const CharacterDetailModal: React.FC = () => {
+interface CharacterDetailModalProps {
+  character?: Character;
+  onClose?: () => void;
+}
+
+export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ character: propCharacter, onClose }) => {
   const party = useGameStore((state) => state.party);
   const selectedCharacterId = useGameStore((state) => state.selectedCharacterId);
   const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
   const [showInventory, setShowInventory] = useState(false);
 
-  if (!selectedCharacterId) return null;
-
-  const character = party.find((c) => c.id === selectedCharacterId);
+  const character = propCharacter ?? party.find((c) => c.id === selectedCharacterId);
   if (!character) return null;
+
+  const closeModal = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      setSelectedCharacterId(null);
+    }
+  };
 
   // 修正値の表記整形 (例: +2, -1, +0)
   const formatMod = (score: number) => {
@@ -35,7 +47,7 @@ export const CharacterDetailModal: React.FC = () => {
   const equippedArmor = character.equipped_armor_id ? itemList[character.equipped_armor_id] : null;
 
   return (
-    <div style={overlayStyle} onClick={() => setSelectedCharacterId(null)}>
+    <div style={overlayStyle} onClick={closeModal}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
         {/* ヘッダー */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #374151', paddingBottom: '8px', marginBottom: '12px' }}>
@@ -45,7 +57,7 @@ export const CharacterDetailModal: React.FC = () => {
               Level {character.level} / クラスID: {character.class_id}
             </span>
           </div>
-          <button onClick={() => setSelectedCharacterId(null)} style={closeBtnStyle}>✕</button>
+          <button onClick={closeModal} style={closeBtnStyle}>✕</button>
         </div>
 
         {showInventory ? (

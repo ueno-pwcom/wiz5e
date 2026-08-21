@@ -40,7 +40,7 @@ export interface WallData {
   W: WallType;
 }
 
-export type EventType = 'stairs_up' | 'stairs_down' | 'chest' | 'boss';
+export type EventType = 'stairs_up' | 'stairs_down' | 'chest' | 'boss' | 'trap' | 'door' | 'encounter' | 'none';
 
 export interface TileEvent {
   type: EventType;

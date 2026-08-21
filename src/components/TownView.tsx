@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { ShopModal } from './ShopModal';
 import { TempleModal } from './TempleModal';
+import { CharacterDetailModal } from './CharacterDetailModal';
+import type { Character } from '../types/game';
 
 export const TownView: React.FC = () => {
   const party = useGameStore((state) => state.party);
@@ -12,6 +14,7 @@ export const TownView: React.FC = () => {
 
   const [showShop, setShowShop] = useState(false);
   const [showTemple, setShowTemple] = useState(false);
+  const [selectedChar, setSelectedChar] = useState<Character | null>(null);
   const innCost = 10; // 宿泊代金
 
   return (
@@ -31,8 +34,15 @@ export const TownView: React.FC = () => {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
           {party.map((m) => (
-            <div key={m.id} style={partyMemberCardStyle}>
-              <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{m.name}</div>
+            <div
+              key={m.id}
+              onClick={() => setSelectedChar(m)}
+              style={partyMemberCardStyle}
+            >
+              <div style={{ fontWeight: 'bold', fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>{m.name}</span>
+                <span style={{ fontSize: '10px', color: '#60a5fa' }}>装備・詳細 ⚙️</span>
+              </div>
               <div style={{ fontSize: '11px', color: m.hp.current < m.hp.max * 0.4 ? '#ef4444' : '#10b981' }}>
                 HP: {m.hp.current} / {m.hp.max}
               </div>
@@ -79,6 +89,12 @@ export const TownView: React.FC = () => {
       {/* モーダル表示 */}
       {showShop && <ShopModal onClose={() => setShowShop(false)} />}
       {showTemple && <TempleModal onClose={() => setShowTemple(false)} />}
+      {selectedChar && (
+        <CharacterDetailModal
+          character={selectedChar}
+          onClose={() => setSelectedChar(null)}
+        />
+      )}
     </div>
   );
 };
