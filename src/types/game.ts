@@ -162,6 +162,7 @@ export interface Character {
   is_alive: boolean;
   status_effects: StatusEffect[];
   equipped_weapon_id: string | null;
+  equipped_armor_id?: string | null;
 }
 
 // 戦闘参加ユニット（プレイヤー＋敵）の共通インターフェース

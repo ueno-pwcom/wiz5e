@@ -47,6 +47,7 @@ interface GameState {
   claimBattleReward: () => void;
   useItem: (itemId: string, targetCharacterId: string) => void;
   equipItem: (characterId: string, itemId: string) => void;
+  unequipItem: (characterId: string, slot: 'weapon' | 'armor') => void;
   enterCamp: () => void;
 
   shortRest: () => void;
@@ -527,9 +528,29 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       if (item.type === 'armor' && item.ac_bonus) {
         addLog(`${m.name} は ${item.name} を装備し、ACが ${item.ac_bonus} になった。`, 'info');
-        return { ...m, ac: item.ac_bonus };
+        return { ...m, equipped_armor_id: itemId, ac: item.ac_bonus };
       }
       return m;
+    });
+
+    set({ party: updatedParty });
+  },
+
+  unequipItem: (characterId: string, slot: 'weapon' | 'armor') => {
+    const { party, addLog } = get();
+
+    const updatedParty = party.map((m) => {
+      if (m.id !== characterId) return m;
+
+      if (slot === 'weapon') {
+        addLog(`${m.name} は武器を外した。`, 'info');
+        return { ...m, equipped_weapon_id: null };
+      }
+
+      const dexMod = Math.floor((m.stats.dex - 10) / 2);
+      const baseAc = 10 + dexMod;
+      addLog(`${m.name} は防具を外し、ACが ${baseAc} になった。`, 'info');
+      return { ...m, equipped_armor_id: null, ac: baseAc };
     });
 
     set({ party: updatedParty });

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { InventoryView } from './InventoryView';
+import { itemList } from '../data/items';
 import { getAbilityModifier } from '../utils/dice';
 
 export const CharacterDetailModal: React.FC = () => {
@@ -29,6 +30,9 @@ export const CharacterDetailModal: React.FC = () => {
     { label: 'WIS (判断)', val: character.stats.wis },
     { label: 'CHA (魅力)', val: character.stats.cha }
   ];
+
+  const equippedWeapon = character.equipped_weapon_id ? itemList[character.equipped_weapon_id] : null;
+  const equippedArmor = character.equipped_armor_id ? itemList[character.equipped_armor_id] : null;
 
   return (
     <div style={overlayStyle} onClick={() => setSelectedCharacterId(null)}>
@@ -85,6 +89,26 @@ export const CharacterDetailModal: React.FC = () => {
                     <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>({formatMod(a.val)})</div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: '#111827', padding: '12px', borderRadius: '6px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 'bold', marginBottom: '8px' }}>
+                🛡️ 現在の装備
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#6b7280' }}>主武器:</span>
+                  <span style={{ fontWeight: 'bold', color: equippedWeapon ? '#fff' : '#6b7280' }}>
+                    {equippedWeapon ? `${equippedWeapon.name} (${equippedWeapon.damage_dice})` : 'なし (素手)'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#6b7280' }}>防具:</span>
+                  <span style={{ fontWeight: 'bold', color: equippedArmor ? '#fff' : '#6b7280' }}>
+                    {equippedArmor ? `${equippedArmor.name} (AC ${equippedArmor.ac_bonus})` : 'なし (服)'}
+                  </span>
+                </div>
               </div>
             </div>
 
