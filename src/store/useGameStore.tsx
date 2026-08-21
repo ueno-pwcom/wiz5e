@@ -539,18 +539,41 @@ export const useGameStore = create<GameState>((set, get) => ({
       let resultMsg = passed ? option.successText : option.failureText;
 
       if (passed && option.reward) {
+        let rewardLogText = '';
+
+        // 1. ゴールドの加算処理
         if (option.reward.gold) {
-          resultMsg += ` (${option.reward.gold} Gold獲得)`;
+          const currentGold = get().gold || 0;
+          set({ gold: currentGold + option.reward.gold });
+          rewardLogText += `💰 ${option.reward.gold} G `;
         }
-        if (option.reward.items) {
+
+        // 2. アイテムのインベントリ追加処理
+        if (option.reward.items && option.reward.items.length > 0) {
+          const currentInventory = [...get().inventory];
+
           option.reward.items.forEach((itemId) => {
-            const existing = inventory.find((i) => i.itemId === itemId);
-            if (existing) {
-              existing.quantity += 1;
+            const existingIndex = currentInventory.findIndex((i) => i.itemId === itemId);
+
+            if (existingIndex >= 0) {
+              currentInventory[existingIndex] = {
+                ...currentInventory[existingIndex],
+                quantity: currentInventory[existingIndex].quantity + 1
+              };
             } else {
-              inventory.push({ itemId, quantity: 1 });
+              currentInventory.push({
+                itemId: itemId,
+                quantity: 1
+              });
             }
           });
+
+          set({ inventory: currentInventory });
+          rewardLogText += `📦 アイテム獲得! `;
+        }
+
+        if (rewardLogText) {
+          resultMsg += ` (${rewardLogText.trim()})`;
         }
       }
 
