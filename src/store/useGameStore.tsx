@@ -4,6 +4,8 @@ import { map1Data } from '../data/map1';
 import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
 import { itemList } from '../data/items';
+import { dungeonEvents } from '../data/dungeonEvents';
+import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
@@ -14,6 +16,15 @@ export interface BattleReward {
   xp: number;
   gold: number;
   items: string[];
+}
+
+export interface EventResult {
+  passed: boolean;
+  roll: number;
+  modifier: number;
+  total: number;
+  dc?: number;
+  message: string;
 }
 
 interface GameState {
@@ -30,6 +41,9 @@ interface GameState {
   battleReward: BattleReward | null;
   showResultModal: boolean;
   inventory: { itemId: string; quantity: number }[];
+  activeEvent: DungeonEvent | null;
+  eventResult: EventResult | null;
+  selectedActorId: string;
 
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
@@ -48,6 +62,10 @@ interface GameState {
   useItem: (itemId: string, targetCharacterId: string) => void;
   equipItem: (characterId: string, itemId: string) => void;
   unequipItem: (characterId: string, slot: 'weapon' | 'armor') => void;
+  triggerEvent: (eventId: string) => void;
+  setSelectedActor: (characterId: string) => void;
+  resolveEventOption: (option: EventOption) => void;
+  closeEventModal: () => void;
   enterCamp: () => void;
 
   shortRest: () => void;
@@ -83,6 +101,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     { itemId: 'potion_of_healing', quantity: 3 },
     { itemId: 'longsword', quantity: 1 }
   ],
+  activeEvent: null,
+  eventResult: null,
+  selectedActorId: '',
 
   setScene: (scene) => set({ scene }),
 
@@ -385,7 +406,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // 勝敗チェック
   checkBattleStatus: () => {
-    const { combatants, addLog, setScene } = get();
+    const { combatants, addLog } = get();
 
     const aliveEnemies = combatants.filter(c => !c.is_player && c.hp.current > 0);
     const alivePlayers = combatants.filter(c => c.is_player && c.hp.current > 0);
@@ -484,6 +505,92 @@ export const useGameStore = create<GameState>((set, get) => ({
     setScene('dungeon');
   },
 
+  // イベントの発生
+  triggerEvent: (eventId: string) => {
+    const event = dungeonEvents[eventId];
+    const { party } = get();
+    if (!event) return;
+
+    set({
+      activeEvent: event,
+      eventResult: null,
+      selectedActorId: party[0]?.id || ''
+    });
+  },
+
+  setSelectedActor: (characterId: string) => {
+    set({ selectedActorId: characterId });
+  },
+
+  // イベント選択肢の実行と技能判定
+  resolveEventOption: (option: EventOption) => {
+    const { party, selectedActorId, inventory, addLog } = get();
+    const actor = party.find((m) => m.id === selectedActorId) || party[0];
+
+    if (!actor) return;
+
+    if (option.check) {
+      const d20Result = rollD20(0);
+      const d20 = d20Result.total;
+      const mod = getAbilityModifier(actor.stats[option.check.ability]);
+      const total = d20 + mod;
+      const passed = total >= option.check.dc;
+
+      let resultMsg = passed ? option.successText : option.failureText;
+
+      if (passed && option.reward) {
+        if (option.reward.gold) {
+          resultMsg += ` (${option.reward.gold} Gold獲得)`;
+        }
+        if (option.reward.items) {
+          option.reward.items.forEach((itemId) => {
+            const existing = inventory.find((i) => i.itemId === itemId);
+            if (existing) {
+              existing.quantity += 1;
+            } else {
+              inventory.push({ itemId, quantity: 1 });
+            }
+          });
+        }
+      }
+
+      if (!passed && option.penalty?.damageDice) {
+        const dmg = rollDiceString(option.penalty.damageDice);
+        actor.hp.current = Math.max(0, actor.hp.current - dmg);
+        resultMsg += ` (${actor.name} は ${dmg} ダメージを受けた！)`;
+      }
+
+      addLog(`[イベント] ${actor.name} の ${option.check.label} 判定: ${total} (出目 ${d20} + 修正値 ${mod}) -> ${passed ? '成功' : '失敗'}`, passed ? 'heal' : 'critical');
+
+      set({
+        eventResult: {
+          passed,
+          roll: d20,
+          modifier: mod,
+          total,
+          dc: option.check.dc,
+          message: resultMsg
+        },
+        party: [...party],
+        inventory: [...inventory]
+      });
+    } else {
+      set({
+        eventResult: {
+          passed: true,
+          roll: 0,
+          modifier: 0,
+          total: 0,
+          message: option.successText
+        }
+      });
+    }
+  },
+
+  closeEventModal: () => {
+    set({ activeEvent: null, eventResult: null });
+  },
+
   // ★ 消費アイテム（ポーション等）の使用
   useItem: (itemId: string, targetCharacterId: string) => {
     const { inventory, party, addLog } = get();
@@ -563,7 +670,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   movePlayer: (action) => {
-    const { playerPosition, currentMap, addLog, startBattle } = get();
+    const { playerPosition, currentMap, addLog, startBattle, triggerEvent } = get();
     const directions: Direction[] = ['N', 'E', 'S', 'W'];
     let { x, y, facing } = playerPosition;
 
@@ -615,7 +722,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     const nextTile = currentMap.grid[nextY][nextX];
     if (nextTile.event) {
       if (nextTile.event.type === 'chest') {
-        addLog('宝箱を発見した！', 'critical');
+        triggerEvent('locked_chest');
+        return;
+      } else if (nextTile.event.type === 'door') {
+        triggerEvent('heavy_door');
         return;
       } else if (nextTile.event.type === 'stairs_up') {
         addLog('地上へ続く階段がある。', 'info');

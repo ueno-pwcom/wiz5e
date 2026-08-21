@@ -186,3 +186,18 @@ export interface LogMessage {
   text: string;
   type: 'info' | 'player_action' | 'enemy_action' | 'heal' | 'critical' | 'system';
 }
+
+// src/types/game.ts
+
+// 能力値の識別キー型（筋力, 敏捷力, 耐久力, 知力, 判断力, 魅力）
+export type AbilityType = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+
+// キャラクターの能力値構造体
+export interface AbilityScores {
+  str: number;
+  dex: number;
+  con: number;
+  int: number;
+  wis: number;
+  cha: number;
+}
