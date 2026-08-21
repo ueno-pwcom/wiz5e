@@ -10,11 +10,12 @@ export const BattleView: React.FC = () => {
   const executePlayerDefend = useGameStore((state) => state.executePlayerDefend);
   const executePlayerSpell = useGameStore((state) => state.executePlayerSpell);
   // const addLog = useGameStore((state) => state.addLog);
-
+ 
   const [selectedAction, setSelectedAction] = useState<'none' | 'attack' | 'spell'>('none');
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
 
   const currentCombatant = combatants[currentTurnIndex];
+  const attemptRun = useGameStore((state) => state.attemptRun);
   const isPlayerTurn = currentCombatant?.is_player ?? false;
   const playerChar = isPlayerTurn ? (currentCombatant.ref as Character) : null;
 
@@ -209,6 +210,20 @@ export const BattleView: React.FC = () => {
             >
               🛡️ 防御
             </button>
+
+            {/* ★ 逃げるボタンの追加 */}
+            <button
+              disabled={!isPlayerTurn}
+              onClick={attemptRun}
+              style={{
+                ...cmdBtnStyle,
+                backgroundColor: isPlayerTurn ? '#4b5563' : '#1f2937',
+                color: '#e5e7eb'
+              }}
+            >
+              🏃 逃げる
+            </button>
+
           </div>
         </div>
       </div>

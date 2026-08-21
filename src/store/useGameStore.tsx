@@ -38,6 +38,7 @@ interface GameState {
   // 戦闘用状態
   combatants: Combatant[];
   currentTurnIndex: number;
+  skipPlayerTurnsUntilIndex: number | null;
   battleReward: BattleReward | null;
   showResultModal: boolean;
   inventory: { itemId: string; quantity: number }[];
@@ -53,6 +54,7 @@ interface GameState {
   startBattle: () => void;
   executePlayerAttack: (targetId: string) => void;
   executePlayerDefend: () => void;
+  attemptRun: () => void;
   executePlayerSpell: (spellId: string, targetId: string) => void;
   processEnemyTurn: () => void;
   nextTurn: () => void;
@@ -100,6 +102,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   playerPosition: map1Data.start_position,
   combatants: [],
   currentTurnIndex: 0,
+  skipPlayerTurnsUntilIndex: null,
   battleReward: null,
   showResultModal: false,
   inventory: [
@@ -260,6 +263,54 @@ export const useGameStore = create<GameState>((set, get) => ({
     nextTurn();
   },
 
+  attemptRun: () => {
+    const { combatants, currentTurnIndex, addLog } = get();
+    const attacker = combatants[currentTurnIndex];
+
+    if (!attacker || !attacker.is_player) return;
+
+    const aliveEnemies = combatants.filter((c) => !c.is_player && c.hp.current > 0);
+    if (aliveEnemies.length === 0) return;
+
+    const playerChar = attacker.ref as Character;
+    const dexMod = getAbilityModifier(playerChar.stats.dex);
+    const escapeRoll = rollD20(dexMod + 5);
+
+    const enemyThreat = aliveEnemies.reduce((sum, enemy) => {
+      const enemyData = enemy.ref as MonsterData;
+      return sum + (enemyData.stats.dex ?? 10);
+    }, 0) / aliveEnemies.length;
+
+    if (escapeRoll.total >= enemyThreat) {
+      addLog(`${attacker.name} は敵の包囲を抜け出して逃げ切った！`, 'info');
+      set({ scene: 'dungeon', combatants: [], currentTurnIndex: 0, battleReward: null, showResultModal: false, skipPlayerTurnsUntilIndex: null });
+      return;
+    }
+
+    addLog(`${attacker.name} は逃走に失敗し、味方全体が体勢を崩した！`, 'system');
+
+    let nextEnemyIndex = -1;
+    const count = combatants.length;
+
+    for (let i = 1; i < count; i++) {
+      const checkIdx = (currentTurnIndex + i) % count;
+      const target = combatants[checkIdx];
+      if (!target.is_player && target.hp.current > 0) {
+        nextEnemyIndex = checkIdx;
+        break;
+      }
+    }
+
+    const failedPlayerIndex = currentTurnIndex;
+    if (nextEnemyIndex !== -1) {
+      set({ currentTurnIndex: nextEnemyIndex, skipPlayerTurnsUntilIndex: failedPlayerIndex });
+    } else {
+      set({ skipPlayerTurnsUntilIndex: failedPlayerIndex });
+    }
+
+    setTimeout(() => get().processEnemyTurn(), 1000);
+  },
+
   executePlayerSpell: (spellId: string, targetId: string) => {
     const { combatants, currentTurnIndex, party, addLog, nextTurn, checkBattleStatus } = get();
     const attacker = combatants[currentTurnIndex];
@@ -308,7 +359,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
 
       addLog(`${attacker.name} は ${spell.name} を唱えた！ ${target.name} のHPが ${healAmount} 回復！`, 'heal');
-    } 
+    }
     // 攻撃呪文の場合（マジック・ミサイル等：必中）
     else if (spell.damage_dice) {
       const target = combatants.find((c) => c.id === targetId && !c.is_player);
@@ -393,12 +444,30 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ターン進行
   nextTurn: () => {
-    const { combatants, currentTurnIndex } = get();
+    const { combatants, currentTurnIndex, skipPlayerTurnsUntilIndex, addLog } = get();
 
-    let nextIndex = (currentTurnIndex + 1) % combatants.length;
+    const count = combatants.length;
+    let nextIndex = (currentTurnIndex + 1) % count;
 
     while (combatants[nextIndex].hp.current <= 0) {
-      nextIndex = (nextIndex + 1) % combatants.length;
+      nextIndex = (nextIndex + 1) % count;
+    }
+
+    if (skipPlayerTurnsUntilIndex !== null) {
+      while (
+        combatants[nextIndex].is_player &&
+        nextIndex !== skipPlayerTurnsUntilIndex
+      ) {
+        addLog(`${combatants[nextIndex].name} は体勢を崩して行動できない。`, 'system');
+        nextIndex = (nextIndex + 1) % count;
+        while (combatants[nextIndex].hp.current <= 0) {
+          nextIndex = (nextIndex + 1) % count;
+        }
+      }
+
+      if (nextIndex === skipPlayerTurnsUntilIndex) {
+        set({ skipPlayerTurnsUntilIndex: null });
+      }
     }
 
     set({ currentTurnIndex: nextIndex });
