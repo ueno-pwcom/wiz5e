@@ -201,3 +201,6 @@ export interface AbilityScores {
   wis: number;
   cha: number;
 }
+
+// src/types/game.ts に追加・更新
+export type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';

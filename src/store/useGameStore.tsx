@@ -62,6 +62,9 @@ interface GameState {
   useItem: (itemId: string, targetCharacterId: string) => void;
   equipItem: (characterId: string, itemId: string) => void;
   unequipItem: (characterId: string, slot: 'weapon' | 'armor') => void;
+  restAtInn: (cost: number) => boolean;
+  buyItem: (itemId: string, price: number) => boolean;
+  sellItem: (itemId: string, price: number) => void;
   triggerEvent: (eventId: string) => void;
   setSelectedActor: (characterId: string) => void;
   resolveEventOption: (option: EventOption) => void;
@@ -86,7 +89,7 @@ const initialParty: Character[] = [
 
 export const useGameStore = create<GameState>((set, get) => ({
   scene: 'dungeon',
-  gold: 150,
+  gold: 100,
   party: initialParty,
   logs: [
     { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '地下迷宮 1階に入った。', type: 'system' }
@@ -684,6 +687,83 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     set({ party: updatedParty });
+  },
+
+  // 🏨 宿屋（大休憩）：全員のHPを最大まで回復
+  restAtInn: (cost: number) => {
+    const { gold, party, addLog } = get();
+    if (gold < cost) {
+      addLog('ゴールドが不足しているため、宿屋に泊まれません。', 'info');
+      return false;
+    }
+
+    const restoredParty = party.map((m) => ({
+      ...m,
+      hp: { ...m.hp, current: m.hp.max },
+      is_alive: true
+    }));
+
+    set({
+      gold: gold - cost,
+      party: restoredParty
+    });
+
+    addLog(`宿屋で大休憩をとり、パーティー全員のHPが全回復した！ (-${cost} G)`, 'heal');
+    return true;
+  },
+
+  // 🛒 アイテム購入
+  buyItem: (itemId: string, price: number) => {
+    const { gold, inventory, addLog } = get();
+    if (gold < price) {
+      addLog('ゴールドが不足しています。', 'info');
+      return false;
+    }
+
+    const currentInventory = [...inventory];
+    const existingIndex = currentInventory.findIndex((i) => i.itemId === itemId);
+
+    if (existingIndex >= 0) {
+      currentInventory[existingIndex] = {
+        ...currentInventory[existingIndex],
+        quantity: currentInventory[existingIndex].quantity + 1
+      };
+    } else {
+      currentInventory.push({ itemId, quantity: 1 });
+    }
+
+    set({
+      gold: gold - price,
+      inventory: currentInventory
+    });
+
+    addLog(`アイテムを購入した (-${price} G)`, 'info');
+    return true;
+  },
+
+  // 💰 アイテム売却
+  sellItem: (itemId: string, price: number) => {
+    const { gold, inventory, addLog } = get();
+    const existingIndex = inventory.findIndex((i) => i.itemId === itemId);
+
+    if (existingIndex < 0) return;
+
+    const currentInventory = [...inventory];
+    if (currentInventory[existingIndex].quantity > 1) {
+      currentInventory[existingIndex] = {
+        ...currentInventory[existingIndex],
+        quantity: currentInventory[existingIndex].quantity - 1
+      };
+    } else {
+      currentInventory.splice(existingIndex, 1);
+    }
+
+    set({
+      gold: gold + price,
+      inventory: currentInventory
+    });
+
+    addLog(`アイテムを売却した (+${price} G)`, 'info');
   },
 
   enterCamp: () => {
