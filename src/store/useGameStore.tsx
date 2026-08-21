@@ -3,6 +3,7 @@ import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterDa
 import { map1Data } from '../data/map1';
 import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
+import { itemList } from '../data/items';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
@@ -28,6 +29,7 @@ interface GameState {
   currentTurnIndex: number;
   battleReward: BattleReward | null;
   showResultModal: boolean;
+  inventory: { itemId: string; quantity: number }[];
 
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
@@ -43,6 +45,8 @@ interface GameState {
   checkBattleStatus: () => boolean;
   checkLevelUp: (character: Character) => Character;
   claimBattleReward: () => void;
+  useItem: (itemId: string, targetCharacterId: string) => void;
+  equipItem: (characterId: string, itemId: string) => void;
   enterCamp: () => void;
 
   shortRest: () => void;
@@ -74,6 +78,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   currentTurnIndex: 0,
   battleReward: null,
   showResultModal: false,
+  inventory: [
+    { itemId: 'potion_of_healing', quantity: 3 },
+    { itemId: 'longsword', quantity: 1 }
+  ],
 
   setScene: (scene) => set({ scene }),
 
@@ -473,6 +481,58 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     setScene('dungeon');
+  },
+
+  // ★ 消費アイテム（ポーション等）の使用
+  useItem: (itemId: string, targetCharacterId: string) => {
+    const { inventory, party, addLog } = get();
+    const item = itemList[itemId];
+    const target = party.find((m) => m.id === targetCharacterId);
+
+    if (!item || !target || !target.is_alive) return;
+
+    const invItem = inventory.find((i) => i.itemId === itemId);
+    if (!invItem || invItem.quantity <= 0) return;
+
+    if (item.type === 'consumable' && item.heal_dice) {
+      const healAmount = rollDiceString(item.heal_dice);
+      const newHp = Math.min(target.hp.max, target.hp.current + healAmount);
+
+      const updatedParty = party.map((m) =>
+        m.id === targetCharacterId ? { ...m, hp: { ...m.hp, current: newHp } } : m
+      );
+
+      const updatedInventory = inventory
+        .map((i) => (i.itemId === itemId ? { ...i, quantity: i.quantity - 1 } : i))
+        .filter((i) => i.quantity > 0);
+
+      addLog(`${target.name} は ${item.name} を使用し、HPが ${healAmount} 回復した！`, 'heal');
+
+      set({ party: updatedParty, inventory: updatedInventory });
+    }
+  },
+
+  // ★ 武器・防具の装備変更
+  equipItem: (characterId: string, itemId: string) => {
+    const { party, addLog } = get();
+    const item = itemList[itemId];
+    if (!item) return;
+
+    const updatedParty = party.map((m) => {
+      if (m.id !== characterId) return m;
+
+      if (item.type === 'weapon') {
+        addLog(`${m.name} は ${item.name} を装備した。`, 'info');
+        return { ...m, equipped_weapon_id: itemId };
+      }
+      if (item.type === 'armor' && item.ac_bonus) {
+        addLog(`${m.name} は ${item.name} を装備し、ACが ${item.ac_bonus} になった。`, 'info');
+        return { ...m, ac: item.ac_bonus };
+      }
+      return m;
+    });
+
+    set({ party: updatedParty });
   },
 
   enterCamp: () => {
