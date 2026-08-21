@@ -7,6 +7,13 @@ import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
 type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
 
+// 獲得報酬の型定義
+export interface BattleReward {
+  xp: number;
+  gold: number;
+  items: string[];
+}
+
 interface GameState {
   scene: GameScene;
   gold: number;
@@ -18,6 +25,8 @@ interface GameState {
   // 戦闘用状態
   combatants: Combatant[];
   currentTurnIndex: number;
+  battleReward: BattleReward | null;
+  showResultModal: boolean;
 
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
@@ -31,6 +40,7 @@ interface GameState {
   processEnemyTurn: () => void;
   nextTurn: () => void;
   checkBattleStatus: () => boolean;
+  claimBattleReward: () => void;
   enterCamp: () => void;
 
   shortRest: () => void;
@@ -60,6 +70,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   playerPosition: map1Data.start_position,
   combatants: [],
   currentTurnIndex: 0,
+  battleReward: null,
+  showResultModal: false,
 
   setScene: (scene) => set({ scene }),
 
@@ -368,10 +380,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     const alivePlayers = combatants.filter(c => c.is_player && c.hp.current > 0);
 
     if (aliveEnemies.length === 0) {
+      const totalEnemies = combatants.filter((c) => !c.is_player);
+      const totalXp = totalEnemies.length * 50;
+      const totalGold = totalEnemies.length * 15;
+
       addLog('戦闘に勝利した！', 'info');
-      setTimeout(() => {
-        setScene('dungeon');
-      }, 1500);
+      set({
+        battleReward: {
+          xp: totalXp,
+          gold: totalGold,
+          items: ['ポーション']
+        },
+        showResultModal: true
+      });
       return true;
     }
 
@@ -381,6 +402,31 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     return false;
+  },
+
+  claimBattleReward: () => {
+    const { party, battleReward, setScene } = get();
+    if (!battleReward) return;
+
+    const aliveMembers = party.filter((m) => m.is_alive);
+    const xpPerMember = Math.floor(battleReward.xp / (aliveMembers.length || 1));
+
+    const updatedParty = party.map((member) => {
+      if (!member.is_alive) return member;
+      return {
+        ...member,
+        xp: (member.xp || 0) + xpPerMember
+      };
+    });
+
+    set({
+      party: updatedParty,
+      battleReward: null,
+      showResultModal: false,
+      gold: (get().gold || 0) + battleReward.gold
+    });
+
+    setScene('dungeon');
   },
 
   enterCamp: () => {
