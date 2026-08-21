@@ -9,7 +9,7 @@ export const BattleView: React.FC = () => {
   const executePlayerAttack = useGameStore((state) => state.executePlayerAttack);
   const executePlayerDefend = useGameStore((state) => state.executePlayerDefend);
   const executePlayerSpell = useGameStore((state) => state.executePlayerSpell);
-  const addLog = useGameStore((state) => state.addLog);
+  // const addLog = useGameStore((state) => state.addLog);
 
   const [selectedAction, setSelectedAction] = useState<'none' | 'attack' | 'spell'>('none');
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
