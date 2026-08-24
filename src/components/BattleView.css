@@ -1,0 +1,239 @@
+.battle-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.battle-view-initiative-bar {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.battle-view-initiative-label {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: bold;
+}
+
+.battle-view-initiative-list {
+  display: flex;
+  gap: 6px;
+}
+
+.battle-view-initiative-token {
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #fff;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+}
+
+.battle-view-initiative-token.player.current {
+  background-color: #15803d;
+  border: 2px solid #f59e0b;
+}
+
+.battle-view-initiative-token.enemy.current {
+  background-color: #b91c1c;
+  border: 2px solid #f59e0b;
+}
+
+.battle-view-initiative-token.dead {
+  opacity: 0.4;
+}
+
+.battle-view-main {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 8px;
+  flex: 1;
+  min-height: 260px;
+}
+
+.battle-view-field {
+  background-color: #111827;
+  border: 1px solid #374151;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.battle-view-enemies {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.battle-view-enemy-card {
+  background-color: #1f2937;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  width: 110px;
+  border: 1px solid #4b5563;
+  cursor: default;
+}
+
+.battle-view-enemy-card.targetable {
+  border: 2px solid #ef4444;
+  cursor: pointer;
+}
+
+.battle-view-enemy-icon {
+  font-size: 28px;
+}
+
+.battle-view-enemy-name {
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.battle-view-enemy-hp {
+  color: #ef4444;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.battle-view-heal-panel {
+  background-color: #1e293b;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.battle-view-heal-text {
+  font-size: 11px;
+  color: #60a5fa;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.battle-view-heal-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.battle-view-heal-button {
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.battle-view-heal-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.battle-view-turn-info {
+  background-color: #1f2937;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #e5e7eb;
+}
+
+.battle-view-panel {
+  background-color: #111827;
+  border: 1px solid #374151;
+  padding: 12px;
+  color: #fff;
+}
+
+.battle-view-panel-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 4px;
+}
+
+.battle-view-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.battle-view-command-button {
+  background-color: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+
+.battle-view-command-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.battle-view-command-button.attack.active {
+  background-color: #dc2626;
+}
+
+.battle-view-command-button.spell.active {
+  background-color: #2563eb;
+}
+
+.battle-view-command-button.run.active {
+  background-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.battle-view-command-button.run.inactive {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
+.battle-view-spell-menu {
+  background-color: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.battle-view-spell-menu-title {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.battle-view-spell-button {
+  background-color: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.battle-view-spell-button.selected {
+  background-color: #1d4ed8;
+}
+
+.battle-view-spell-button.disabled {
+  color: #6b7280;
+  cursor: not-allowed;
+}

@@ -1,0 +1,148 @@
+.character-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.character-detail-modal {
+  background-color: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  padding: 16px;
+  width: 360px;
+  max-width: 90vw;
+  color: #fff;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.character-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.character-detail-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0;
+  color: #fff;
+}
+
+.character-detail-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.character-detail-close-button {
+  background-color: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.character-detail-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.character-detail-stat-box,
+.character-detail-ability-box,
+.character-detail-slot-box,
+.character-detail-equipment-box,
+.character-detail-drop-items {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.character-detail-stat-label {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-bottom: 2px;
+}
+
+.character-detail-stat-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.character-detail-ability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.character-detail-section-title {
+  font-size: 13px;
+  font-weight: bold;
+  color: #e5e7eb;
+  margin-bottom: 6px;
+}
+
+.character-detail-equipment-panel {
+  background-color: #111827;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.character-detail-equipment-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.character-detail-ability-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.character-detail-ability-mod {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.character-detail-slot-row {
+  display: flex;
+  gap: 8px;
+}
+
+.character-detail-slot-box {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.character-detail-section-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.character-detail-action-button {
+  width: 100%;
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}

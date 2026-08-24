@@ -1,0 +1,136 @@
+.dungeon-event-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1200;
+}
+
+.dungeon-event-modal {
+  background-color: #1f2937;
+  border: 2px solid #374151;
+  border-radius: 8px;
+  padding: 20px;
+  width: 360px;
+  color: #fff;
+  box-shadow: 0 0 25px rgba(0,0,0,0.5);
+}
+
+.dungeon-event-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.dungeon-event-icon {
+  font-size: 36px;
+  margin-bottom: 4px;
+}
+
+.dungeon-event-title {
+  font-size: 18px;
+  color: #f59e0b;
+  margin: 0;
+  font-weight: bold;
+}
+
+.dungeon-event-description {
+  font-size: 12px;
+  color: #d1d5db;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  background-color: #111827;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.dungeon-event-result {
+  margin-bottom: 16px;
+}
+
+.dungeon-event-result-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.dungeon-event-result-status {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.dungeon-event-result-message {
+  background-color: #111827;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.dungeon-event-close-button {
+  width: 100%;
+  background-color: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.dungeon-event-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dungeon-event-option-button {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 10px;
+  color: #fff;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.dungeon-event-option-label {
+  font-weight: bold;
+}
+
+.dungeon-event-option-note {
+  font-size: 10px;
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.dungeon-event-select-row {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #111827;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.dungeon-event-select-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.dungeon-event-select {
+  background-color: #1f2937;
+  color: #fff;
+  border: 1px solid #4b5563;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}

@@ -1,0 +1,107 @@
+.status-panel {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 8px;
+  background-color: #1f2937;
+  padding: 8px;
+  border: 1px solid #374151;
+  color: #fff;
+  font-family: monospace;
+}
+
+.status-panel-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-panel-row {
+  display: flex;
+  gap: 0;
+  min-height: 0;
+}
+
+.status-panel-front-row {
+  justify-content: space-between;
+}
+
+.status-panel-back-row {
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.status-panel-card {
+  background-color: #111827;
+  padding: 6px;
+  border-radius: 4px;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.status-panel-card-front {
+  border: 1px solid #3b82f6;
+}
+
+.status-panel-card-back {
+  border: 1px solid #6b7280;
+}
+
+.status-panel-card-current {
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+}
+
+.status-panel-card-down {
+  border: 1px solid #ef4444;
+}
+
+.status-panel-card-half {
+  border: 1px solid #f59e0b;
+}
+
+.status-panel-card-header {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.status-panel-card-class {
+  font-size: 11px;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+}
+
+.status-panel-card-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.status-panel-card-stat {
+  font-size: 12px;
+}
+
+.status-panel-card-status {
+  font-size: 11px;
+}
+
+.status-panel-gold {
+  background-color: #111827;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #f59e0b;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.status-panel-gold-label {
+  font-size: 11px;
+  color: #f59e0b;
+}
+
+.status-panel-gold-value {
+  font-weight: bold;
+  font-size: 16px;
+  color: #fbbf24;
+}

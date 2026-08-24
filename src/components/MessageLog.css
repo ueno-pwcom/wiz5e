@@ -1,0 +1,37 @@
+.message-log {
+  height: 100px;
+  background-color: #111827;
+  border: 1px solid #374151;
+  padding: 8px 12px;
+  font-family: monospace;
+  font-size: 14px;
+  overflow-y: auto;
+}
+
+.message-log-entry {
+  margin-bottom: 2px;
+}
+
+.message-log-player_action {
+  color: #60a5fa;
+}
+
+.message-log-enemy_action {
+  color: #f87171;
+}
+
+.message-log-heal {
+  color: #4ade80;
+}
+
+.message-log-critical {
+  color: #fbbf24;
+}
+
+.message-log-system {
+  color: #a78bfa;
+}
+
+.message-log-default {
+  color: #e5e7eb;
+}

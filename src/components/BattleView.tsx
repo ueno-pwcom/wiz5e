@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './BattleView.css';
 import { useGameStore } from '../store/useGameStore';
 import { spellList } from '../data/spells';
 import type { Character, SpellData } from '../types/game';
@@ -39,32 +40,15 @@ export const BattleView: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: '100%' }}>
+    <div className="battle-view">
       {/* イニシアチブバー */}
-      <div style={{
-        backgroundColor: '#111827',
-        border: '1px solid #374151',
-        borderRadius: '6px',
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        overflowX: 'auto'
-      }}>
-        <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 'bold' }}>行動順:</span>
-        <div style={{ display: 'flex', gap: '6px' }}>
+      <div className="battle-view-initiative-bar">
+        <span className="battle-view-initiative-label">行動順:</span>
+        <div className="battle-view-initiative-list">
           {combatants.map((c, idx) => (
             <div
               key={c.id}
-              style={{
-                backgroundColor: idx === currentTurnIndex ? (c.is_player ? '#15803d' : '#b91c1c') : '#1f2937',
-                border: idx === currentTurnIndex ? '2px solid #f59e0b' : '1px solid #374151',
-                borderRadius: '4px',
-                padding: '4px 8px',
-                fontSize: '12px',
-                color: '#fff',
-                opacity: c.hp.current <= 0 ? 0.4 : 1
-              }}
+              className={`battle-view-initiative-token ${c.is_player ? 'player' : 'enemy'} ${idx === currentTurnIndex ? 'current' : ''} ${c.hp.current <= 0 ? 'dead' : ''}`}
             >
               {c.is_player ? '🛡️' : '👾'} {c.name} ({c.initiative})
             </div>
@@ -72,18 +56,11 @@ export const BattleView: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: '8px', flex: 1, minHeight: '260px' }}>
+      <div className="battle-view-main">
         {/* 戦闘フィールド (敵・味方) */}
-        <div style={{
-          backgroundColor: '#111827',
-          border: '1px solid #374151',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}>
+        <div className="battle-view-field">
           {/* 敵一覧 */}
-          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+          <div className="battle-view-enemies">
             {enemies.map((enemy) => {
               const isTargetable = isPlayerTurn && (
                 selectedAction === 'attack' || (selectedAction === 'spell' && selectedSpell?.damage_dice != null)
@@ -92,19 +69,11 @@ export const BattleView: React.FC = () => {
                 <div
                   key={enemy.id}
                   onClick={() => isTargetable && handleSelectTarget(enemy.id)}
-                  style={{
-                    backgroundColor: '#1f2937',
-                    border: isTargetable ? '2px solid #ef4444' : '1px solid #4b5563',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    textAlign: 'center',
-                    width: '110px',
-                    cursor: isTargetable ? 'pointer' : 'default'
-                  }}
+                  className={`battle-view-enemy-card ${isTargetable ? 'targetable' : ''}`}
                 >
-                  <div style={{ fontSize: '28px' }}>👾</div>
-                  <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '13px' }}>{enemy.name}</div>
-                  <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '4px' }}>HP: {enemy.hp.current} / {enemy.hp.max}</div>
+                  <div className="battle-view-enemy-icon">👾</div>
+                  <div className="battle-view-enemy-name">{enemy.name}</div>
+                  <div className="battle-view-enemy-hp">HP: {enemy.hp.current} / {enemy.hp.max}</div>
                 </div>
               );
             })}
@@ -112,24 +81,16 @@ export const BattleView: React.FC = () => {
 
           {/* 味方（回復呪文のターゲット選択用） */}
           {selectedAction === 'spell' && selectedSpell?.heal_dice && (
-            <div style={{ backgroundColor: '#1e293b', border: '1px solid #3b82f6', borderRadius: '6px', padding: '8px' }}>
-              <div style={{ fontSize: '11px', color: '#60a5fa', marginBottom: '6px', fontWeight: 'bold' }}>
+            <div className="battle-view-heal-panel">
+              <div className="battle-view-heal-text">
                 回復対象の味方を選択してください:
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="battle-view-heal-buttons">
                 {allies.map((ally) => (
                   <button
                     key={ally.id}
                     onClick={() => handleSelectTarget(ally.id)}
-                    style={{
-                      backgroundColor: '#2563eb',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '6px 10px',
-                      fontSize: '12px',
-                      cursor: 'pointer'
-                    }}
+                    className="battle-view-heal-button"
                   >
                     {ally.name} (HP: {ally.hp.current}/{ally.hp.max})
                   </button>
@@ -138,25 +99,21 @@ export const BattleView: React.FC = () => {
             </div>
           )}
 
-          <div style={{ backgroundColor: '#1f2937', padding: '8px 12px', borderRadius: '4px', fontSize: '12px', color: '#e5e7eb' }}>
+          <div className="battle-view-turn-info">
             現在のターン: <strong>{currentCombatant?.name}</strong>
           </div>
         </div>
 
         {/* コマンドパネル */}
-        <div style={{ backgroundColor: '#111827', border: '1px solid #374151', padding: '12px', color: '#fff' }}>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #374151', paddingBottom: '4px' }}>
+        <div className="battle-view-panel">
+          <div className="battle-view-panel-title">
             戦闘コマンド
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="battle-view-command-list">
             <button
               disabled={!isPlayerTurn}
-              style={{
-                ...cmdBtnStyle,
-                backgroundColor: selectedAction === 'attack' ? '#dc2626' : '#374151',
-                opacity: isPlayerTurn ? 1 : 0.5
-              }}
+              className={`battle-view-command-button attack ${selectedAction === 'attack' ? 'active' : ''} ${!isPlayerTurn ? 'disabled' : ''}`}
               onClick={() => {
                 setSelectedAction(selectedAction === 'attack' ? 'none' : 'attack');
                 setSelectedSpell(null);
@@ -167,7 +124,7 @@ export const BattleView: React.FC = () => {
 
             <button
               disabled={!isPlayerTurn}
-              style={{ ...cmdBtnStyle, backgroundColor: selectedAction === 'spell' ? '#2563eb' : '#374151', opacity: isPlayerTurn ? 1 : 0.5 }}
+              className={`battle-view-command-button spell ${selectedAction === 'spell' ? 'active' : ''} ${!isPlayerTurn ? 'disabled' : ''}`}
               onClick={() => setSelectedAction(selectedAction === 'spell' ? 'none' : 'spell')}
             >
               🪄 呪文
@@ -175,28 +132,19 @@ export const BattleView: React.FC = () => {
 
             {/* 呪文サブメニュー */}
             {selectedAction === 'spell' && isPlayerTurn && (
-              <div style={{ backgroundColor: '#1f2937', border: '1px solid #4b5563', borderRadius: '4px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ fontSize: '11px', color: '#9ca3af' }}>使用する呪文を選択:</div>
+              <div className="battle-view-spell-menu">
+                <div className="battle-view-spell-menu-title">使用する呪文を選択:</div>
                 {availableSpells.map((spell) => {
                   const isCantrip = spell.level === 0;
                   const slots = isCantrip ? 1 : playerChar?.spell_slots?.[spell.level]?.current ?? 0;
                   const slotLabel = isCantrip ? '無制限' : `残:${slots}`;
                   const isSelected = selectedSpell?.id === spell.id;
                   return (
-                    <button
+                      <button
                       key={spell.id}
                       disabled={!isCantrip && slots <= 0}
                       onClick={() => setSelectedSpell(spell)}
-                      style={{
-                        backgroundColor: isSelected ? '#1d4ed8' : '#374151',
-                        color: isCantrip || slots > 0 ? '#fff' : '#6b7280',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px',
-                        fontSize: '11px',
-                        textAlign: 'left',
-                        cursor: isCantrip || slots > 0 ? 'pointer' : 'not-allowed'
-                      }}
+                      className={`battle-view-spell-button ${isSelected ? 'selected' : ''} ${!isCantrip && slots <= 0 ? 'disabled' : ''}`}
                     >
                       {spell.name} (Lv.{spell.level}) [{slotLabel}]
                     </button>
@@ -207,7 +155,7 @@ export const BattleView: React.FC = () => {
 
             <button
               disabled={!isPlayerTurn}
-              style={cmdBtnStyle}
+              className={`battle-view-command-button ${!isPlayerTurn ? 'disabled' : ''}`}
               onClick={() => {
                 setSelectedAction('none');
                 setSelectedSpell(null);
@@ -220,12 +168,8 @@ export const BattleView: React.FC = () => {
             {/* ★ 逃げるボタンの追加 */}
             <button
               disabled={!isPlayerTurn}
+              className={`battle-view-command-button run ${isPlayerTurn ? 'active' : 'inactive'} ${!isPlayerTurn ? 'disabled' : ''}`}
               onClick={attemptRun}
-              style={{
-                ...cmdBtnStyle,
-                backgroundColor: isPlayerTurn ? '#4b5563' : '#1f2937',
-                color: '#e5e7eb'
-              }}
             >
               🏃 逃げる
             </button>
@@ -237,14 +181,3 @@ export const BattleView: React.FC = () => {
   );
 };
 
-const cmdBtnStyle: React.CSSProperties = {
-  backgroundColor: '#374151',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '4px',
-  padding: '10px',
-  cursor: 'pointer',
-  fontSize: '13px',
-  textAlign: 'left',
-  transition: 'background-color 0.15s'
-};

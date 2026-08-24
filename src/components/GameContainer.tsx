@@ -1,4 +1,5 @@
 import React from 'react';
+import './GameContainer.css';
 import { useGameStore } from '../store/useGameStore';
 import { DungeonView } from './DungeonView';
 import { BattleView } from './BattleView';
@@ -17,9 +18,9 @@ export const GameContainer: React.FC = () => {
   const logs = useGameStore((state) => state.logs);
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '16px', fontFamily: 'sans-serif' }}>
+    <div className="game-container">
       {/* 画面切り替えボタン */}
-      <div style={{ marginBottom: '12px', display: 'flex', gap: '8px' }}>
+      <div className="game-container-toolbar">
         <button onClick={() => setScene('dungeon')}>ダンジョン画面</button>
         <button onClick={() => setScene('battle')}>戦闘画面</button>
         <button onClick={() => setScene('town')}>街画面</button>
@@ -27,7 +28,7 @@ export const GameContainer: React.FC = () => {
       </div>
 
       {/* メイン画面ビュー切り替え */}
-      <div style={{ marginBottom: '16px' }}>
+      <div className="game-container-main">
         {scene === 'dungeon' && <DungeonView />}
         {scene === 'battle' && <BattleView />}
         {scene === 'town' && <TownView />}
@@ -35,7 +36,7 @@ export const GameContainer: React.FC = () => {
       </div>
 
       {/* メッセージログ */}
-      <div style={{ marginBottom: '8px' }}>
+      <div className="game-container-log">
         <MessageLog logs={logs} />
       </div>
 

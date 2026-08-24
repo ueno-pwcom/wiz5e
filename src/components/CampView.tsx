@@ -1,5 +1,6 @@
 // src/components/CampView.tsx
 import React from 'react';
+import './CampView.css';
 import { useGameStore } from '../store/useGameStore';
 
 export const CampView: React.FC = () => {
@@ -9,31 +10,21 @@ export const CampView: React.FC = () => {
   const setScene = useGameStore((state) => state.setScene);
 
   return (
-    <div style={{
-      backgroundColor: '#111827',
-      border: '1px solid #374151',
-      borderRadius: '8px',
-      padding: '16px',
-      color: '#fff',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between'
-    }}>
+    <div className="camp-view">
       <div>
-        <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #374151', paddingBottom: '8px' }}>
+        <h2 className="camp-view-heading">
           ⛺ 野営地（キャンプ）
         </h2>
 
         {/* パーティステータス一覧 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', marginBottom: '16px' }}>
+        <div className="camp-view-party-grid">
           {party.map((m) => (
-            <div key={m.id} style={{ backgroundColor: '#1f2937', padding: '10px', borderRadius: '6px', fontSize: '12px' }}>
-              <div style={{ fontWeight: 'bold', color: m.is_alive ? '#fff' : '#ef4444' }}>{m.name}</div>
-              <div style={{ color: '#9ca3af', marginTop: '4px' }}>
+            <div key={m.id} className="camp-view-party-card">
+              <div className="camp-view-party-card-name" style={{ color: m.is_alive ? '#fff' : '#ef4444' }}>{m.name}</div>
+              <div className="camp-view-party-card-status">
                 HP: {m.hp.current} / {m.hp.max}
               </div>
-              <div style={{ color: '#9ca3af' }}>
+              <div className="camp-view-party-card-status">
                 HD残: {m.hit_dice_remaining}
               </div>
             </div>
@@ -42,14 +33,14 @@ export const CampView: React.FC = () => {
       </div>
 
       {/* 休憩コマンド */}
-      <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #374151', paddingTop: '12px' }}>
-        <button onClick={shortRest} style={btnStyle}>
+      <div className="camp-view-action-bar">
+        <button onClick={shortRest} className="camp-view-button">
           🍖 小休憩（ヒットダイス消費回復）
         </button>
-        <button onClick={longRest} style={{ ...btnStyle, backgroundColor: '#1d4ed8' }}>
+        <button onClick={longRest} className="camp-view-button inn">
           💤 大休憩（HP・スロット全回復）
         </button>
-        <button onClick={() => setScene('dungeon')} style={{ ...btnStyle, backgroundColor: '#374151', marginLeft: 'auto' }}>
+        <button onClick={() => setScene('dungeon')} className="camp-view-button back">
           🚶 ダンジョンへ戻る
         </button>
       </div>

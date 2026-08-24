@@ -1,4 +1,5 @@
 import React from 'react';
+import './BattleResultModal.css';
 import { useGameStore } from '../store/useGameStore';
 import { XP_TABLE } from '../data/levelTable';
 
@@ -14,59 +15,59 @@ export const BattleResultModal: React.FC = () => {
   const xpPerMember = Math.floor(battleReward.xp / (aliveCount || 1));
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
+    <div className="battle-result-overlay">
+      <div className="battle-result-modal">
         {/* ヘッダー */}
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-          <div style={{ fontSize: '36px', marginBottom: '4px' }}>⚔️✨</div>
-          <h2 style={{ fontSize: '20px', color: '#f59e0b', margin: 0, fontWeight: 'bold' }}>
+        <div className="battle-result-header">
+          <div className="battle-result-header-icon">⚔️✨</div>
+          <h2 className="battle-result-header-title">
             VICTORY!（戦闘勝利）
           </h2>
-          <p style={{ fontSize: '12px', color: '#9ca3af', margin: '4px 0 0 0' }}>
+          <p className="battle-result-header-subtitle">
             敵の群れを退けた！
           </p>
         </div>
 
         {/* 獲得報酬カード */}
-        <div style={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '12px', marginBottom: '16px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e5e7eb', marginBottom: '8px', borderBottom: '1px solid #374151', paddingBottom: '4px' }}>
+        <div className="battle-result-rewards">
+          <div className="battle-result-rewards-title">
             戦利品・獲得報酬
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div style={rewardBoxStyle}>
-              <span style={{ fontSize: '11px', color: '#9ca3af' }}>総獲得XP</span>
-              <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#60a5fa' }}>
+          <div className="battle-result-reward-grid">
+            <div className="battle-result-reward-box">
+              <span className="battle-result-reward-label">総獲得XP</span>
+              <span className="battle-result-reward-value battle-result-reward-value--xp">
                 +{battleReward.xp} XP
               </span>
-              <span style={{ fontSize: '10px', color: '#6b7280' }}>（1人あたり +{xpPerMember}）</span>
+              <span className="battle-result-reward-note">（1人あたり +{xpPerMember}）</span>
             </div>
 
-            <div style={rewardBoxStyle}>
-              <span style={{ fontSize: '11px', color: '#9ca3af' }}>獲得ゴールド</span>
-              <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#facc15' }}>
+            <div className="battle-result-reward-box">
+              <span className="battle-result-reward-label">獲得ゴールド</span>
+              <span className="battle-result-reward-value battle-result-reward-value--gold">
                 +{battleReward.gold} GP
               </span>
             </div>
           </div>
 
           {/* パーティの獲得XPとレベルアップ状況 */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', marginBottom: '6px' }}>
+          <div className="battle-result-party-growth">
+            <div className="battle-result-party-growth-title">
               パーティの成長
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div className="battle-result-party-growth-list">
               {party.filter(m => m.is_alive).map((m) => {
                 const nextXp = XP_TABLE[m.level + 1];
                 const willLevelUp = nextXp && ((m.xp || 0) + xpPerMember) >= nextXp;
 
                 return (
-                  <div key={m.id} style={{ backgroundColor: '#111827', padding: '6px 8px', borderRadius: '4px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={m.id} className="battle-result-party-growth-item">
                     <span>{m.name} (Lv.{m.level})</span>
                     {willLevelUp ? (
-                      <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>✨ LEVEL UP!</span>
+                      <span className="battle-result-level-up">✨ LEVEL UP!</span>
                     ) : (
-                      <span style={{ color: '#6b7280' }}>
+                      <span className="battle-result-next-xp">
                         次Lvまで: {nextXp ? nextXp - ((m.xp || 0) + xpPerMember) : 'MAX'} XP
                       </span>
                     )}
@@ -78,64 +79,18 @@ export const BattleResultModal: React.FC = () => {
 
           {/* ドロップアイテム */}
           {battleReward.items.length > 0 && (
-            <div style={{ fontSize: '12px', color: '#d1d5db', marginTop: '6px' }}>
-              <span style={{ color: '#9ca3af' }}>入手アイテム: </span>
+            <div className="battle-result-drop-items">
+              <span className="battle-result-drop-items-label">入手アイテム: </span>
               {battleReward.items.join(', ')}
             </div>
           )}
         </div>
 
         {/* 完了ボタン */}
-        <button onClick={claimBattleReward} style={buttonStyle}>
+        <button onClick={claimBattleReward} className="battle-result-button">
           報酬を受け取って探索を続ける
         </button>
       </div>
     </div>
   );
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  width: '100vw',
-  height: '100vh',
-  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 1100
-};
-
-const modalStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937',
-  border: '2px solid #f59e0b',
-  borderRadius: '8px',
-  padding: '20px',
-  width: '340px',
-  color: '#fff',
-  boxShadow: '0 0 20px rgba(245, 158, 11, 0.2)'
-};
-
-const rewardBoxStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937',
-  border: '1px solid #374151',
-  borderRadius: '4px',
-  padding: '8px',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center'
-};
-
-const buttonStyle: React.CSSProperties = {
-  width: '100%',
-  backgroundColor: '#059669',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '6px',
-  padding: '10px',
-  fontSize: '13px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  transition: 'background-color 0.2s'
 };

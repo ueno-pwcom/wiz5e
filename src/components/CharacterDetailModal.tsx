@@ -1,5 +1,6 @@
 // src/components/CharacterDetailModal.tsx
 import React, { useState } from 'react';
+import './CharacterDetailModal.css';
 import { useGameStore } from '../store/useGameStore';
 import { InventoryView } from './InventoryView';
 import { itemList } from '../data/items';

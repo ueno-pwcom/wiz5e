@@ -1,0 +1,108 @@
+.temple-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.temple-modal {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  width: 360px;
+  color: #fff;
+}
+
+.temple-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.temple-modal-title {
+  margin: 0;
+  font-size: 18px;
+  color: #60a5fa;
+}
+
+.temple-modal-gold {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fbbf24;
+}
+
+.temple-modal-description {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.temple-modal-members {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.temple-modal-member-card {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.temple-modal-member-name {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.temple-modal-member-status {
+  font-size: 11px;
+}
+
+.temple-modal-button {
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.temple-modal-button.revive {
+  background-color: #ef4444;
+}
+
+.temple-modal-button.heal {
+  background-color: #3b82f6;
+}
+
+.temple-modal-button.disabled {
+  background-color: #4b5563;
+  cursor: not-allowed;
+}
+
+.temple-modal-close-button {
+  width: 100%;
+  background-color: #374151;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}

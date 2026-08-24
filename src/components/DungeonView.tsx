@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import './DungeonView.css';
 import * as THREE from 'three';
 import { useGameStore } from '../store/useGameStore';
 import type { Direction, DungeonMap } from '../types/game';

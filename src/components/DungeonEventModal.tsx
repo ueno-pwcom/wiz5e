@@ -1,5 +1,6 @@
 // src/components/DungeonEventModal.tsx
 import React from 'react';
+import './DungeonEventModal.css';
 import { useGameStore } from '../store/useGameStore';
 import { getAbilityModifier } from '../utils/dice';
 

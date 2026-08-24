@@ -1,0 +1,103 @@
+.inventory-view {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  color: #fff;
+}
+
+.inventory-view-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+}
+
+.inventory-view-target-row {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inventory-view-target-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.inventory-view-select {
+  background-color: #1f2937;
+  color: #fff;
+  border: 1px solid #4b5563;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.inventory-view-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inventory-view-empty {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.inventory-view-item-card {
+  background-color: #1f2937;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inventory-view-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inventory-view-item-name {
+  font-weight: bold;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inventory-view-item-quantity {
+  color: #f59e0b;
+  font-size: 11px;
+}
+
+.inventory-view-item-desc {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.inventory-view-button {
+  background-color: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.inventory-view-button.equip {
+  background-color: #2563eb;
+}
+
+.inventory-view-button.unequip {
+  background-color: #dc2626;
+}
+
+.inventory-view-button.equipped {
+  background-color: #1d4ed8;
+}
