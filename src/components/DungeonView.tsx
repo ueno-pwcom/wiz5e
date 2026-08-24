@@ -1,16 +1,346 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
 import { useGameStore } from '../store/useGameStore';
-import type { Direction } from '../types/game';
+import type { Direction, DungeonMap } from '../types/game';
 
 export const DungeonView: React.FC = () => {
   const playerPosition = useGameStore((state) => state.playerPosition);
   const currentMap = useGameStore((state) => state.currentMap);
   const movePlayer = useGameStore((state) => state.movePlayer);
   const enterCamp = useGameStore((state) => state.enterCamp);
-  const returnToTown = useGameStore((state) => state.returnToTown); // 街に戻るアクションを取得
+  const returnToTown = useGameStore((state) => state.returnToTown);
 
-  // 現在プレイヤーが足元に置いているタイルの情報を取得
   const currentTile = currentMap.grid[playerPosition.y]?.[playerPosition.x];
+  const sceneContainerRef = useRef<HTMLDivElement | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const wallGroupRef = useRef<THREE.Group | null>(null);
+  const chestGroupRef = useRef<THREE.Group | null>(null);
+
+  const tileSize = 1;
+  const wallHeight = tileSize;
+  const cameraHeight = wallHeight * 0.65;
+  const wallThickness = 0.06;
+
+  const directionVectors: Record<Direction, { dx: number; dz: number }> = {
+    N: { dx: 0, dz: -1 },
+    E: { dx: 1, dz: 0 },
+    S: { dx: 0, dz: 1 },
+    W: { dx: -1, dz: 0 }
+  };
+
+  const oppositeWall: Record<'N' | 'E' | 'S' | 'W', 'N' | 'E' | 'S' | 'W'> = {
+    N: 'S',
+    E: 'W',
+    S: 'N',
+    W: 'E'
+  };
+
+  const buildWalls = (map: DungeonMap) => {
+    const group = new THREE.Group();
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
+    const seamMaterial = new THREE.LineBasicMaterial({ color: 0x99c3ff, transparent: true, opacity: 0.85 });
+    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x7d8691, roughness: 0.95, metalness: 0.1 });
+    const doorMaterial = new THREE.MeshStandardMaterial({ color: 0xc2782c, roughness: 0.85, metalness: 0.2 });
+    const lockedDoorMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4c20, roughness: 0.85, metalness: 0.2 });
+    const secretWallMaterial = new THREE.MeshStandardMaterial({ color: 0x1b2230, roughness: 0.95, metalness: 0.05 });
+
+    const getWallMaterial = (wall: string) => {
+      switch (wall) {
+        case 'door': return doorMaterial;
+        case 'locked_door': return lockedDoorMaterial;
+        case 'secret_door': return secretWallMaterial;
+        default: return wallMaterial;
+      }
+    };
+
+    const addWall = (x: number, z: number, rotationY: number, wallType: string) => {
+      const geometry = new THREE.BoxGeometry(tileSize, wallHeight, wallThickness);
+      const wall = new THREE.Mesh(geometry, wallMaterial);
+      wall.position.set(x, wallHeight / 2, z);
+      wall.rotation.y = rotationY;
+      group.add(wall);
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edgeMaterial);
+      edges.position.copy(wall.position);
+      edges.rotation.copy(wall.rotation);
+      group.add(edges);
+
+      if (wallType !== 'wall') {
+        const doorWidth = tileSize * 0.6;
+        const doorHeight = wallHeight * 0.85;
+        const doorDepth = wallThickness + 0.02;
+        const doorGeometry = new THREE.BoxGeometry(doorWidth, doorHeight, doorDepth);
+        const door = new THREE.Mesh(doorGeometry, getWallMaterial(wallType));
+        door.position.set(x, doorHeight / 2, z);
+        door.rotation.y = rotationY;
+        group.add(door);
+        const doorEdges = new THREE.LineSegments(new THREE.EdgesGeometry(doorGeometry), edgeMaterial);
+        doorEdges.position.copy(door.position);
+        doorEdges.rotation.copy(door.rotation);
+        group.add(doorEdges);
+      }
+    };
+
+    const getTile = (x: number, y: number) => map.grid[y]?.[x] ?? null;
+
+    const cornerPositions = new Set<string>();
+
+    map.grid.forEach((row) => {
+      row.forEach((tile) => {
+        const centerX = tile.x + tileSize / 2;
+        const centerZ = tile.y + tileSize / 2;
+
+        const placeWall = (side: 'N' | 'E' | 'S' | 'W') => {
+          const wallType = tile.walls[side];
+          if (wallType === 'none') return;
+          const neighbor = getTile(
+            tile.x + (side === 'E' ? 1 : side === 'W' ? -1 : 0),
+            tile.y + (side === 'S' ? 1 : side === 'N' ? -1 : 0)
+          );
+
+          const shouldPlace = (() => {
+            if (!neighbor) return true;
+            switch (side) {
+              case 'N': return tile.y > neighbor.y;
+              case 'S': return tile.y < neighbor.y;
+              case 'E': return tile.x < neighbor.x;
+              case 'W': return tile.x > neighbor.x;
+            }
+          })();
+
+          if (!shouldPlace) return;
+
+          if (side === 'N') {
+            addWall(centerX, tile.y, 0, wallType);
+            cornerPositions.add(`${tile.x},${tile.y}`);
+            cornerPositions.add(`${tile.x + 1},${tile.y}`);
+          }
+          if (side === 'S') {
+            addWall(centerX, tile.y + tileSize, Math.PI, wallType);
+            cornerPositions.add(`${tile.x},${tile.y + 1}`);
+            cornerPositions.add(`${tile.x + 1},${tile.y + 1}`);
+          }
+          if (side === 'E') {
+            addWall(tile.x + tileSize, centerZ, Math.PI / 2, wallType);
+            cornerPositions.add(`${tile.x + 1},${tile.y}`);
+            cornerPositions.add(`${tile.x + 1},${tile.y + 1}`);
+          }
+          if (side === 'W') {
+            addWall(tile.x, centerZ, -Math.PI / 2, wallType);
+            cornerPositions.add(`${tile.x},${tile.y}`);
+            cornerPositions.add(`${tile.x},${tile.y + 1}`);
+          }
+        };
+
+        placeWall('N');
+        placeWall('S');
+        placeWall('E');
+        placeWall('W');
+      });
+    });
+
+    const cornerMaterial = new THREE.LineBasicMaterial({ color: 0x99c3ff, transparent: true, opacity: 0.9 });
+    cornerPositions.forEach((pos) => {
+      const [x, z] = pos.split(',').map(Number);
+      const cornerGeometry = new THREE.BufferGeometry();
+      const positions = new Float32Array([x, 0, z, x, wallHeight, z]);
+      cornerGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const line = new THREE.Line(cornerGeometry, cornerMaterial);
+      group.add(line);
+    });
+
+    return group;
+  };
+
+  const buildChests = (map: DungeonMap) => {
+    const group = new THREE.Group();
+    const chestBaseMaterial = new THREE.MeshStandardMaterial({ color: 0x8d5a2b, roughness: 0.6, metalness: 0.2 });
+    const chestLidMaterial = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.5, metalness: 0.7 });
+    const chestLockMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.75, metalness: 0.8 });
+
+    map.grid.forEach((row) => {
+      row.forEach((tile) => {
+        if (tile.event?.type !== 'chest') return;
+
+        const chest = new THREE.Group();
+        const base = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.25, 0.35),
+          chestBaseMaterial
+        );
+        base.position.y = 0.125;
+        chest.add(base);
+
+        const lid = new THREE.Mesh(
+          new THREE.BoxGeometry(0.52, 0.12, 0.37),
+          chestLidMaterial
+        );
+        lid.position.y = 0.25 + 0.06;
+        lid.rotation.x = -Math.PI / 18;
+        chest.add(lid);
+
+        const lock = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 0.08, 0.02),
+          chestLockMaterial
+        );
+        lock.position.set(0, 0.16, 0.19);
+        chest.add(lock);
+
+        chest.position.set(tile.x + 0.5, 0, tile.y + 0.5);
+        group.add(chest);
+      });
+    });
+
+    return group;
+  };
+
+  const updateCamera = () => {
+    const camera = cameraRef.current;
+    const renderer = rendererRef.current;
+    const scene = sceneRef.current;
+    if (!camera || !renderer || !scene) return;
+
+    const cameraX = playerPosition.x + tileSize / 2;
+    const cameraZ = playerPosition.y + tileSize / 2;
+    const forward = directionVectors[playerPosition.facing];
+    const backwardOffset = 0.25;
+    const lookDistance = 0.9;
+
+    camera.position.set(
+      cameraX - forward.dx * backwardOffset,
+      cameraHeight,
+      cameraZ - forward.dz * backwardOffset
+    );
+
+    camera.lookAt(
+      cameraX + forward.dx * lookDistance,
+      cameraHeight,
+      cameraZ + forward.dz * lookDistance
+    );
+    renderer.render(scene, camera);
+  };
+
+  useEffect(() => {
+    const container = sceneContainerRef.current;
+    if (!container) return;
+
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x08121f);
+    sceneRef.current = scene;
+
+    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
+    cameraRef.current = camera;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+    renderer.domElement.style.display = 'block';
+    container.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.75);
+    directionalLight.position.set(5, 10, 5);
+    scene.add(directionalLight);
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(currentMap.width, currentMap.height),
+      new THREE.MeshStandardMaterial({ color: 0x202840, roughness: 0.95, metalness: 0.1, side: THREE.DoubleSide })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(currentMap.width / 2, 0, currentMap.height / 2);
+    scene.add(floor);
+
+    const ceiling = new THREE.Mesh(
+      new THREE.PlaneGeometry(currentMap.width, currentMap.height),
+      new THREE.MeshStandardMaterial({ color: 0x181f38, roughness: 0.95, metalness: 0.1, side: THREE.DoubleSide })
+    );
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.set(currentMap.width / 2, wallHeight, currentMap.height / 2);
+    scene.add(ceiling);
+
+    const walls = buildWalls(currentMap);
+    wallGroupRef.current = walls;
+    scene.add(walls);
+
+    const chests = buildChests(currentMap);
+    chestGroupRef.current = chests;
+    scene.add(chests);
+
+    updateCamera();
+
+    const handleResize = () => {
+      const widthResize = container.clientWidth;
+      const heightResize = container.clientHeight;
+      camera.aspect = widthResize / heightResize;
+      camera.updateProjectionMatrix();
+      renderer.setSize(widthResize, heightResize);
+      updateCamera();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+      scene.traverse((child: THREE.Object3D) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose();
+          const material = child.material;
+          if (Array.isArray(material)) {
+            material.forEach((m) => m.dispose());
+          } else {
+            material.dispose();
+          }
+        }
+      });
+    };
+  }, [currentMap]);
+
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    if (wallGroupRef.current) {
+      sceneRef.current.remove(wallGroupRef.current);
+    }
+    if (chestGroupRef.current) {
+      sceneRef.current.remove(chestGroupRef.current);
+    }
+    const walls = buildWalls(currentMap);
+    wallGroupRef.current = walls;
+    sceneRef.current.add(walls);
+
+    const chests = buildChests(currentMap);
+    chestGroupRef.current = chests;
+    sceneRef.current.add(chests);
+
+    updateCamera();
+  }, [currentMap, playerPosition]);
+
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    const existing = sceneRef.current.getObjectByName('stairs_up');
+    if (currentTile?.event?.type === 'stairs_up') {
+      if (!existing) {
+        const stairs = new THREE.Mesh(
+          new THREE.BoxGeometry(0.7, 0.2, 0.7),
+          new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0x906010, emissiveIntensity: 0.8 })
+        );
+        stairs.name = 'stairs_up';
+        stairs.position.set(currentTile.x + 0.5, 0.1, currentTile.y + 0.5);
+        sceneRef.current.add(stairs);
+      }
+    } else if (existing) {
+      sceneRef.current.remove(existing);
+    }
+  }, [currentTile]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -24,7 +354,6 @@ export const DungeonView: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [movePlayer]);
 
-  // 向きを示す矢印アイコン
   const getFacingIcon = (facing: Direction) => {
     switch (facing) {
       case 'N': return '▲';
@@ -42,34 +371,35 @@ export const DungeonView: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: '8px', height: '320px' }}>
-      {/* 3Dビューエリア */}
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: '8px', height: '100%' }}>
       <div style={{
         backgroundColor: '#000',
         border: '1px solid #374151',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'stretch',
         color: '#4b5563',
-        position: 'relative'
+        position: 'relative',
+        minHeight: '0'
       }}>
-        <div style={{
-          width: '200px',
-          height: '180px',
-          border: '2px solid #fff',
-          boxShadow: 'inset 0 0 20px #555',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <div style={{ textAlign: 'center', color: '#fff' }}>[ 3D View Area ]</div>
-        </div>
+        <div
+          ref={sceneContainerRef}
+          style={{
+            flex: 1,
+            width: '100%',
+            height: '100%',
+            border: '2px solid #fff',
+            boxShadow: 'inset 0 0 20px #555',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        />
 
-        {/* 階上への階段（stairs_up）イベントオーバーレイ */}
         {currentTile?.event?.type === 'stairs_up' && (
           <div style={{
             position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
             bottom: '12px',
             backgroundColor: 'rgba(17, 24, 39, 0.9)',
             border: '1px solid #f59e0b',
@@ -103,7 +433,6 @@ export const DungeonView: React.FC = () => {
         )}
       </div>
 
-      {/* ミニマップ & コマンド */}
       <div style={{ backgroundColor: '#111827', border: '1px solid #374151', padding: '12px', color: '#fff' }}>
         <div style={{ fontSize: '12px', marginBottom: '8px', color: '#9ca3af' }}>
           [{playerPosition.facing}] 座標: X:{String(playerPosition.x).padStart(2, '0')} Y:{String(playerPosition.y).padStart(2, '0')}
