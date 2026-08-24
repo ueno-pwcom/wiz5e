@@ -60,13 +60,13 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
           }
         }}
       >
-        <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '4px' }}>
+        <div style={{ fontSize: '11px', color: '#cbd5e1', marginBottom: '4px', lineHeight: 1.2 }}>
           {classNames[char.class_id] ?? char.class_id}
         </div>
-        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{char.name}</div>
-        <div style={{ fontSize: '12px' }}>HP: {char.hp.current}/{char.hp.max}</div>
-        <div style={{ fontSize: '12px' }}>AC: {char.ac}</div>
-        <div style={{ fontSize: '11px', color: char.is_alive ? '#4ade80' : '#ef4444' }}>
+        <div style={{ fontWeight: 'bold', fontSize: '14px', lineHeight: 1.15 }}>{char.name}</div>
+        <div style={{ fontSize: '12px', lineHeight: 1.2 }}>HP: {char.hp.current}/{char.hp.max}</div>
+        <div style={{ fontSize: '12px', lineHeight: 1.2 }}>AC: {char.ac}</div>
+        <div style={{ fontSize: '11px', color: char.is_alive ? '#4ade80' : '#ef4444', lineHeight: 1.2 }}>
           {char.is_alive ? '[正常]' : '[死亡]'}
         </div>
       </div>
@@ -77,14 +77,14 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
     <div style={{
       display: 'grid',
       gridTemplateColumns: '1fr 120px',
-      gap: '8px',
+      gap: '4px',
       backgroundColor: '#1f2937',
       padding: '8px',
       border: '1px solid #374151',
       color: '#fff',
       fontFamily: 'monospace'
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 0, minHeight: 0 }}>
           {frontParty.map((char) => renderCharacterCard(char))}
         </div>

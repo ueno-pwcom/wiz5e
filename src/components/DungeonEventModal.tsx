@@ -42,7 +42,7 @@ export const DungeonEventModal: React.FC = () => {
                   {eventResult.passed ? '判定成功！' : '判定失敗...'}
                 </span>
                 <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '8px' }}>
-                  (出目 {eventResult.roll} + 修正値 {eventResult.modifier} = {eventResult.total} / 目標値 DC {eventResult.dc})
+                  ({eventResult.roll} + 修正値 {eventResult.modifier} = {eventResult.total} / 目標値 DC {eventResult.dc})
                 </span>
               </div>
             )}

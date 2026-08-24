@@ -5,7 +5,9 @@
   padding: 8px 12px;
   font-family: monospace;
   font-size: 14px;
+  line-height: 1.2;
   overflow-y: auto;
+  text-align: left;
 }
 
 .message-log-entry {
@@ -32,6 +34,6 @@
   color: #a78bfa;
 }
 
-.message-log-default {
-  color: #e5e7eb;
+.message-log {
+  color: #fdfeff;
 }

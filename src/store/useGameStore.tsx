@@ -257,8 +257,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const dexMod = getAbilityModifier(playerChar.stats.dex);
     const isRanged = weapon?.weapon_category === 'ranged';
     const isFinesse = weapon?.weapon_property === 'finesse';
-    const abilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
-    const attackBonus = abilityMod + 2;
+    const attackAbilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
+    const attackBonus = attackAbilityMod + 2;
 
     const attackRoll = rollD20(attackBonus);
     addLog(`${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`, 'player_action');
@@ -277,11 +277,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     if (isHit) {
-      const weaponDice = weapon?.damage_dice || '1d8+2';
-      const damage = rollDiceString(weaponDice, attackRoll.isCritical);
+      const weaponDice = weapon?.damage_dice || '1d8';
+      const diceDamage = rollDiceString(weaponDice, attackRoll.isCritical);
+      const damageAbilityMod = isRanged ? dexMod : isFinesse ? Math.max(strMod, dexMod) : strMod;
+      const damage = diceDamage + damageAbilityMod;
       target.hp.current = Math.max(0, target.hp.current - damage);
 
-      addLog(`${target.name} に ${damage} のダメージ！`, 'critical');
+      const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
+      const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
+      addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, 'critical');
 
       if (target.hp.current === 0) {
         addLog(`${target.name} を倒した！`, 'info');

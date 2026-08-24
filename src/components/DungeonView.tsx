@@ -10,6 +10,8 @@ export const DungeonView: React.FC = () => {
   const movePlayer = useGameStore((state) => state.movePlayer);
   const enterCamp = useGameStore((state) => state.enterCamp);
   const returnToTown = useGameStore((state) => state.returnToTown);
+  const triggerEvent = useGameStore((state) => state.triggerEvent);
+  const addLog = useGameStore((state) => state.addLog);
 
   const currentTile = currentMap.grid[playerPosition.y]?.[playerPosition.x];
   const sceneContainerRef = useRef<HTMLDivElement | null>(null);
@@ -231,6 +233,9 @@ export const DungeonView: React.FC = () => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
     renderer.domElement.style.display = 'block';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.boxSizing = 'border-box';
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -364,7 +369,7 @@ export const DungeonView: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: '8px', height: '100%' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 240px', gap: '8px', height: '100%' }}>
       <div style={{
         backgroundColor: '#000',
         border: '1px solid #374151',
@@ -373,7 +378,8 @@ export const DungeonView: React.FC = () => {
         alignItems: 'stretch',
         color: '#4b5563',
         position: 'relative',
-        minHeight: '0'
+        minHeight: '0',
+        minWidth: 0
       }}>
         <div
           ref={sceneContainerRef}
@@ -381,6 +387,7 @@ export const DungeonView: React.FC = () => {
             flex: 1,
             width: '100%',
             height: '100%',
+            minWidth: 0,
             border: '2px solid #fff',
             boxShadow: 'inset 0 0 20px #555',
             position: 'relative',
@@ -480,11 +487,36 @@ export const DungeonView: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '4px' }}>
-          <button style={{ ...btnStyle, flex: 1 }}>調べる</button>
           <button
             style={{ ...btnStyle, flex: 1 }}
             onClick={() => {
-              console.log('DungeonView: キャンプボタンが押されました');
+              if (!currentTile?.event) {
+                addLog('特に何も見つからなかった。', 'system');
+                return;
+              }
+
+              switch (currentTile.event.type) {
+                case 'chest':
+                  if (currentTile.event.chest_id === 'chest_1') {
+                    triggerEvent('locked_chest');
+                  }
+                  break;
+                case 'door':
+                  triggerEvent('heavy_door');
+                  break;
+                case 'trap':
+                  triggerEvent('poison_dart_trap');
+                  break;
+                default:
+                  addLog('この場所には何もなかった。', 'system');
+              }
+            }}
+          >
+            調べる
+          </button>
+          <button
+            style={{ ...btnStyle, flex: 1 }}
+            onClick={() => {
               enterCamp();
             }}
           >

@@ -58,7 +58,7 @@ export const dungeonEvents: Record<string, DungeonEvent> = {
       },
       {
         id: 'ignore',
-        label: '無視して進む',
+        label: '立ち去る',
         successText: '宝箱には手を触れず、先を急ぐことにした。',
         failureText: ''
       }
