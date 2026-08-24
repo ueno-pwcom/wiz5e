@@ -9,6 +9,18 @@ import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
+const calculateCharacterAc = (character: Character, armorId: string | null | undefined, shieldId: string | null | undefined): number => {
+  const armor = armorId ? itemList[armorId] : null;
+  const shield = shieldId ? itemList[shieldId] : null;
+  const dexMod = Math.floor((character.stats.dex - 10) / 2);
+  const baseAc = 10 + dexMod;
+  let ac = armor && armor.ac_bonus ? armor.ac_bonus : baseAc;
+  if (shield && shield.ac_bonus) {
+    ac += shield.ac_bonus;
+  }
+  return ac;
+};
+
 type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
 
 // 獲得報酬の型定義
@@ -63,7 +75,7 @@ interface GameState {
   claimBattleReward: () => void;
   useItem: (itemId: string, targetCharacterId: string) => void;
   equipItem: (characterId: string, itemId: string) => void;
-  unequipItem: (characterId: string, slot: 'weapon' | 'armor') => void;
+  unequipItem: (characterId: string, slot: 'weapon' | 'armor' | 'shield') => void;
   restAtInn: (cost: number) => boolean;
   buyItem: (itemId: string, price: number) => boolean;
   sellItem: (itemId: string, price: number) => void;
@@ -74,6 +86,7 @@ interface GameState {
   resolveEventOption: (option: EventOption) => void;
   closeEventModal: () => void;
   enterCamp: () => void;
+  enterDungeon: () => void;
 
   shortRest: () => void;
   longRest: () => void;
@@ -93,6 +106,31 @@ const initialParty: Character[] = [
   { id: '5', name: 'シオン', class_id: 'wizard', level: 1, xp: 0, stats: { str: 8, dex: 14, con: 12, int: 16, wis: 12, cha: 10 }, hp: { current: 7, max: 7 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 12, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'dagger' },
 ];
 
+const buildInitialInventory = () => {
+  const baseInventory = [
+    { itemId: 'potion_of_healing', quantity: 3 },
+    { itemId: 'longsword', quantity: 1 }
+  ];
+
+  const equippedCounts = initialParty.reduce<Record<string, number>>((counts, member) => {
+    [member.equipped_weapon_id, member.equipped_armor_id, member.equipped_shield_id].forEach((itemId) => {
+      if (!itemId) return;
+      counts[itemId] = (counts[itemId] ?? 0) + 1;
+    });
+    return counts;
+  }, {});
+
+  return Object.entries(equippedCounts).reduce((inventory, [itemId, quantity]) => {
+    const existing = inventory.find((item) => item.itemId === itemId);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      inventory.push({ itemId, quantity });
+    }
+    return inventory;
+  }, baseInventory.map((item) => ({ ...item })));
+};
+
 export const useGameStore = create<GameState>((set, get) => ({
   scene: 'dungeon',
   gold: 100,
@@ -107,10 +145,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   skipPlayerTurnsUntilIndex: null,
   battleReward: null,
   showResultModal: false,
-  inventory: [
-    { itemId: 'potion_of_healing', quantity: 3 },
-    { itemId: 'longsword', quantity: 1 }
-  ],
+  inventory: buildInitialInventory(),
   activeEvent: null,
   eventResult: null,
   selectedActorId: '',
@@ -780,17 +815,32 @@ export const useGameStore = create<GameState>((set, get) => ({
         addLog(`${m.name} は ${item.name} を装備した。`, 'info');
         return { ...m, equipped_weapon_id: itemId };
       }
+
+      if (item.type === 'armor' && item.slot === 'shield') {
+        addLog(`${m.name} は ${item.name} を装備した。`, 'info');
+        return {
+          ...m,
+          equipped_shield_id: itemId,
+          ac: calculateCharacterAc(m, m.equipped_armor_id ?? null, itemId)
+        };
+      }
+
       if (item.type === 'armor' && item.ac_bonus) {
         addLog(`${m.name} は ${item.name} を装備し、ACが ${item.ac_bonus} になった。`, 'info');
-        return { ...m, equipped_armor_id: itemId, ac: item.ac_bonus };
+        return {
+          ...m,
+          equipped_armor_id: itemId,
+          ac: calculateCharacterAc(m, itemId, m.equipped_shield_id ?? null)
+        };
       }
+
       return m;
     });
 
     set({ party: updatedParty });
   },
 
-  unequipItem: (characterId: string, slot: 'weapon' | 'armor') => {
+  unequipItem: (characterId: string, slot: 'weapon' | 'armor' | 'shield') => {
     const { party, addLog } = get();
 
     const updatedParty = party.map((m) => {
@@ -801,10 +851,21 @@ export const useGameStore = create<GameState>((set, get) => ({
         return { ...m, equipped_weapon_id: null };
       }
 
-      const dexMod = Math.floor((m.stats.dex - 10) / 2);
-      const baseAc = 10 + dexMod;
-      addLog(`${m.name} は防具を外し、ACが ${baseAc} になった。`, 'info');
-      return { ...m, equipped_armor_id: null, ac: baseAc };
+      if (slot === 'armor') {
+        addLog(`${m.name} は防具を外した。`, 'info');
+        return {
+          ...m,
+          equipped_armor_id: null,
+          ac: calculateCharacterAc(m, null, m.equipped_shield_id ?? null)
+        };
+      }
+
+      addLog(`${m.name} は盾を外した。`, 'info');
+      return {
+        ...m,
+        equipped_shield_id: null,
+        ac: calculateCharacterAc(m, m.equipped_armor_id ?? null, null)
+      };
     });
 
     set({ party: updatedParty });

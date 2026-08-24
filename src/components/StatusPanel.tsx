@@ -29,7 +29,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
     ? `${Math.min(100, (backParty.length / frontParty.length) * 100)}%`
     : '100%';
 
-  const renderCharacterCard = (char: Character, idx: number) => {
+  const renderCharacterCard = (char: Character) => {
     const isCurrentTurn = showFocus && char.id === currentTurnId;
     const hpHalfDown = char.hp.current > 0 && char.hp.current <= Math.floor(char.hp.max / 2);
     const isDown = char.hp.current <= 0;
@@ -86,10 +86,10 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
     }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 0, minHeight: 0 }}>
-          {frontParty.map((char, idx) => renderCharacterCard(char, idx))}
+          {frontParty.map((char) => renderCharacterCard(char))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 0, width: backRowWidth, minHeight: 0, margin: '0 auto' }}>
-          {backParty.map((char, idx) => renderCharacterCard(char, idx))}
+          {backParty.map((char) => renderCharacterCard(char))}
         </div>
       </div>
       <div style={{

@@ -46,6 +46,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
 
   const equippedWeapon = character.equipped_weapon_id ? itemList[character.equipped_weapon_id] : null;
   const equippedArmor = character.equipped_armor_id ? itemList[character.equipped_armor_id] : null;
+  const equippedShield = character.equipped_shield_id ? itemList[character.equipped_shield_id] : null;
 
   return (
     <div style={overlayStyle} onClick={closeModal}>
@@ -122,6 +123,12 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
                     {equippedArmor ? `${equippedArmor.name} (AC ${equippedArmor.ac_bonus})` : 'なし (服)'}
                   </span>
                 </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#6b7280' }}>盾:</span>
+                  <span style={{ fontWeight: 'bold', color: equippedShield ? '#fff' : '#6b7280' }}>
+                    {equippedShield ? `${equippedShield.name} (+${equippedShield.ac_bonus})` : 'なし'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -144,6 +151,8 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
             <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
               <div>隊列: <span style={{ color: '#fff' }}>{character.position === 'front' ? '前衛' : '後衛'}</span></div>
               <div>装備中の武器ID: <span style={{ color: '#fff' }}>{character.equipped_weapon_id || 'なし'}</span></div>
+              <div>装備中の防具ID: <span style={{ color: '#fff' }}>{character.equipped_armor_id || 'なし'}</span></div>
+              <div>装備中の盾ID: <span style={{ color: '#fff' }}>{character.equipped_shield_id || 'なし'}</span></div>
               <div>状態異常: <span style={{ color: character.status_effects.length ? '#ef4444' : '#10b981' }}>
                 {character.status_effects.length ? character.status_effects.join(', ') : '正常'}
               </span></div>

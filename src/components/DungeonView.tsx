@@ -31,17 +31,9 @@ export const DungeonView: React.FC = () => {
     W: { dx: -1, dz: 0 }
   };
 
-  const oppositeWall: Record<'N' | 'E' | 'S' | 'W', 'N' | 'E' | 'S' | 'W'> = {
-    N: 'S',
-    E: 'W',
-    S: 'N',
-    W: 'E'
-  };
-
   const buildWalls = (map: DungeonMap) => {
     const group = new THREE.Group();
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-    const seamMaterial = new THREE.LineBasicMaterial({ color: 0x99c3ff, transparent: true, opacity: 0.85 });
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x7d8691, roughness: 0.95, metalness: 0.1 });
     const doorMaterial = new THREE.MeshStandardMaterial({ color: 0xc2782c, roughness: 0.85, metalness: 0.2 });
     const lockedDoorMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4c20, roughness: 0.85, metalness: 0.2 });

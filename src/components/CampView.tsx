@@ -47,14 +47,3 @@ export const CampView: React.FC = () => {
     </div>
   );
 };
-
-const btnStyle: React.CSSProperties = {
-  backgroundColor: '#059669',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '4px',
-  padding: '10px 14px',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  cursor: 'pointer'
-};

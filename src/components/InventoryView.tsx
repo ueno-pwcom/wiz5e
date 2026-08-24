@@ -46,18 +46,34 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId 
           inventory.map(({ itemId, quantity }) => {
             const item = itemList[itemId];
             const targetChar = party.find((m) => m.id === selectedTargetId);
+            if (!item) return null;
+
+            const otherEquippedCount = party.reduce((count, m) => {
+              if (m.id === selectedTargetId) return count;
+              if (m.equipped_weapon_id === itemId) return count + 1;
+              if (m.equipped_armor_id === itemId) return count + 1;
+              if (m.equipped_shield_id === itemId) return count + 1;
+              return count;
+            }, 0);
+
+            const availableQuantity = item.type === 'weapon' || item.type === 'armor'
+              ? Math.max(0, quantity - otherEquippedCount)
+              : quantity;
+
+            if (availableQuantity <= 0) return null;
+
             const isEquippedWeapon = targetChar?.equipped_weapon_id === itemId;
             const isEquippedArmor = targetChar?.equipped_armor_id === itemId;
-            const isEquipped = isEquippedWeapon || isEquippedArmor;
-
-            if (!item) return null;
+            const isEquippedShield = targetChar?.equipped_shield_id === itemId;
+            const isEquipped = isEquippedWeapon || isEquippedArmor || isEquippedShield;
+            const itemSlot: 'weapon' | 'armor' | 'shield' = item.type === 'weapon' ? 'weapon' : item.slot === 'shield' ? 'shield' : 'armor';
 
             return (
               <div key={itemId} style={{ backgroundColor: '#1f2937', border: isEquipped ? '1px solid #3b82f6' : '1px solid #374151', padding: '10px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>{item.name}</span>
-                    <span style={{ color: '#f59e0b', fontSize: '11px' }}>x{quantity}</span>
+                    <span style={{ color: '#f59e0b', fontSize: '11px' }}>x{availableQuantity}</span>
                     {isEquipped && (
                       <span style={{ backgroundColor: '#1d4ed8', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px' }}>
                         装備中
@@ -77,7 +93,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId 
                   {(item.type === 'weapon' || item.type === 'armor') && (
                     isEquipped ? (
                       <button
-                        onClick={() => unequipItem(selectedTargetId, item.type as 'weapon' | 'armor')}
+                        onClick={() => unequipItem(selectedTargetId, itemSlot)}
                         style={{ ...actionBtnStyle, backgroundColor: '#dc2626' }}
                       >
                         外す
@@ -109,5 +125,6 @@ const actionBtnStyle: React.CSSProperties = {
   padding: '6px 12px',
   fontSize: '11px',
   fontWeight: 'bold',
-  cursor: 'pointer'
+  cursor: 'pointer',
+  whiteSpace: 'nowrap'
 };

@@ -9,7 +9,6 @@ import type { Character } from '../types/game';
 export const TownView: React.FC = () => {
   const party = useGameStore((state) => state.party);
   const gold = useGameStore((state) => state.gold);
-  const setScene = useGameStore((state) => state.setScene);
   const restAtInn = useGameStore((state) => state.restAtInn);
 
   const [showShop, setShowShop] = useState(false);
