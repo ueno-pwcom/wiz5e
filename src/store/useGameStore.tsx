@@ -1065,6 +1065,20 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // 🏰 地上（街）へ帰還する
+  enterDungeon: () => {
+    const { currentMap, addLog } = get();
+    set({
+      scene: 'dungeon',
+      playerPosition: currentMap.start_position,
+      combatants: [],
+      currentTurnIndex: 0,
+      skipPlayerTurnsUntilIndex: null,
+      battleReward: null,
+      showResultModal: false,
+    });
+    addLog('🏰 街から地下迷宮のスタート地点へ入った。', 'info');
+  },
+
   returnToTown: () => {
     const { addLog } = get();
     addLog('🏰 階段を上り、無事に地上（街）へ帰還した。', 'info');

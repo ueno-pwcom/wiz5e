@@ -15,6 +15,7 @@ export const TownView: React.FC = () => {
   const [showShop, setShowShop] = useState(false);
   const [showTemple, setShowTemple] = useState(false);
   const [selectedChar, setSelectedChar] = useState<Character | null>(null);
+  const enterDungeon = useGameStore((state) => state.enterDungeon);
   const innCost = 10; // 宿泊代金
 
   return (
@@ -78,7 +79,7 @@ export const TownView: React.FC = () => {
         </button>
 
         {/* ダンジョンへ出発 */}
-        <button onClick={() => setScene('dungeon')} style={{ ...menuButtonStyle, backgroundColor: '#991b1b', marginTop: '8px' }}>
+        <button onClick={enterDungeon} style={{ ...menuButtonStyle, backgroundColor: '#991b1b', marginTop: '8px' }}>
           <div style={{ fontSize: '16px' }}>⚔️ ダンジョンへ出発する</div>
           <div style={{ fontSize: '11px', color: '#fca5a5', marginTop: '2px' }}>
             古の地下迷宮へ挑戦する
