@@ -22,6 +22,10 @@ export const BattleView: React.FC = () => {
   const enemies = combatants.filter((c) => !c.is_player && c.hp.current > 0);
   const allies = combatants.filter((c) => c.is_player && c.hp.current > 0);
 
+  const availableSpells = playerChar
+    ? Object.values(spellList).filter((spell) => spell.classes.includes(playerChar.class_id))
+    : [];
+
   // 攻撃または呪文の対象を選択した時の処理
   const handleSelectTarget = (targetId: string) => {
     if (selectedAction === 'attack') {
@@ -173,26 +177,28 @@ export const BattleView: React.FC = () => {
             {selectedAction === 'spell' && isPlayerTurn && (
               <div style={{ backgroundColor: '#1f2937', border: '1px solid #4b5563', borderRadius: '4px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ fontSize: '11px', color: '#9ca3af' }}>使用する呪文を選択:</div>
-                {Object.values(spellList).map((spell) => {
-                  const slots = playerChar?.spell_slots?.[spell.level]?.current ?? 0;
+                {availableSpells.map((spell) => {
+                  const isCantrip = spell.level === 0;
+                  const slots = isCantrip ? 1 : playerChar?.spell_slots?.[spell.level]?.current ?? 0;
+                  const slotLabel = isCantrip ? '無制限' : `残:${slots}`;
                   const isSelected = selectedSpell?.id === spell.id;
                   return (
                     <button
                       key={spell.id}
-                      disabled={slots <= 0}
+                      disabled={!isCantrip && slots <= 0}
                       onClick={() => setSelectedSpell(spell)}
                       style={{
                         backgroundColor: isSelected ? '#1d4ed8' : '#374151',
-                        color: slots > 0 ? '#fff' : '#6b7280',
+                        color: isCantrip || slots > 0 ? '#fff' : '#6b7280',
                         border: 'none',
                         borderRadius: '4px',
                         padding: '6px',
                         fontSize: '11px',
                         textAlign: 'left',
-                        cursor: slots > 0 ? 'pointer' : 'not-allowed'
+                        cursor: isCantrip || slots > 0 ? 'pointer' : 'not-allowed'
                       }}
                     >
-                      {spell.name} (Lv.{spell.level}) [残:{slots}]
+                      {spell.name} (Lv.{spell.level}) [{slotLabel}]
                     </button>
                   );
                 })}

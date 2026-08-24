@@ -326,58 +326,106 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // 呪文スロットの確認と消費
     const spellLevel = spell.level;
-    const currentSlots = playerChar.spell_slots?.[spellLevel]?.current ?? 0;
+    let updatedSpellSlots = playerChar.spell_slots;
 
-    if (currentSlots <= 0) {
-      addLog(`レベル ${spellLevel} の呪文スロットが不足しています！`, 'system');
-      return;
-    }
+    // --- 1. 呪文スロットの確認と消費（初級呪文 level 0 は消費なし） ---
+    if (spellLevel > 0) {
+      const currentSlots = playerChar.spell_slots?.[spellLevel]?.current ?? 0;
 
-    // 呪文スロットを1消費
-    const updatedSpellSlots = {
-      ...playerChar.spell_slots,
-      [spellLevel]: {
-        ...playerChar.spell_slots[spellLevel],
-        current: currentSlots - 1
-      }
-    };
-
-    playerChar.spell_slots = updatedSpellSlots;
-
-    // 回復呪文の場合
-    if (spell.heal_dice) {
-      const target = combatants.find((c) => c.id === targetId && c.is_player);
-      if (!target) return;
-
-      const healAmount = rollDiceString(spell.heal_dice);
-      target.hp.current = Math.min(target.hp.max, target.hp.current + healAmount);
-
-      // パーティデータへの同期
-      const partyMember = party.find((p) => p.id === target.id);
-      if (partyMember) {
-        partyMember.hp.current = target.hp.current;
+      if (currentSlots <= 0) {
+        addLog(`レベル ${spellLevel} の呪文スロットが不足しています！`, 'system');
+        return;
       }
 
-      addLog(`${attacker.name} は ${spell.name} を唱えた！ ${target.name} のHPが ${healAmount} 回復！`, 'heal');
+      // イミュータブルにスロットを更新
+      updatedSpellSlots = {
+        ...playerChar.spell_slots,
+        [spellLevel]: {
+          ...playerChar.spell_slots[spellLevel],
+          current: currentSlots - 1,
+        },
+      };
     }
-    // 攻撃呪文の場合（マジック・ミサイル等：必中）
-    else if (spell.damage_dice) {
-      const target = combatants.find((c) => c.id === targetId && !c.is_player);
-      if (!target) return;
 
-      const damage = rollDiceString(spell.damage_dice);
-      target.hp.current = Math.max(0, target.hp.current - damage);
+    // 攻撃・回復の計算用変数
+    let logMessage = '';
+    let logType: 'heal' | 'critical' | 'info' = 'info';
 
-      addLog(`${attacker.name} は ${spell.name} を唱えた！ ${target.name} に ${damage} の${spell.damage_type || ''}ダメージ！`, 'critical');
-
-      if (target.hp.current === 0) {
-        addLog(`${target.name} を倒した！`, 'info');
+    // --- 2. 戦闘参加者（combatants）の不変更新 ---
+    const updatedCombatants = combatants.map((c) => {
+      // 自身（呪文使用者）のスロット更新
+      if (c.id === attacker.id) {
+        c = {
+          ...c,
+          ref: {
+            ...playerChar,
+            spell_slots: updatedSpellSlots,
+          },
+        };
       }
+
+      // 対象への効果適用
+      if (c.id === targetId) {
+        // 回復呪文の場合
+        if (spell.heal_dice && c.is_player) {
+          const healAmount = rollDiceString(spell.heal_dice);
+          const newHp = Math.min(c.hp.max, c.hp.current + healAmount);
+
+          logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} のHPが ${healAmount} 回復！`;
+          logType = 'heal';
+
+          return {
+            ...c,
+            hp: { ...c.hp, current: newHp },
+          };
+        }
+
+        // 攻撃呪文の場合
+        else if (spell.damage_dice && !c.is_player) {
+          const damage = rollDiceString(spell.damage_dice);
+          const newHp = Math.max(0, c.hp.current - damage);
+
+          logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！`;
+          logType = 'critical';
+
+          return {
+            ...c,
+            hp: { ...c.hp, current: newHp },
+          };
+        }
+      }
+
+      return c;
+    });
+
+    // 対象が見つからなかった場合などログがないなら処理中断
+    if (!logMessage) return;
+
+    // ログ出力
+    addLog(logMessage, logType);
+
+    // 対象を倒したかどうかのチェック
+    const targetCombatant = updatedCombatants.find((c) => c.id === targetId);
+    if (targetCombatant && targetCombatant.hp.current === 0 && spell.damage_dice) {
+      addLog(`${targetCombatant.name} を倒した！`, 'info');
     }
 
-    set({ combatants: [...combatants], party: [...party] });
+    // --- 3. パーティデータの不変同期 ---
+    const updatedParty = party.map((p) => {
+      const matched = updatedCombatants.find((c) => c.id === p.id);
+      if (matched) {
+        return {
+          ...p,
+          hp: { ...p.hp, current: matched.hp.current },
+          spell_slots: (matched.ref as Character).spell_slots,
+        };
+      }
+      return p;
+    });
+
+    // --- 4. ステートの更新とターン進行 ---
+    set({ combatants: updatedCombatants, party: updatedParty });
 
     if (!checkBattleStatus()) {
       nextTurn();
