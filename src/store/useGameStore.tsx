@@ -252,8 +252,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!attacker || !target || !attacker.is_player) return;
 
     const playerChar = attacker.ref as Character;
+    const weapon = playerChar.equipped_weapon_id ? itemList[playerChar.equipped_weapon_id] : null;
     const strMod = getAbilityModifier(playerChar.stats.str);
-    const attackBonus = strMod + 2;
+    const dexMod = getAbilityModifier(playerChar.stats.dex);
+    const isRanged = weapon?.weapon_category === 'ranged';
+    const isFinesse = weapon?.weapon_property === 'finesse';
+    const abilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
+    const attackBonus = abilityMod + 2;
 
     const attackRoll = rollD20(attackBonus);
     addLog(`${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`, 'player_action');
@@ -272,7 +277,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     if (isHit) {
-      const weaponDice = '1d8+2';
+      const weaponDice = weapon?.damage_dice || '1d8+2';
       const damage = rollDiceString(weaponDice, attackRoll.isCritical);
       target.hp.current = Math.max(0, target.hp.current - damage);
 

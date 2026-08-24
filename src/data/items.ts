@@ -7,6 +7,8 @@ export interface ItemData {
   name: string;
   type: ItemType;
   slot?: 'weapon' | 'armor' | 'shield';
+  weapon_category?: 'melee' | 'ranged';
+  weapon_property?: 'finesse';
   description: string;
   value_gp: number;
   // 消費アイテム用
@@ -53,6 +55,8 @@ export const itemList: Record<string, ItemData> = {
     id: 'dagger',
     name: 'ダガー',
     type: 'weapon',
+    weapon_category: 'melee',
+    weapon_property: 'finesse',
     description: '小ぶりで扱いやすい短剣。巧妙さや投擲に優れる。',
     value_gp: 2,
     damage_dice: '1d4',
@@ -61,6 +65,8 @@ export const itemList: Record<string, ItemData> = {
     id: 'shortsword',
     name: 'ショートソード',
     type: 'weapon',
+    weapon_category: 'melee',
+    weapon_property: 'finesse',
     description: '素早い刺突に向いた軽快な片手剣。',
     value_gp: 10,
     damage_dice: '1d6',
@@ -69,6 +75,7 @@ export const itemList: Record<string, ItemData> = {
     id: 'longsword',
     name: 'ロングソード',
     type: 'weapon',
+    weapon_category: 'melee',
     description: '汎用性の高い標準的な片手/両手用剣。',
     value_gp: 15,
     damage_dice: '1d8',
@@ -77,6 +84,7 @@ export const itemList: Record<string, ItemData> = {
     id: 'greatsword',
     name: 'グレートソード',
     type: 'weapon',
+    weapon_category: 'melee',
     description: '両手で振り回す大型の大剣。非常に高い威力を誇る。',
     value_gp: 50,
     damage_dice: '2d6',
@@ -85,6 +93,7 @@ export const itemList: Record<string, ItemData> = {
     id: 'battleaxe',
     name: 'バトルアックス',
     type: 'weapon',
+    weapon_category: 'melee',
     description: '重厚な刃を持つ戦斧。ドワーフなどに好まれる。',
     value_gp: 10,
     damage_dice: '1d8',
@@ -93,6 +102,7 @@ export const itemList: Record<string, ItemData> = {
     id: 'mace',
     name: 'メイス',
     type: 'weapon',
+    weapon_category: 'melee',
     description: '金属製の頭部を持つ打撃武器。クレリックの標準装備。',
     value_gp: 5,
     damage_dice: '1d6',
@@ -101,6 +111,7 @@ export const itemList: Record<string, ItemData> = {
     id: 'shortbow',
     name: 'ショートボウ',
     type: 'weapon',
+    weapon_category: 'ranged',
     description: '小型で扱いやすい弓。遠距離攻撃が可能。',
     value_gp: 25,
     damage_dice: '1d6',
@@ -108,8 +119,7 @@ export const itemList: Record<string, ItemData> = {
   longbow: {
     id: 'longbow',
     name: 'ロングボウ',
-    type: 'weapon',
-    description: '強力な射程と貫通力を備えた大型の長弓。',
+    type: 'weapon',    weapon_category: 'ranged',    description: '強力な射程と貫通力を備えた大型の長弓。',
     value_gp: 50,
     damage_dice: '1d8',
   },
