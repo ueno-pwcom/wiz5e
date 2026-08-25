@@ -144,7 +144,7 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                   <div className="guild-modal-table">
                     <div className="guild-modal-row guild-modal-row-header">
                       <div className="guild-modal-cell guild-modal-cell-name">名前</div>
-                      <div className="guild-modal-cell guild-modal-cell-level">Lv</div>
+                      <div className="guild-modal-cell guild-modal-cell-level">レベル</div>
                       <div className="guild-modal-cell guild-modal-cell-class">クラス</div>
                       <div className="guild-modal-cell">HP</div>
                       <div className="guild-modal-cell">AC</div>

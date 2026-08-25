@@ -6,9 +6,10 @@ import './StatusPanel.css';
 interface Props {
   party: Character[];
   gold: number;
+  onSelectCharacter?: (character: Character) => void;
 }
 
-export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
+export const StatusPanel: React.FC<Props> = ({ party, gold, onSelectCharacter }) => {
   const combatants = useGameStore((state) => state.combatants);
   const currentTurnIndex = useGameStore((state) => state.currentTurnIndex);
   const scene = useGameStore((state) => state.scene);
@@ -30,7 +31,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
     const isDown = char.hp.current <= 0;
     const rowClass = [
       'status-panel-row',
-      scene === 'camp' ? 'status-panel-row-clickable' : '',
+      (scene === 'camp' || Boolean(onSelectCharacter)) ? 'status-panel-row-clickable' : '',
       isCurrentTurn ? 'status-panel-row-current' : '',
       isDown ? 'status-panel-row-down' : '',
       hpHalfDown ? 'status-panel-row-half' : ''
@@ -43,6 +44,9 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
         onClick={() => {
           if (scene === 'camp') {
             setSelectedCharacterId(char.id);
+          }
+          if (onSelectCharacter) {
+            onSelectCharacter(char);
           }
         }}
       >

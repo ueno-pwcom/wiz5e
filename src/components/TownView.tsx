@@ -5,6 +5,7 @@ import { ShopModal } from './ShopModal';
 import { TempleModal } from './TempleModal';
 import { CharacterDetailModal } from './CharacterDetailModal';
 import { GuildModal } from './GuildModal';
+import { StatusPanel } from './StatusPanel';
 import './TownView.css';
 import type { Character } from '../types/game';
 
@@ -20,13 +21,6 @@ export const TownView: React.FC = () => {
   const [selectedChar, setSelectedChar] = useState<Character | null>(null);
   const enterDungeon = useGameStore((state) => state.enterDungeon);
   const innCost = 10; // 宿泊代金
-
-  const classNames: Record<string, string> = {
-    Fighter: 'ファイター',
-    Wizard: 'ウィザード',
-    Cleric: 'クレリック',
-    Rogue: 'ローグ'
-  };
 
   return (
     <div style={containerStyle}>
@@ -83,40 +77,7 @@ export const TownView: React.FC = () => {
 
       {/* パーティー簡易ステータス表示 */}
       <div style={{ ...partyStatusStyle, marginTop: '24px' }}>
-        <div style={partyStatusTitleStyle}>🛡️ パーティーの状態</div>
-        <div style={partyStatusTableStyle}>
-          <div style={{ ...partyStatusRowStyle, ...partyStatusHeaderRowStyle }}>
-            <div style={partyStatusCellName}>名前</div>
-            <div style={partyStatusCellLevel}>レベル</div>
-            <div style={partyStatusCellClass}>クラス</div>
-            <div style={partyStatusCell}>HP</div>
-            <div style={partyStatusCell}>AC</div>
-            <div style={partyStatusCellStatus}>状態</div>
-          </div>
-          {party.map((m) => {
-            const hpHalfDown = m.hp.current > 0 && m.hp.current <= Math.floor(m.hp.max / 2);
-            const isDown = m.hp.current <= 0;
-            return (
-              <div
-                key={m.id}
-                className="town-view-party-row"
-                onClick={() => setSelectedChar(m)}
-                style={{
-                  ...partyStatusRowStyle,
-                  borderColor: isDown ? '#ef4444' : hpHalfDown ? '#f59e0b' : 'transparent',
-                  boxShadow: isDown ? '0 0 0 3px rgba(239, 68, 68, 0.12)' : hpHalfDown ? '0 0 0 3px rgba(245, 158, 11, 0.12)' : undefined
-                }}
-              >
-                <div style={partyStatusCellName}>{m.name}</div>
-                <div style={partyStatusCellLevel}>Lv.{m.level}</div>
-                <div style={partyStatusCellClass}>{classNames[m.class_id] ?? m.class_id}</div>
-                <div style={partyStatusCell}>{m.hp.current}/{m.hp.max}</div>
-                <div style={partyStatusCell}>{m.ac}</div>
-                <div style={partyStatusCellStatus}>{isDown ? '[死亡]' : '[正常]'}</div>
-              </div>
-            );
-          })}
-        </div>
+        <StatusPanel party={party} gold={gold} onSelectCharacter={setSelectedChar} />
       </div>
 
       {/* モーダル表示 */}
@@ -155,34 +116,7 @@ const headerStyle: React.CSSProperties = {
   textAlign: 'center', marginBottom: '20px'
 };
 const partyStatusStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', padding: '16px', width: '100%', maxWidth: '680px', marginBottom: '20px'
-};
-const partyStatusTitleStyle: React.CSSProperties = {
-  fontSize: '11px', color: '#9ca3af', marginBottom: '12px', fontWeight: 'bold'
-};
-const partyStatusTableStyle: React.CSSProperties = {
-  display: 'grid', gap: '10px'
-};
-const partyStatusRowStyle: React.CSSProperties = {
-  display: 'grid', gridTemplateColumns: 'minmax(140px, 1.5fr) minmax(60px, 0.8fr) minmax(100px, 1fr) 1fr 1fr 1fr', gap: '8px', alignItems: 'center', padding: '12px', backgroundColor: '#111827', borderRadius: '8px', border: '1px solid transparent', cursor: 'pointer'
-};
-const partyStatusHeaderRowStyle: React.CSSProperties = {
-  fontWeight: 'bold', color: '#cbd5e1', backgroundColor: 'rgba(15, 23, 42, 0.95)', borderColor: 'rgba(148, 163, 184, 0.12)', cursor: 'default'
-};
-const partyStatusCellName: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', gap: '4px'
-};
-const partyStatusCellClass: React.CSSProperties = {
-  display: 'flex', alignItems: 'center'
-};
-const partyStatusCellLevel: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', fontSize: '11px', lineHeight: 1.3
-};
-const partyStatusCell: React.CSSProperties = {
-  fontSize: '11px', lineHeight: 1.3
-};
-const partyStatusCellStatus: React.CSSProperties = {
-  fontSize: '11px', color: '#a78bfa'
+  backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', padding: '0px', width: '100%', maxWidth: '680px', marginBottom: '20px'
 };
 const menuButtonStyle: React.CSSProperties = {
   border: '1px solid #374151', borderRadius: '8px', padding: '14px', color: '#fff', textAlign: 'left', cursor: 'pointer', transition: 'transform 0.1s'
