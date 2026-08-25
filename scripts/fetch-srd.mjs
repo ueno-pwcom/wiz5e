@@ -8,10 +8,10 @@ const OUTPUT_DIR = './src/data';
 // 1. 日本語マッピング辞書（主要要素の定義）
 const translationMap = {
   // クラス名
-  "Fighter": "ファイター",
-  "Rogue": "ローグ",
-  "Cleric": "クレリック",
-  "Wizard": "ウィザード",
+  "fighter": "ファイター",
+  "rogue": "ローグ",
+  "cleric": "クレリック",
+  "wizard": "ウィザード",
 
   // 呪文名
   "Burning Hands": "バーニング・ハンズ",

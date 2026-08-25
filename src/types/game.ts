@@ -165,7 +165,7 @@ export interface MonsterData {
 // ==========================================
 
 export type PositionRole = 'front' | 'back';
-export type CharacterClassName = 'Fighter' | 'Wizard' | 'Cleric' | 'Rogue' | string;
+export type CharacterClassName = 'fighter' | 'wizard' | 'cleric' | 'rogue' | string;
 
 export interface Character {
   id: string;

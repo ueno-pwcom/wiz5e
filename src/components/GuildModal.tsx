@@ -25,8 +25,8 @@ const generateRandomStats = (): AbilityScores => ({
 
 // クラス別のベーステンプレート
 const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name' | 'stats'>> = {
-  Fighter: {
-    class_id: 'Fighter',
+  fighter: {
+    class_id: 'fighter',
     level: 1,
     xp: 0,
     hp: { current: 12, max: 12 },
@@ -38,8 +38,8 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name' | 'stats'>> 
     equipped_weapon_id: 'longsword',
     equipped_armor_id: 'chain_mail',
   },
-  Wizard: {
-    class_id: 'Wizard',
+  wizard: {
+    class_id: 'wizard',
     level: 1,
     xp: 0,
     hp: { current: 8, max: 8 },
@@ -51,8 +51,8 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name' | 'stats'>> 
     spell_slots: { 1: { current: 2, max: 2 } },
     equipped_weapon_id: 'dagger',
   },
-  Cleric: {
-    class_id: 'Cleric',
+  cleric: {
+    class_id: 'cleric',
     level: 1,
     xp: 0,
     hp: { current: 10, max: 10 },
@@ -66,8 +66,8 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name' | 'stats'>> 
     equipped_armor_id: 'scale_mail',
     equipped_shield_id: 'shield',
   },
-  Rogue: {
-    class_id: 'Rogue',
+  rogue: {
+    class_id: 'rogue',
     level: 1,
     xp: 0,
     hp: { current: 9, max: 9 },
@@ -86,16 +86,16 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
 
   const [activeTab, setActiveTab] = useState<'roster' | 'create'>('roster');
   const [newCharName, setNewCharName] = useState('');
-  const [selectedClass, setSelectedClass] = useState<CharacterClassName>('Fighter');
+  const [selectedClass, setSelectedClass] = useState<CharacterClassName>('fighter');
   
   // ランダム生成された能力値を保持する State
   const [rolledStats, setRolledStats] = useState<AbilityScores>(generateRandomStats);
 
   const classNames: Record<string, string> = {
-    Fighter: 'ファイター',
-    Wizard: 'ウィザード',
-    Cleric: 'クレリック',
-    Rogue: 'ローグ',
+    fighter: 'ファイター',
+    wizard: 'ウィザード',
+    cleric: 'クレリック',
+    rogue: 'ローグ',
   };
 
   const sortedParty = [...party].sort((a, b) => {
@@ -112,7 +112,7 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
     e.preventDefault();
     if (!newCharName.trim()) return;
 
-    const template = CLASS_TEMPLATES[selectedClass] || CLASS_TEMPLATES.Fighter;
+    const template = CLASS_TEMPLATES[selectedClass] || CLASS_TEMPLATES.fighter;
     const newChar: Character = {
       ...template,
       id: `char_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
@@ -287,7 +287,7 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
               <div className="guild-modal-form-group">
                 <label className="guild-modal-form-label">3. クラス（職業）の選択</label>
                 <div className="guild-modal-class-grid">
-                  {(['Fighter', 'Wizard', 'Cleric', 'Rogue'] as const).map((cls) => (
+                  {(['fighter', 'wizard', 'cleric', 'rogue'] as const).map((cls) => (
                     <button
                       key={cls}
                       type="button"
@@ -296,10 +296,10 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                     >
                       <div className="guild-modal-class-name">{cls}</div>
                       <div className="guild-modal-class-desc">
-                        {cls === 'Fighter' && '前衛 / 近接攻撃'}
-                        {cls === 'Wizard' && '後衛 / 範囲・攻撃呪文'}
-                        {cls === 'Cleric' && '前衛・中衛 / 回復・補助'}
-                        {cls === 'Rogue' && '前衛・後衛 / 奇襲・高火力'}
+                        {cls === 'fighter' && '前衛 / 近接攻撃'}
+                        {cls === 'wizard' && '後衛 / 範囲・攻撃呪文'}
+                        {cls === 'cleric' && '前衛・中衛 / 回復・補助'}
+                        {cls === 'rogue' && '前衛・後衛 / 奇襲・高火力'}
                       </div>
                     </button>
                   ))}
