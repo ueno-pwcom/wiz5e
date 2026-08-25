@@ -76,6 +76,19 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
   const [newCharName, setNewCharName] = useState('');
   const [selectedClass, setSelectedClass] = useState<CharacterClassName>('Fighter');
 
+  const classNames: Record<string, string> = {
+    Fighter: 'ファイター',
+    Wizard: 'ウィザード',
+    Cleric: 'クレリック',
+    Rogue: 'ローグ',
+  };
+
+  const sortedParty = [...party].sort((a, b) => {
+    if (a.position === 'front' && b.position !== 'front') return -1;
+    if (a.position !== 'front' && b.position === 'front') return 1;
+    return 0;
+  });
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCharName.trim()) return;
@@ -128,21 +141,34 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                     メンバーがいません。控えから追加するか新規作成してください。
                   </p>
                 ) : (
-                  <div className="guild-modal-grid">
-                    {party.map((char) => (
-                      <div key={char.id} className="guild-modal-card guild-modal-party-card">
-                        <div>
+                  <div className="guild-modal-table">
+                    <div className="guild-modal-row guild-modal-row-header">
+                      <div className="guild-modal-cell guild-modal-cell-name">名前</div>
+                      <div className="guild-modal-cell guild-modal-cell-level">Lv</div>
+                      <div className="guild-modal-cell guild-modal-cell-class">クラス</div>
+                      <div className="guild-modal-cell">HP</div>
+                      <div className="guild-modal-cell">AC</div>
+                      <div className="guild-modal-cell">位置</div>
+                      <div className="guild-modal-cell guild-modal-cell-action"></div>
+                    </div>
+                    {sortedParty.map((char) => (
+                      <div key={char.id} className="guild-modal-row guild-modal-party-row">
+                        <div className="guild-modal-cell guild-modal-cell-name">
                           <div className="guild-modal-card-name">{char.name}</div>
-                          <div className="guild-modal-card-meta">
-                            Lv.{char.level} {char.class_id} | HP: {char.hp.current}/{char.hp.max} | AC: {char.ac} ({char.position === 'front' ? '前衛' : '後衛'})
-                          </div>
                         </div>
-                        <button
-                          onClick={() => removeFromParty(char.id)}
-                          className="guild-modal-button guild-modal-button-danger"
-                        >
-                          外す
-                        </button>
+                        <div className="guild-modal-cell guild-modal-cell-level">Lv.{char.level}</div>
+                        <div className="guild-modal-cell guild-modal-cell-class">{classNames[char.class_id] ?? char.class_id}</div>
+                        <div className="guild-modal-cell">{char.hp.current}/{char.hp.max}</div>
+                        <div className="guild-modal-cell">{char.ac}</div>
+                        <div className="guild-modal-cell">{char.position === 'front' ? '前衛' : '後衛'}</div>
+                        <div className="guild-modal-cell guild-modal-cell-action">
+                          <button
+                            onClick={() => removeFromParty(char.id)}
+                            className="guild-modal-button guild-modal-button-danger"
+                          >
+                            外す
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -154,24 +180,37 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                 {characterRoster.filter((c) => !party.some((p) => p.id === c.id)).length === 0 ? (
                   <p className="guild-modal-empty">待機中の冒険者は居ません。</p>
                 ) : (
-                  <div className="guild-modal-grid">
+                  <div className="guild-modal-table">
+                    <div className="guild-modal-row guild-modal-row-header">
+                      <div className="guild-modal-cell guild-modal-cell-name">名前</div>
+                      <div className="guild-modal-cell guild-modal-cell-level">Lv</div>
+                      <div className="guild-modal-cell guild-modal-cell-class">クラス</div>
+                      <div className="guild-modal-cell">HP</div>
+                      <div className="guild-modal-cell">AC</div>
+                      <div className="guild-modal-cell">位置</div>
+                      <div className="guild-modal-cell guild-modal-cell-action"></div>
+                    </div>
                     {characterRoster
                       .filter((c) => !party.some((p) => p.id === c.id))
                       .map((char) => (
-                        <div key={char.id} className="guild-modal-card guild-modal-waiting-card">
-                          <div>
+                        <div key={char.id} className="guild-modal-row guild-modal-waiting-row">
+                          <div className="guild-modal-cell guild-modal-cell-name">
                             <div className="guild-modal-card-name guild-modal-card-name-muted">{char.name}</div>
-                            <div className="guild-modal-card-meta">
-                              Lv.{char.level} {char.class_id} | HP: {char.hp.max} | AC: {char.ac}
-                            </div>
                           </div>
-                          <button
-                            onClick={() => addToParty(char.id)}
-                            disabled={party.length >= 5}
-                            className={party.length >= 5 ? 'guild-modal-button guild-modal-button-disabled' : 'guild-modal-button guild-modal-button-primary'}
-                          >
-                            加える
-                          </button>
+                          <div className="guild-modal-cell guild-modal-cell-level">Lv.{char.level}</div>
+                          <div className="guild-modal-cell guild-modal-cell-class">{classNames[char.class_id] ?? char.class_id}</div>
+                          <div className="guild-modal-cell">{char.hp.max}</div>
+                          <div className="guild-modal-cell">{char.ac}</div>
+                          <div className="guild-modal-cell">{char.position === 'front' ? '前衛' : '後衛'}</div>
+                          <div className="guild-modal-cell guild-modal-cell-action">
+                            <button
+                              onClick={() => addToParty(char.id)}
+                              disabled={party.length >= 5}
+                              className={party.length >= 5 ? 'guild-modal-button guild-modal-button-disabled' : 'guild-modal-button guild-modal-button-primary'}
+                            >
+                              加える
+                            </button>
+                          </div>
                         </div>
                       ))}
                   </div>

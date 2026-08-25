@@ -113,27 +113,120 @@
   border: 1px dashed rgba(148, 163, 184, 0.2);
 }
 
-.guild-modal-grid {
+.guild-modal-table {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 8px;
+  width: 100%;
 }
 
-@media (min-width: 768px) {
-  .guild-modal-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.guild-modal-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.5fr) minmax(60px, 0.7fr) minmax(110px, 1fr) 1fr 1fr 1fr minmax(100px, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 12px 14px;
+  background: rgba(30, 41, 59, 0.9);
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.guild-modal-row-header {
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(148, 163, 184, 0.12);
+}
+
+.guild-modal-party-row {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.guild-modal-waiting-row {
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.guild-modal-cell {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #e2e8f0;
+}
+
+.guild-modal-cell-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guild-modal-cell-level {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.guild-modal-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.guild-modal-cell-class,
+.guild-modal-cell-action {
+  display: flex;
+  align-items: center;
+}
+
+.guild-modal-cell-action {
+  justify-content: flex-end;
+}
+
+.guild-modal-card-name-muted {
+  color: #cbd5e1;
+}
+
+.guild-modal-card-meta {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: #94a3b8;
 }
 
 .guild-modal-card {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   padding: 18px;
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.12);
   background: rgba(30, 41, 59, 0.85);
+}
+
+.guild-modal-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.guild-modal-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.guild-modal-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.guild-modal-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  font-size: 0.78rem;
 }
 
 .guild-modal-party-card {
