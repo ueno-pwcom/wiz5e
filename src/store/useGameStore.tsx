@@ -43,6 +43,7 @@ interface GameState {
   scene: GameScene;
   gold: number;
   party: Character[];
+  characterRoster: Character[];
   logs: LogMessage[];
   currentMap: DungeonMap;
   playerPosition: { x: number; y: number; facing: Direction };
@@ -86,6 +87,9 @@ interface GameState {
   resolveEventOption: (option: EventOption) => void;
   closeEventModal: () => void;
   enterCamp: () => void;
+  addToParty: (characterId: string) => void;
+  removeFromParty: (characterId: string) => void;
+  createCharacter: (newChar: Character) => void;
   enterDungeon: () => void;
 
   shortRest: () => void;
@@ -135,6 +139,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   scene: 'dungeon',
   gold: 100,
   party: initialParty,
+  characterRoster: [...initialParty],
   logs: [
     { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '地下迷宮 1階に入った。', type: 'system' }
   ],
@@ -1159,6 +1164,30 @@ export const useGameStore = create<GameState>((set, get) => ({
       currentTurnIndex: 0,
       battleReward: null,
       showResultModal: false,
+    });
+  },
+
+  addToParty: (characterId: string) => {
+    set((state) => {
+      const char = state.characterRoster.find((c) => c.id === characterId);
+      if (!char || state.party.some((p) => p.id === characterId) || state.party.length >= 5) {
+        return {};
+      }
+      return { party: [...state.party, char] };
+    });
+  },
+
+  removeFromParty: (characterId: string) => {
+    set((state) => ({
+      party: state.party.filter((c) => c.id !== characterId),
+    }));
+  },
+
+  createCharacter: (newChar: Character) => {
+    set((state) => {
+      const nextRoster = [...state.characterRoster, newChar];
+      const nextParty = state.party.length < 5 ? [...state.party, newChar] : state.party;
+      return { characterRoster: nextRoster, party: nextParty };
     });
   },
 

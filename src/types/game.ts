@@ -2,7 +2,8 @@
 // 1. 基本パラメータ・能力値関連 (SRD 5.1)
 // ==========================================
 
-export type AbilityScoreName = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+export type AbilityType = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+export type AbilityScoreName = AbilityType;
 
 export interface AbilityScores {
   str: number;
@@ -25,8 +26,36 @@ export type DamageType =
 
 export type StatusEffect = 'poisoned' | 'paralyzed' | 'unconscious' | 'dead';
 
+export type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
+
 // ==========================================
-// 2. マップ・探索関連
+// 2. アイテム・装備関連
+// ==========================================
+
+export type ItemType = 'consumable' | 'weapon' | 'armor';
+
+export interface ItemData {
+  id: string;
+  name: string;
+  type: ItemType;
+  description: string;
+  value_gp: number;
+  heal_dice?: string;
+  damage_dice?: string;
+  ac_bonus?: number;
+}
+
+export interface EquipmentData {
+  id: string;
+  name: string;
+  cost_gp: number;
+  damage_dice: string;
+  damage_type: DamageType;
+  properties: string[];
+}
+
+// ==========================================
+// 3. マップ・探索関連
 // ==========================================
 
 export type Direction = 'N' | 'E' | 'S' | 'W';
@@ -40,7 +69,15 @@ export interface WallData {
   W: WallType;
 }
 
-export type EventType = 'stairs_up' | 'stairs_down' | 'chest' | 'boss' | 'trap' | 'door' | 'encounter' | 'none';
+export type EventType =
+  | 'stairs_up'
+  | 'stairs_down'
+  | 'chest'
+  | 'boss'
+  | 'trap'
+  | 'door'
+  | 'encounter'
+  | 'none';
 
 export interface TileEvent {
   type: EventType;
@@ -74,10 +111,9 @@ export interface DungeonMap {
 }
 
 // ==========================================
-// 3. SRD データ（JSONファイル構造型）
+// 4. SRD データ（JSONファイル構造型）
 // ==========================================
 
-// クラスデータ (classes.json)
 export interface ClassData {
   id: string;
   name: string;
@@ -88,7 +124,6 @@ export interface ClassData {
   spellcasting_ability: AbilityScoreName | null;
 }
 
-// 呪文データ (spells.json)
 export interface SpellData {
   id: string;
   name: string;
@@ -103,7 +138,6 @@ export interface SpellData {
   requires_concentration: boolean;
 }
 
-// モンスターアクション
 export interface MonsterAction {
   name: string;
   to_hit: number;
@@ -111,7 +145,6 @@ export interface MonsterAction {
   damage_type: DamageType;
 }
 
-// モンスターデータ (monsters.json)
 export interface MonsterData {
   id: string;
   name: string;
@@ -127,27 +160,17 @@ export interface MonsterData {
   actions: MonsterAction[];
 }
 
-// 武器・装備データ (equipment.json)
-export interface EquipmentData {
-  id: string;
-  name: string;
-  cost_gp: number;
-  damage_dice: string;
-  damage_type: DamageType;
-  properties: string[];
-}
-
 // ==========================================
-// 4. アプリケーション状態（キャラクター・戦闘）
+// 5. アプリケーション状態（キャラクター・戦闘）
 // ==========================================
 
 export type PositionRole = 'front' | 'back';
+export type CharacterClassName = 'Fighter' | 'Wizard' | 'Cleric' | 'Rogue' | string;
 
-// パーティメンバーの動的ステータス
 export interface Character {
   id: string;
   name: string;
-  class_id: string;
+  class_id: CharacterClassName;
   level: number;
   xp: number;
   stats: AbilityScores;
@@ -156,7 +179,7 @@ export interface Character {
     max: number;
   };
   hit_dice_remaining: number;
-  spell_slots: Record<number, { current: number; max: number }>;
+  spell_slots?: Record<number, { current: number; max: number }>;
   ac: number;
   position: PositionRole;
   is_alive: boolean;
@@ -166,7 +189,6 @@ export interface Character {
   equipped_shield_id?: string | null;
 }
 
-// 戦闘参加ユニット（プレイヤー＋敵）の共通インターフェース
 export interface Combatant {
   id: string;
   name: string;
@@ -178,30 +200,11 @@ export interface Combatant {
     max: number;
   };
   position: PositionRole;
-  ref: Character | MonsterData; // 元データへの参照
+  ref: Character | MonsterData;
 }
 
-// テキストログの行データ
 export interface LogMessage {
   id: string;
   text: string;
   type: 'info' | 'player_action' | 'enemy_action' | 'heal' | 'critical' | 'system';
 }
-
-// src/types/game.ts
-
-// 能力値の識別キー型（筋力, 敏捷力, 耐久力, 知力, 判断力, 魅力）
-export type AbilityType = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
-
-// キャラクターの能力値構造体
-export interface AbilityScores {
-  str: number;
-  dex: number;
-  con: number;
-  int: number;
-  wis: number;
-  cha: number;
-}
-
-// src/types/game.ts に追加・更新
-export type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
