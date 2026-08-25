@@ -22,6 +22,9 @@ export const CampView: React.FC = () => {
             <div key={m.id} className="camp-view-party-card">
               <div className="camp-view-party-card-name" style={{ color: m.is_alive ? '#fff' : '#ef4444' }}>{m.name}</div>
               <div className="camp-view-party-card-status">
+                レベル: {m.level}
+              </div>
+              <div className="camp-view-party-card-status">
                 HP: {m.hp.current} / {m.hp.max}
               </div>
               <div className="camp-view-party-card-status">

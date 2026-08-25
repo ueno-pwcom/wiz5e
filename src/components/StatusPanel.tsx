@@ -49,6 +49,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
         <div className="status-panel-cell status-panel-cell-name">
           <div className="status-panel-card-name">{char.name}</div>
         </div>
+        <div className="status-panel-cell status-panel-cell-level">Lv.{char.level}</div>
         <div className="status-panel-cell status-panel-cell-class">
           {classNames[char.class_id] ?? char.class_id}
         </div>
@@ -64,6 +65,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold }) => {
       <div className="status-panel-left">
         <div className="status-panel-row status-panel-row-header">
           <div className="status-panel-cell status-panel-cell-name">名前</div>
+          <div className="status-panel-cell status-panel-cell-level">レベル</div>
           <div className="status-panel-cell status-panel-cell-class">クラス</div>
           <div className="status-panel-cell">HP</div>
           <div className="status-panel-cell">AC</div>

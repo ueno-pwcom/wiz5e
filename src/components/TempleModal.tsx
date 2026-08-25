@@ -29,7 +29,7 @@ export const TempleModal: React.FC<Props> = ({ onClose }) => {
         </p>
 
         {/* メンバー一覧と施術ボタン */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', maxHeight: '280px', overflowY: 'auto' }}>
+        <div style={{ flex: '1 1 0', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', overflowY: 'auto' }}>
           {party.map((m) => {
             const isDead = !m.is_alive || m.hp.current <= 0;
             const isFullHp = m.hp.current >= m.hp.max;
@@ -88,7 +88,7 @@ const overlayStyle: React.CSSProperties = {
   backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100
 };
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', padding: '16px', width: '360px', color: '#fff'
+  backgroundColor: '#1f2937', border: '1px solid rgba(251, 191, 36, 0.25)', borderRadius: '20px', padding: '20px', width: '100%', maxWidth: '880px', height: 'min(90vh, 760px)', color: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden'
 };
 const memberCardStyle: React.CSSProperties = {
   backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
