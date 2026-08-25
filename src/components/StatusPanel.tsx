@@ -19,10 +19,10 @@ export const StatusPanel: React.FC<Props> = ({ party, gold, onSelectCharacter })
   const showFocus = scene === 'battle' && Boolean(currentTurnId);
 
   const classNames: Record<string, string> = {
-    fighter: 'ファイター',
-    wizard: 'ウィザード',
-    cleric: 'クレリック',
-    rogue: 'ローグ'
+    Fighter: 'ファイター',
+    Wizard: 'ウィザード',
+    Cleric: 'クレリック',
+    Rogue: 'ローグ'
   };
 
   const renderCharacterRow = (char: Character) => {

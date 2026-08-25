@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import type { Character, CharacterClassName } from '../types/game';
+import type { AbilityScores, Character, CharacterClassName } from '../types/game';
 import './GuildModal.css';
 
 interface GuildModalProps {
   onClose: () => void;
 }
 
-// クラス別のテンプレート定義（game.tsのCharacter型に準拠）
-const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name'>> = {
+// ダイス表示・能力値生成ユーティリティ（4d6 drop lowest方式）
+const roll4d6DropLowest = (): number => {
+  const rolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+  rolls.sort((a, b) => a - b);
+  return rolls[1] + rolls[2] + rolls[3];
+};
+
+const generateRandomStats = (): AbilityScores => ({
+  str: roll4d6DropLowest(),
+  dex: roll4d6DropLowest(),
+  con: roll4d6DropLowest(),
+  int: roll4d6DropLowest(),
+  wis: roll4d6DropLowest(),
+  cha: roll4d6DropLowest(),
+});
+
+// クラス別のベーステンプレート
+const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name' | 'stats'>> = {
   Fighter: {
     class_id: 'Fighter',
     level: 1,
@@ -19,7 +35,6 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name'>> = {
     position: 'front',
     is_alive: true,
     status_effects: [],
-    stats: { str: 16, dex: 12, con: 14, int: 8, wis: 10, cha: 10 },
     equipped_weapon_id: 'longsword',
     equipped_armor_id: 'chain_mail',
   },
@@ -33,7 +48,6 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name'>> = {
     position: 'back',
     is_alive: true,
     status_effects: [],
-    stats: { str: 8, dex: 14, con: 12, int: 16, wis: 12, cha: 10 },
     spell_slots: { 1: { current: 2, max: 2 } },
     equipped_weapon_id: 'dagger',
   },
@@ -47,7 +61,6 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name'>> = {
     position: 'front',
     is_alive: true,
     status_effects: [],
-    stats: { str: 14, dex: 10, con: 14, int: 10, wis: 16, cha: 12 },
     spell_slots: { 1: { current: 2, max: 2 } },
     equipped_weapon_id: 'mace',
     equipped_armor_id: 'scale_mail',
@@ -63,7 +76,6 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name'>> = {
     position: 'front',
     is_alive: true,
     status_effects: [],
-    stats: { str: 10, dex: 16, con: 12, int: 12, wis: 10, cha: 14 },
     equipped_weapon_id: 'shortsword',
     equipped_armor_id: 'leather_armor',
   },
@@ -75,6 +87,9 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<'roster' | 'create'>('roster');
   const [newCharName, setNewCharName] = useState('');
   const [selectedClass, setSelectedClass] = useState<CharacterClassName>('Fighter');
+  
+  // ランダム生成された能力値を保持する State
+  const [rolledStats, setRolledStats] = useState<AbilityScores>(generateRandomStats);
 
   const classNames: Record<string, string> = {
     Fighter: 'ファイター',
@@ -89,20 +104,25 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
     return 0;
   });
 
+  const handleRerollStats = () => {
+    setRolledStats(generateRandomStats());
+  };
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCharName.trim()) return;
 
-    // テンプレートを基にキャラクターを生成
     const template = CLASS_TEMPLATES[selectedClass] || CLASS_TEMPLATES.Fighter;
     const newChar: Character = {
       ...template,
       id: `char_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
       name: newCharName.trim(),
+      stats: rolledStats, // 振り直したランダム能力値を適用
     };
 
     createCharacter(newChar);
     setNewCharName('');
+    setRolledStats(generateRandomStats()); // 次回用にリセット
     setActiveTab('roster');
   };
 
@@ -164,7 +184,8 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                         <div className="guild-modal-cell guild-modal-cell-action">
                           <button
                             onClick={() => removeFromParty(char.id)}
-                            className="guild-modal-button guild-modal-button-danger"
+                            disabled={party.length <= 1}
+                            className={party.length <= 1 ? 'guild-modal-button guild-modal-button-disabled' : 'guild-modal-button guild-modal-button-danger'}
                           >
                             外す
                           </button>
@@ -220,7 +241,7 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
           ) : (
             <form onSubmit={handleCreate} className="guild-modal-form">
               <div className="guild-modal-form-group">
-                <label className="guild-modal-form-label">冒険者の名前</label>
+                <label className="guild-modal-form-label">1. 冒険者の名前</label>
                 <input
                   type="text"
                   required
@@ -231,8 +252,40 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                 />
               </div>
 
+              {/* 能力値決定セクション */}
               <div className="guild-modal-form-group">
-                <label className="guild-modal-form-label">クラス（職業）</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="guild-modal-form-label">2. 能力値決定（4d6、最低値を破棄）</label>
+                  <button
+                    type="button"
+                    onClick={handleRerollStats}
+                    className="guild-modal-button guild-modal-button-primary"
+                    style={{ padding: '4px 12px', fontSize: '12px' }}
+                  >
+                    🎲 ダイスを振り直す
+                  </button>
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(6, 1fr)',
+                  gap: '8px',
+                  marginTop: '8px',
+                  background: 'rgba(0,0,0,0.2)',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  textAlign: 'center'
+                }}>
+                  <div><strong style={{ fontSize: '11px', display: 'block', color: '#888' }}>STR</strong><span>{rolledStats.str}</span></div>
+                  <div><strong style={{ fontSize: '11px', display: 'block', color: '#888' }}>DEX</strong><span>{rolledStats.dex}</span></div>
+                  <div><strong style={{ fontSize: '11px', display: 'block', color: '#888' }}>CON</strong><span>{rolledStats.con}</span></div>
+                  <div><strong style={{ fontSize: '11px', display: 'block', color: '#888' }}>INT</strong><span>{rolledStats.int}</span></div>
+                  <div><strong style={{ fontSize: '11px', display: 'block', color: '#888' }}>WIS</strong><span>{rolledStats.wis}</span></div>
+                  <div><strong style={{ fontSize: '11px', display: 'block', color: '#888' }}>CHA</strong><span>{rolledStats.cha}</span></div>
+                </div>
+              </div>
+
+              <div className="guild-modal-form-group">
+                <label className="guild-modal-form-label">3. クラス（職業）の選択</label>
                 <div className="guild-modal-class-grid">
                   {(['Fighter', 'Wizard', 'Cleric', 'Rogue'] as const).map((cls) => (
                     <button
