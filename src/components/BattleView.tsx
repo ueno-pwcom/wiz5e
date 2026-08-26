@@ -26,8 +26,9 @@ export const BattleView: React.FC = () => {
   const nextTurn = useGameStore((state) => state.nextTurn);
   const isPlayerTurn = currentCombatant?.is_player ?? false;
   const playerChar = isPlayerTurn ? (currentCombatant.ref as Character) : null;
+  const enemyShakeTargetId = useGameStore((state) => state.enemyShakeTargetId);
 
-  const enemies = combatants.filter((c) => !c.is_player && c.hp.current > 0);
+  const enemies = combatants.filter((c) => !c.is_player && (c.hp.current > 0 || c.id === enemyShakeTargetId));
   const allies = party.filter((c) => c.hp.current > 0);
 
   const availableSpells = playerChar
@@ -87,7 +88,7 @@ export const BattleView: React.FC = () => {
                 <div
                   key={enemy.id}
                   onClick={() => isTargetable && handleSelectTarget(enemy.id)}
-                  className={`battle-view-enemy-card ${isTargetable ? 'targetable' : ''}`}
+                  className={`battle-view-enemy-card ${isTargetable ? 'targetable' : ''} ${enemyShakeTargetId === enemy.id ? 'enemy-shake' : ''}`}
                 >
                   <div className="battle-view-enemy-icon">👾</div>
                   <div className="battle-view-enemy-name">{enemy.name}</div>

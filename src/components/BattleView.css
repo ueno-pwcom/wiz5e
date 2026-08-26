@@ -124,6 +124,19 @@
   padding: 8px;
 }
 
+.battle-view-enemy-card.enemy-shake {
+  animation: enemyHitShake 0.15s ease-in-out;
+}
+
+@keyframes enemyHitShake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
 .battle-view-heal-text {
   font-size: 11px;
   color: #60a5fa;

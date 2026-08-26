@@ -63,6 +63,7 @@ interface GameState {
   showResultModal: boolean;
   inventory: { itemId: string; quantity: number }[];
   battleShake: boolean;
+  enemyShakeTargetId: string | null;
   activeEvent: DungeonEvent | null;
   eventResult: EventResult | null;
   selectedActorId: string;
@@ -199,6 +200,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   showResultModal: false,
   inventory: buildInitialInventory(),
   battleShake: false,
+  enemyShakeTargetId: null,
   activeEvent: null,
   eventResult: null,
   selectedActorId: '',
@@ -359,6 +361,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
       const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
       addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, 'critical');
+      set({ combatants: [...combatants], enemyShakeTargetId: target.id });
+      setTimeout(() => set({ enemyShakeTargetId: null }), 150);
 
       if (target.hp.current === 0) {
         addLog(`${target.name} を倒した！`, 'info');
@@ -522,6 +526,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
           logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！`;
           logType = 'critical';
+
+          setTimeout(() => set({ enemyShakeTargetId: c.id }), 0);
+          setTimeout(() => set({ enemyShakeTargetId: null }), 150);
 
           return {
             ...c,
