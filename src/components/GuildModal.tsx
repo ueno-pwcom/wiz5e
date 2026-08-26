@@ -332,7 +332,7 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                       onClick={() => setSelectedClass(cls)}
                       className={selectedClass === cls ? 'guild-modal-class-button selected' : 'guild-modal-class-button'}
                     >
-                      <div className="guild-modal-class-name">{cls}</div>
+                      <div className="guild-modal-class-name">{classNames[cls]}</div>
                       <div className="guild-modal-class-desc">
                         {cls === 'fighter' && '前衛 / 近接攻撃'}
                         {cls === 'wizard' && '後衛 / 範囲・攻撃呪文'}

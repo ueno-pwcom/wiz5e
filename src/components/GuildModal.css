@@ -297,9 +297,10 @@
 .guild-modal-form-label {
   font-size: 0.9rem;
   color: #cbd5e1;
+  text-align: left;
 }
 
-..guild-modal-input,
+.guild-modal-input,
 .guild-modal-input-small {
   width: 100%;
   box-sizing: border-box;
@@ -309,7 +310,15 @@
   background: #0f172a;
   color: #e2e8f0;
   outline: none;
+  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guild-modal-input::placeholder,
+.guild-modal-input-small::placeholder {
+  color: #94a3b8;
 }
 
 .guild-modal-input-small {
