@@ -20,32 +20,32 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
   const shopCatalog = Object.keys(itemList);
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
+    <div className="shop-modal-overlay">
+      <div className="shop-modal">
         {/* ヘッダー */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', color: '#f59e0b' }}>🛒 武具・道具屋</h2>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fbbf24' }}>💰 {gold} G</div>
+        <div className="shop-modal-header">
+          <h2 className="shop-modal-title">🛒 武具・道具屋</h2>
+          <div className="shop-modal-gold">💰 {gold} G</div>
         </div>
 
         {/* タブ切り替え */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+        <div className="shop-modal-tabs">
           <button
             onClick={() => setTab('buy')}
-            style={{ ...tabButtonStyle, backgroundColor: tab === 'buy' ? '#2563eb' : '#374151' }}
+            className={`shop-modal-tab-button ${tab === 'buy' ? 'active' : ''}`}
           >
             購入する
           </button>
           <button
             onClick={() => setTab('sell')}
-            style={{ ...tabButtonStyle, backgroundColor: tab === 'sell' ? '#2563eb' : '#374151' }}
+            className={`shop-modal-tab-button ${tab === 'sell' ? 'active' : ''}`}
           >
             売却する
           </button>
         </div>
 
         {/* 商品一覧 / 売却一覧 */}
-        <div style={{ flex: '1 1 0', minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+        <div className="shop-modal-content">
           {tab === 'buy' ? (
             shopCatalog.map((id) => {
               const item = itemList[id];
@@ -54,18 +54,15 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
               const canAfford = gold >= price;
 
               return (
-                <div key={id} style={itemRowStyle}>
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{item.name}</div>
-                    <div style={{ fontSize: '10px', color: '#9ca3af' }}>{item.description}</div>
+                <div key={id} className="shop-modal-item-row">
+                  <div className="shop-modal-item-info">
+                    <div className="shop-modal-item-name">{item.name}</div>
+                    <div className="shop-modal-item-desc">{item.description}</div>
                   </div>
                   <button
                     disabled={!canAfford}
                     onClick={() => buyItem(id, price)}
-                    className={`shop-modal-button ${!canAfford ? 'disabled' : ''}`}
-                    style={{
-                      backgroundColor: canAfford ? '#10b981' : '#4b5563'
-                    }}
+                    className={`shop-modal-button ${canAfford ? 'can-afford' : 'disabled'}`}
                   >
                     {price} G
                   </button>
@@ -74,7 +71,7 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
             })
           ) : (
             inventory.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '12px', padding: '20px' }}>
+              <div className="shop-modal-empty">
                 売却できるアイテムがありません
               </div>
             ) : (
@@ -94,22 +91,21 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
                   return Array.from({ length: inv.quantity }, (_, index) => {
                     const ownerName = equippedOwners[index];
                     return (
-                      <div key={`${inv.itemId}-${index}`} style={itemRowStyle}>
-                        <div style={{ textAlign: 'left' }}>
-                          <div style={{ fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div key={`${inv.itemId}-${index}`} className="shop-modal-item-row">
+                        <div className="shop-modal-item-info">
+                          <div className="shop-modal-item-name shop-modal-item-name-with-status">
                             <span>{item.name}</span>
                             {ownerName && (
-                              <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>
+                              <span className="shop-modal-item-equipped">
                                 {ownerName} 装備中
                               </span>
                             )}
                           </div>
-                          <div style={{ fontSize: '10px', color: '#9ca3af' }}>{item.description}</div>
+                          <div className="shop-modal-item-desc">{item.description}</div>
                         </div>
                         <button
                           onClick={() => sellItem(inv.itemId, sellPrice)}
-                          className="shop-modal-button"
-                          style={{ backgroundColor: '#f59e0b' }}
+                          className="shop-modal-button sell"
                         >
                           +{sellPrice} G で売る
                         </button>
@@ -119,17 +115,16 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
                 }
 
                 return (
-                  <div key={inv.itemId} style={itemRowStyle}>
-                    <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px' }}>
-                        {item.name} <span style={{ color: '#f59e0b' }}>x{inv.quantity}</span>
+                  <div key={inv.itemId} className="shop-modal-item-row">
+                    <div className="shop-modal-item-info">
+                      <div className="shop-modal-item-name">
+                        {item.name} <span className="shop-modal-item-quantity">x{inv.quantity}</span>
                       </div>
-                      <div style={{ fontSize: '10px', color: '#9ca3af' }}>{item.description}</div>
+                      <div className="shop-modal-item-desc">{item.description}</div>
                     </div>
                     <button
                       onClick={() => sellItem(inv.itemId, sellPrice)}
-                      className="shop-modal-button"
-                      style={{ backgroundColor: '#f59e0b' }}
+                      className="shop-modal-button sell"
                     >
                       +{sellPrice} G で売る
                     </button>
@@ -141,28 +136,8 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
         </div>
 
         {/* 閉じるボタン */}
-        <button onClick={onClose} style={closeButtonStyle}>閉じる</button>
+        <button onClick={onClose} className="shop-modal-close-button">閉じる</button>
       </div>
     </div>
   );
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-  backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100
-};
-const modalStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937', border: '1px solid rgba(251, 191, 36, 0.25)', borderRadius: '20px', padding: '20px', width: '100%', maxWidth: '880px', height: 'min(90vh, 760px)', color: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden'
-};
-const tabButtonStyle: React.CSSProperties = {
-  flex: 1, padding: '6px', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
-};
-const itemRowStyle: React.CSSProperties = {
-  backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-};
-const actionBtnStyle: React.CSSProperties = {
-  border: 'none', borderRadius: '4px', padding: '6px 10px', color: '#fff', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer', whiteSpace: 'nowrap'
-};
-const closeButtonStyle: React.CSSProperties = {
-  width: '100%', backgroundColor: '#374151', border: 'none', borderRadius: '6px', padding: '8px', color: '#fff', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer'
 };

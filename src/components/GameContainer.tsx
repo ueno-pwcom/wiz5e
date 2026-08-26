@@ -16,6 +16,7 @@ export const GameContainer: React.FC = () => {
   const party = useGameStore((state) => state.party);
   const gold = useGameStore((state) => state.gold);
   const logs = useGameStore((state) => state.logs);
+  const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
 
   return (
     <div className="game-container">
@@ -41,7 +42,7 @@ export const GameContainer: React.FC = () => {
       </div>
 
       {/* パーティステータス */}
-      <StatusPanel party={party} gold={gold} />
+      <StatusPanel party={party} gold={gold} onSelectCharacter={(character) => setSelectedCharacterId(character.id)} />
       <CharacterDetailModal />
     </div>
   );

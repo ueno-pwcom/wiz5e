@@ -3,14 +3,10 @@ import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { ShopModal } from './ShopModal';
 import { TempleModal } from './TempleModal';
-import { CharacterDetailModal } from './CharacterDetailModal';
 import { GuildModal } from './GuildModal';
-import { StatusPanel } from './StatusPanel';
 import './TownView.css';
-import type { Character } from '../types/game';
 
 export const TownView: React.FC = () => {
-  const party = useGameStore((state) => state.party);
   const gold = useGameStore((state) => state.gold);
   const restAtInn = useGameStore((state) => state.restAtInn);
 
@@ -18,7 +14,6 @@ export const TownView: React.FC = () => {
   const [showTemple, setShowTemple] = useState(false);
   const [showGuild, setShowGuild] = useState(false);
   const [showInnConfirm, setShowInnConfirm] = useState(false);
-  const [selectedChar, setSelectedChar] = useState<Character | null>(null);
   const enterDungeon = useGameStore((state) => state.enterDungeon);
   const innCost = 10; // 宿泊代金
 
@@ -75,11 +70,6 @@ export const TownView: React.FC = () => {
         </button>
       </div>
 
-      {/* パーティー簡易ステータス表示 */}
-      <div style={{ ...partyStatusStyle, marginTop: '24px' }}>
-        <StatusPanel party={party} gold={gold} onSelectCharacter={setSelectedChar} />
-      </div>
-
       {/* モーダル表示 */}
       {showShop && <ShopModal onClose={() => setShowShop(false)} />}
       {showTemple && <TempleModal onClose={() => setShowTemple(false)} />}
@@ -98,25 +88,16 @@ export const TownView: React.FC = () => {
           </div>
         </div>
       )}
-      {selectedChar && (
-        <CharacterDetailModal
-          character={selectedChar}
-          onClose={() => setSelectedChar(null)}
-        />
-      )}
     </div>
   );
 };
 
 const containerStyle: React.CSSProperties = {
-  width: '100%', minHeight: '100vh', backgroundColor: '#111827', color: '#fff',
+  width: '100%', backgroundColor: '#111827', color: '#fff',
   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', padding: '16px', boxSizing: 'border-box'
 };
 const headerStyle: React.CSSProperties = {
   textAlign: 'center', marginBottom: '20px'
-};
-const partyStatusStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px', padding: '0px', width: '100%', maxWidth: '680px', marginBottom: '20px'
 };
 const menuButtonStyle: React.CSSProperties = {
   border: '1px solid #374151', borderRadius: '8px', padding: '14px', color: '#fff', textAlign: 'left', cursor: 'pointer', transition: 'transform 0.1s'

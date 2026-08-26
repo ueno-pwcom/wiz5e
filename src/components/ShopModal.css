@@ -56,6 +56,62 @@
   cursor: pointer;
 }
 
+.shop-modal {
+  background-color: #1f2937;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+  max-width: 880px;
+  height: auto;
+  max-height: calc(100vh - 40px);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shop-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.shop-modal-title {
+  margin: 0;
+  font-size: 18px;
+  color: #f59e0b;
+}
+
+.shop-modal-gold {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fbbf24;
+}
+
+.shop-modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.shop-modal-tab-button {
+  flex: 1;
+  padding: 6px;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #374151;
+}
+
+.shop-modal-tab-button.active {
+  background-color: #2563eb;
+}
+
 .shop-modal-content {
   max-height: 280px;
   overflow-y: auto;
@@ -73,6 +129,94 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.shop-modal-item-info {
+  text-align: left;
+}
+
+.shop-modal-item-name {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.shop-modal-item-name-with-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.shop-modal-item-equipped {
+  color: #60a5fa;
+  font-weight: bold;
+}
+
+.shop-modal-item-desc {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.shop-modal-item-quantity {
+  color: #f59e0b;
+}
+
+.shop-modal-button {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+}
+
+.shop-modal-button:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+
+.shop-modal-button:not(.disabled):hover {
+  cursor: pointer;
+  filter: brightness(1.05);
+}
+
+.shop-modal-button:not(.disabled):active {
+  cursor: pointer;
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.shop-modal-button.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.shop-modal-button.can-afford {
+  background-color: #10b981;
+}
+
+.shop-modal-button.sell {
+  background-color: #f59e0b;
+}
+
+.shop-modal-empty {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 12px;
+  padding: 20px;
+}
+
+.shop-modal-close-button {
+  width: 100%;
+  background-color: #374151;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .shop-modal-item-name {
