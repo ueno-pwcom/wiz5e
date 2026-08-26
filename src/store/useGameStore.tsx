@@ -910,9 +910,10 @@ export const useGameStore = create<GameState>((set, get) => ({
    */
   // ★ 消費アイテム（ポーション等）の使用
   useItem: (itemId: string, targetCharacterId: string) => {
-    const { inventory, party, addLog } = get();
+    const { inventory, party, combatants, currentTurnIndex, addLog } = get();
     const item = itemList[itemId];
     const target = party.find((m) => m.id === targetCharacterId);
+    const actor = combatants[currentTurnIndex];
 
     if (!item || !target || !target.is_alive) return;
 
@@ -927,13 +928,22 @@ export const useGameStore = create<GameState>((set, get) => ({
         m.id === targetCharacterId ? { ...m, hp: { ...m.hp, current: newHp } } : m
       );
 
+      const updatedCombatants = combatants.map((c) =>
+        c.id === targetCharacterId ? { ...c, hp: { ...c.hp, current: newHp } } : c
+      );
+
       const updatedInventory = inventory
         .map((i) => (i.itemId === itemId ? { ...i, quantity: i.quantity - 1 } : i))
         .filter((i) => i.quantity > 0);
 
-      addLog(`${target.name} は ${item.name} を使用し、HPが ${healAmount} 回復した！`, 'heal');
+      const actorName = actor?.is_player ? actor.name : '誰か';
+      const logMessage = actorName === target.name
+        ? `${actorName} は ${item.name} を使用し、HPが ${healAmount} 回復した！`
+        : `${actorName} が ${target.name} に ${item.name} を使用した。HPが ${healAmount} 点回復した！`;
 
-      set({ party: updatedParty, inventory: updatedInventory });
+      addLog(logMessage, 'heal');
+
+      set({ party: updatedParty, combatants: updatedCombatants, inventory: updatedInventory });
     }
   },
 

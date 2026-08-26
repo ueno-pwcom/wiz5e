@@ -160,7 +160,7 @@ export const map1Data: DungeonMap = {
     facing: 'N'
   },
   encounter_table: {
-    rate: 0.0,
+    rate: 0.15,
     monsters: [
       { id: 'goblin', weight: 70 },
       { id: 'skeleton', weight: 30 }
