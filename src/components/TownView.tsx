@@ -21,7 +21,7 @@ export const TownView: React.FC = () => {
     <div style={containerStyle}>
       {/* 街のヘッダー */}
       <div style={headerStyle}>
-        <h1 style={{ margin: 0, fontSize: '20px', color: '#f59e0b' }}>🏰 始まりの街 アークヘイブン</h1>
+        <h1 style={{ margin: 0, fontSize: '20px', color: '#f59e0b' }}>🏰 アークヘイブン</h1>
         <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fbbf24', marginTop: '4px' }}>
           所持金: 💰 {gold} G
         </div>
