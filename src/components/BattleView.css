@@ -3,6 +3,26 @@
   flex-direction: column;
   gap: 8px;
   height: 100%;
+  transform-style: preserve-3d;
+}
+
+.battle-view-enter {
+  animation: battleEnter 0.4s ease-out forwards;
+}
+
+@keyframes battleEnter {
+  0% {
+    opacity: 0;
+    transform: perspective(800px) rotateY(90deg) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: perspective(800px) rotateY(-10deg) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(800px) rotateY(0deg) scale(1);
+  }
 }
 
 .battle-view-shake {
@@ -27,6 +47,15 @@
   align-items: center;
   gap: 8px;
   overflow-x: auto;
+}
+
+.battle-view-initiative-blink {
+  animation: initiativeBlink 0.35s ease-in-out 4;
+}
+
+@keyframes initiativeBlink {
+  0%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0.2; }
 }
 
 .battle-view-initiative-label {
@@ -98,7 +127,19 @@
 
 .battle-view-enemy-card.targetable {
   border: 2px solid #ef4444;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.battle-view-enemy-card.targetable,
+.battle-view-enemy-card.targetable * {
   cursor: pointer;
+}
+
+.battle-view-enemy-card.targetable:hover,
+.battle-view-enemy-card.targetable:focus-visible {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 .battle-view-enemy-icon {
@@ -202,7 +243,29 @@
   cursor: pointer;
   font-size: 13px;
   text-align: left;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+.battle-view-command-button:not(.disabled) {
+  cursor: pointer;
+}
+
+.battle-view-command-button:hover:not(.disabled),
+.battle-view-command-button:focus-visible {
+  background-color: #4b5563;
+  transform: translateX(2px);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+  outline: none;
+}
+
+}
+
+.battle-view-enemy-card.targetable:hover,
+.battle-view-enemy-card.targetable:focus-visible {
+  background-color: #4b5563;
+  transform: translateX(2px);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+  outline: none;
 }
 
 .battle-view-command-button.disabled {

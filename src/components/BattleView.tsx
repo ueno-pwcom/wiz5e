@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './BattleView.css';
 import { useGameStore } from '../store/useGameStore';
 import { spellList } from '../data/spells';
@@ -27,6 +27,17 @@ export const BattleView: React.FC = () => {
   const isPlayerTurn = currentCombatant?.is_player ?? false;
   const playerChar = isPlayerTurn ? (currentCombatant.ref as Character) : null;
   const enemyShakeTargetId = useGameStore((state) => state.enemyShakeTargetId);
+  const [isEntering, setIsEntering] = useState(true);
+  const [isBlinkingInitiative, setIsBlinkingInitiative] = useState(true);
+
+  useEffect(() => {
+    const enterTimer = window.setTimeout(() => setIsEntering(false), 400);
+    const blinkTimer = window.setTimeout(() => setIsBlinkingInitiative(false), 2400);
+    return () => {
+      window.clearTimeout(enterTimer);
+      window.clearTimeout(blinkTimer);
+    };
+  }, []);
 
   const enemies = combatants.filter((c) => !c.is_player && (c.hp.current > 0 || c.id === enemyShakeTargetId));
   const allies = party.filter((c) => c.hp.current > 0);
@@ -59,9 +70,9 @@ export const BattleView: React.FC = () => {
   };
 
   return (
-    <div className={`battle-view ${battleShake ? 'battle-view-shake' : ''}`}>
+    <div className={`battle-view ${battleShake ? 'battle-view-shake' : ''} ${isEntering ? 'battle-view-enter' : ''}`}>
       {/* イニシアチブバー */}
-      <div className="battle-view-initiative-bar">
+      <div className={`battle-view-initiative-bar ${isBlinkingInitiative ? 'battle-view-initiative-blink' : ''}`}>
         <span className="battle-view-initiative-label">行動順:</span>
         <div className="battle-view-initiative-list">
           {combatants.map((c, idx) => (
@@ -134,7 +145,7 @@ export const BattleView: React.FC = () => {
         {/* コマンドパネル */}
         <div className="battle-view-panel">
           <div className="battle-view-panel-title">
-            戦闘コマンド
+            アクション
           </div>
 
           <div className="battle-view-command-list">
