@@ -21,6 +21,7 @@ export const DungeonView: React.FC = () => {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const wallGroupRef = useRef<THREE.Group | null>(null);
   const chestGroupRef = useRef<THREE.Group | null>(null);
+  const stairsGroupRef = useRef<THREE.Group | null>(null);
 
   const tileSize = 1;
   const wallHeight = tileSize;
@@ -190,6 +191,40 @@ export const DungeonView: React.FC = () => {
     return group;
   };
 
+  const buildStairs = (map: DungeonMap) => {
+    const group = new THREE.Group();
+    const staircaseMaterial = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0x906010, emissiveIntensity: 0.6 });
+
+    map.grid.forEach((row) => {
+      row.forEach((tile) => {
+        if (tile.event?.type !== 'stairs_up' && tile.event?.type !== 'stairs_down') return;
+
+        const stair = new THREE.Group();
+        const base = new THREE.Mesh(
+          new THREE.BoxGeometry(0.7, 0.1, 0.7),
+          new THREE.MeshStandardMaterial({ color: 0x2b3560, roughness: 0.95, metalness: 0.1 })
+        );
+        base.position.y = 0.05;
+        stair.add(base);
+
+        const stepCount = 3;
+        for (let i = 0; i < stepCount; i += 1) {
+          const step = new THREE.Mesh(
+            new THREE.BoxGeometry(0.64, 0.08, 0.18),
+            staircaseMaterial
+          );
+          step.position.set(0, 0.1 + i * 0.08, -0.2 + i * 0.18);
+          stair.add(step);
+        }
+
+        stair.position.set(tile.x + 0.5, 0, tile.y + 0.5);
+        group.add(stair);
+      });
+    });
+
+    return group;
+  };
+
   const updateCamera = () => {
     const camera = cameraRef.current;
     const renderer = rendererRef.current;
@@ -271,6 +306,10 @@ export const DungeonView: React.FC = () => {
     chestGroupRef.current = chests;
     scene.add(chests);
 
+    const stairsGroup = buildStairs(currentMap);
+    stairsGroupRef.current = stairsGroup;
+    scene.add(stairsGroup);
+
     updateCamera();
 
     const handleResize = () => {
@@ -312,6 +351,9 @@ export const DungeonView: React.FC = () => {
     if (chestGroupRef.current) {
       sceneRef.current.remove(chestGroupRef.current);
     }
+    if (stairsGroupRef.current) {
+      sceneRef.current.remove(stairsGroupRef.current);
+    }
     const walls = buildWalls(currentMap);
     wallGroupRef.current = walls;
     sceneRef.current.add(walls);
@@ -320,26 +362,38 @@ export const DungeonView: React.FC = () => {
     chestGroupRef.current = chests;
     sceneRef.current.add(chests);
 
+    const stairs = buildStairs(currentMap);
+    stairsGroupRef.current = stairs;
+    sceneRef.current.add(stairs);
+
     updateCamera();
   }, [currentMap, playerPosition]);
 
   useEffect(() => {
     if (!sceneRef.current) return;
-    const existing = sceneRef.current.getObjectByName('stairs_up');
-    if (currentTile?.event?.type === 'stairs_up') {
-      if (!existing) {
-        const stairs = new THREE.Mesh(
-          new THREE.BoxGeometry(0.7, 0.2, 0.7),
-          new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0x906010, emissiveIntensity: 0.8 })
-        );
-        stairs.name = 'stairs_up';
-        stairs.position.set(currentTile.x + 0.5, 0.1, currentTile.y + 0.5);
-        sceneRef.current.add(stairs);
-      }
-    } else if (existing) {
-      sceneRef.current.remove(existing);
+    if (wallGroupRef.current) {
+      sceneRef.current.remove(wallGroupRef.current);
     }
-  }, [currentTile]);
+    if (chestGroupRef.current) {
+      sceneRef.current.remove(chestGroupRef.current);
+    }
+    if (stairsGroupRef.current) {
+      sceneRef.current.remove(stairsGroupRef.current);
+    }
+    const walls = buildWalls(currentMap);
+    wallGroupRef.current = walls;
+    sceneRef.current.add(walls);
+
+    const chests = buildChests(currentMap);
+    chestGroupRef.current = chests;
+    sceneRef.current.add(chests);
+
+    const stairs = buildStairs(currentMap);
+    stairsGroupRef.current = stairs;
+    sceneRef.current.add(stairs);
+
+    updateCamera();
+  }, [currentMap, playerPosition]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -392,41 +446,27 @@ export const DungeonView: React.FC = () => {
       display: 'grid',
       placeItems: 'center'
     };
-    const railStyle: React.CSSProperties = {
+    const stepStyle: React.CSSProperties = {
       position: 'absolute',
-      width: '2px',
-      height: '12px',
+      height: '2px',
       backgroundColor: '#fbbf24',
       borderRadius: '1px'
     };
-    const rungStyle: React.CSSProperties = {
-      position: 'absolute',
-      width: '10px',
-      height: '1px',
-      backgroundColor: '#fbbf24'
-    };
-    const arrowStyle: React.CSSProperties = {
-      position: 'absolute',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      width: 0,
-      height: 0,
-      borderLeft: '4px solid transparent',
-      borderRight: '4px solid transparent',
-      borderBottom: type === 'stairs_up' ? '6px solid #fbbf24' : undefined,
-      borderTop: type === 'stairs_down' ? '6px solid #fbbf24' : undefined,
-      top: type === 'stairs_down' ? '1px' : undefined,
-      bottom: type === 'stairs_up' ? '1px' : undefined
-    };
+    const stepPositions = [2, 6, 10];
 
     return (
       <div style={wrapperStyle}>
-        <div style={{ ...railStyle, left: '2px' }} />
-        <div style={{ ...railStyle, right: '2px' }} />
-        <div style={{ ...rungStyle, top: '3px' }} />
-        <div style={{ ...rungStyle, top: '6px' }} />
-        <div style={{ ...rungStyle, top: '9px' }} />
-        <div style={arrowStyle} />
+        {stepPositions.map((top, index) => (
+          <div
+            key={index}
+            style={{
+              ...stepStyle,
+              top: `${top}px`,
+              left: type === 'stairs_up' ? `${index * 4}px` : `${10 - index * 4}px`,
+              width: `${8 + index * 4}px`
+            }}
+          />
+        ))}
       </div>
     );
   };
