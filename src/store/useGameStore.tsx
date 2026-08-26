@@ -58,6 +58,7 @@ interface GameState {
   // 戦闘用状態
   combatants: Combatant[];
   currentTurnIndex: number;
+  battleRound: number;
   skipPlayerTurnsUntilIndex: number | null;
   battleReward: BattleReward | null;
   showResultModal: boolean;
@@ -117,7 +118,7 @@ const initialParty: Character[] = [
   { id: '1', name: 'ケール', class_id: 'fighter', level: 1, xp: 0, stats: { str: 16, dex: 12, con: 14, int: 10, wis: 10, cha: 8 }, hp: { current: 12, max: 12 }, hit_dice_remaining: 1, spell_slots: {}, ac: 16, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'longsword' },
   { id: '2', name: 'ナグール', class_id: 'fighter', level: 1, xp: 0, stats: { str: 15, dex: 12, con: 14, int: 10, wis: 12, cha: 8 }, hp: { current: 12, max: 12 }, hit_dice_remaining: 1, spell_slots: {}, ac: 16, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'longsword' },
   { id: '3', name: 'イヤス', class_id: 'cleric', level: 1, xp: 0, stats: { str: 14, dex: 8, con: 14, int: 10, wis: 16, cha: 12 }, hp: { current: 10, max: 10 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 18, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'mace' },
-  { id: '4', name: 'ドロン', class_id: 'rogue', level: 1, xp: 0, stats: { str: 10, dex: 16, con: 12, int: 14, wis: 10, cha: 12 }, hp: { current: 9, max: 9 }, hit_dice_remaining: 1, spell_slots: {}, ac: 14, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'shortsword' },
+  { id: '4', name: 'ドロン', class_id: 'rogue', level: 1, xp: 0, stats: { str: 10, dex: 16, con: 12, int: 14, wis: 10, cha: 12 }, hp: { current: 9, max: 9 }, hit_dice_remaining: 1, spell_slots: {}, ac: 14, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'shortbow' },
   { id: '5', name: 'マホー', class_id: 'wizard', level: 1, xp: 0, stats: { str: 8, dex: 14, con: 12, int: 16, wis: 12, cha: 10 }, hp: { current: 7, max: 7 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 12, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'dagger' },
 ];
 
@@ -195,6 +196,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   playerPosition: map1Data.start_position,
   combatants: [],
   currentTurnIndex: 0,
+  battleRound: 1,
   skipPlayerTurnsUntilIndex: null,
   battleReward: null,
   showResultModal: false,
@@ -266,7 +268,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         ac: p.ac,
         hp: { ...p.hp },
         position: getPartyPositionRole(index),
-        ref: p
+        ref: p,
+        is_evading: false
       });
     });
 
@@ -301,7 +304,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       scene: 'battle',
       combatants: newCombatants,
-      currentTurnIndex: 0
+      currentTurnIndex: 0,
+      battleRound: 1
     });
 
     addLog(`モンスターが現れた！ (${newCombatants.filter(c => !c.is_player).map(c => c.name).join(', ')})`, 'critical');
@@ -335,7 +339,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     const attackAbilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
     const attackBonus = attackAbilityMod + 2;
 
-    const attackRoll = rollD20(attackBonus);
+    const isBacklineMelee = playerChar.position === 'back' && !isRanged;
+    if (isBacklineMelee) {
+      addLog(`${attacker.name} は後衛のため近接攻撃ができない。`, 'system');
+      return;
+    }
+
+    const attackRoll = isRanged && playerChar.position === 'front'
+      ? rollD20WithDisadvantage(attackBonus)
+      : rollD20(attackBonus);
     addLog(`${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`, 'player_action');
 
     let isHit = false;
@@ -465,11 +477,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     const spellLevel = spell.level;
-    let updatedSpellSlots = playerChar.spell_slots;
+    const currentSpellSlots = playerChar.spell_slots ?? {};
+    let updatedSpellSlots = currentSpellSlots;
 
     // --- 1. 呪文スロットの確認と消費（初級呪文 level 0 は消費なし） ---
     if (spellLevel > 0) {
-      const currentSlots = playerChar.spell_slots?.[spellLevel]?.current ?? 0;
+      const currentSlots = currentSpellSlots[spellLevel]?.current ?? 0;
 
       if (currentSlots <= 0) {
         addLog(`レベル ${spellLevel} の呪文スロットが不足しています！`, 'system');
@@ -478,9 +491,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       // イミュータブルにスロットを更新
       updatedSpellSlots = {
-        ...playerChar.spell_slots,
+        ...currentSpellSlots,
         [spellLevel]: {
-          ...playerChar.spell_slots[spellLevel],
+          ...currentSpellSlots[spellLevel],
           current: currentSlots - 1,
         },
       };
@@ -673,7 +686,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }
 
-    set({ currentTurnIndex: nextIndex });
+    const roundIncrement = nextIndex <= currentTurnIndex && combatants.filter((c) => c.hp.current > 0).length > 1;
+    set({
+      currentTurnIndex: nextIndex,
+      battleRound: roundIncrement ? get().battleRound + 1 : get().battleRound
+    });
 
     const nextCombatant = combatants[nextIndex];
     if (!nextCombatant.is_player) {
@@ -1311,13 +1328,17 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (!member.is_alive) return member;
 
       const restoredSlots: Record<number, { current: number; max: number }> = {};
-      if (member.spell_slots) {
-        Object.keys(member.spell_slots).forEach((levelStr) => {
+      const memberSpellSlots = member.spell_slots;
+      if (memberSpellSlots) {
+        Object.keys(memberSpellSlots).forEach((levelStr) => {
           const level = Number(levelStr);
-          restoredSlots[level] = {
-            current: member.spell_slots[level].max,
-            max: member.spell_slots[level].max
-          };
+          const slot = memberSpellSlots[level];
+          if (slot) {
+            restoredSlots[level] = {
+              current: slot.max,
+              max: slot.max
+            };
+          }
         });
       }
 

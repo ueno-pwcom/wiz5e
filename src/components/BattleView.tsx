@@ -8,6 +8,7 @@ import type { Character, SpellData, ItemData } from '../types/game';
 export const BattleView: React.FC = () => {
   const combatants = useGameStore((state) => state.combatants);
   const currentTurnIndex = useGameStore((state) => state.currentTurnIndex);
+  const battleRound = useGameStore((state) => state.battleRound);
   const executePlayerAttack = useGameStore((state) => state.executePlayerAttack);
   const executePlayerEvade = useGameStore((state) => state.executePlayerEvade);
   const executePlayerSpell = useGameStore((state) => state.executePlayerSpell);
@@ -26,6 +27,9 @@ export const BattleView: React.FC = () => {
   const nextTurn = useGameStore((state) => state.nextTurn);
   const isPlayerTurn = currentCombatant?.is_player ?? false;
   const playerChar = isPlayerTurn ? (currentCombatant.ref as Character) : null;
+  const weapon = playerChar?.equipped_weapon_id ? itemList[playerChar.equipped_weapon_id] : null;
+  const isCurrentWeaponRanged = weapon?.weapon_category === 'ranged';
+  const cannotPerformMeleeAttack = isPlayerTurn && !isCurrentWeaponRanged && playerChar?.position === 'back';
   const enemyShakeTargetId = useGameStore((state) => state.enemyShakeTargetId);
   const [isEntering, setIsEntering] = useState(true);
   const [isBlinkingInitiative, setIsBlinkingInitiative] = useState(true);
@@ -73,7 +77,10 @@ export const BattleView: React.FC = () => {
     <div className={`battle-view ${battleShake ? 'battle-view-shake' : ''} ${isEntering ? 'battle-view-enter' : ''}`}>
       {/* イニシアチブバー */}
       <div className={`battle-view-initiative-bar ${isBlinkingInitiative ? 'battle-view-initiative-blink' : ''}`}>
-        <span className="battle-view-initiative-label">行動順:</span>
+        <div className="battle-view-initiative-header">
+          <span className="battle-view-round-label">ラウンド {battleRound}</span>
+          <span className="battle-view-initiative-label">行動順:</span>
+        </div>
         <div className="battle-view-initiative-list">
           {combatants.map((c, idx) => (
             <div
@@ -93,7 +100,7 @@ export const BattleView: React.FC = () => {
           <div className="battle-view-enemies">
             {enemies.map((enemy) => {
               const isTargetable = isPlayerTurn && (
-                selectedAction === 'attack' || (selectedAction === 'spell' && selectedSpell?.damage_dice != null)
+                selectedAction === 'attack' && !cannotPerformMeleeAttack || (selectedAction === 'spell' && selectedSpell?.damage_dice != null)
               );
               return (
                 <div
@@ -147,31 +154,39 @@ export const BattleView: React.FC = () => {
           <div className="battle-view-panel-title">
             アクション
           </div>
+          <div className="battle-view-panel-caption">
+            {currentCombatant ? `${currentCombatant.name} のターンです。` : 'ターンを選択してください'}
+          </div>
 
           <div className="battle-view-command-list">
             <button
-              disabled={!isPlayerTurn}
-              className={`battle-view-command-button attack ${selectedAction === 'attack' ? 'active' : ''} ${!isPlayerTurn ? 'disabled' : ''}`}
+              disabled={!isPlayerTurn || cannotPerformMeleeAttack}
+              className={`battle-view-command-button attack ${selectedAction === 'attack' ? 'active' : ''} ${!isPlayerTurn || cannotPerformMeleeAttack ? 'disabled' : ''}`}
               onClick={() => {
                 setSelectedAction(selectedAction === 'attack' ? 'none' : 'attack');
                 setSelectedSpell(null);
               }}
+              title={cannotPerformMeleeAttack ? '後衛は近接攻撃できません。' : undefined}
             >
-              ⚔️ 攻撃
+              ⚔️ 攻撃{weapon ? ` (${weapon.name})` : ''}
             </button>
 
-            {hasSpells && (
-              <button
-                disabled={!isPlayerTurn}
-                className={`battle-view-command-button spell ${selectedAction === 'spell' ? 'active' : ''} ${!isPlayerTurn ? 'disabled' : ''}`}
-                onClick={() => {
-                  setSelectedAction(selectedAction === 'spell' ? 'none' : 'spell');
-                  setSelectedItemId(null);
-                }}
-              >
-                🪄 呪文
-              </button>
+            {selectedAction === 'attack' && isPlayerTurn && playerChar && isCurrentWeaponRanged && playerChar.position === 'front' && (
+              <div className="battle-view-target-hint">前衛の遠隔武器攻撃は不利判定になります。</div>
             )}
+
+            <button
+              disabled={!isPlayerTurn || !hasSpells}
+              className={`battle-view-command-button spell ${selectedAction === 'spell' ? 'active' : ''} ${!isPlayerTurn || !hasSpells ? 'disabled' : ''}`}
+              onClick={() => {
+                if (!hasSpells) return;
+                setSelectedAction(selectedAction === 'spell' ? 'none' : 'spell');
+                setSelectedItemId(null);
+              }}
+              title={!hasSpells ? '使用可能な呪文がありません。' : undefined}
+            >
+              🪄 呪文
+            </button>
             {hasItems && (
               <button
                 disabled={!isPlayerTurn}
