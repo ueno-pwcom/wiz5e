@@ -50,7 +50,7 @@
 }
 
 .battle-view-initiative-blink {
-  animation: initiativeBlink 0.35s ease-in-out 4;
+  animation: initiativeBlink 0.1s ease-in-out 2;
 }
 
 @keyframes initiativeBlink {
@@ -256,8 +256,6 @@
   transform: translateX(2px);
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
   outline: none;
-}
-
 }
 
 .battle-view-enemy-card.targetable:hover,
