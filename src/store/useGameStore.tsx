@@ -589,9 +589,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     const alivePlayers = combatants.filter(c => c.is_player && c.hp.current > 0);
     if (alivePlayers.length === 0) return;
 
-    const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
     const enemyData = attacker.ref as MonsterData;
-    const action = enemyData.actions[0] || { name: '攻撃', to_hit: 2, damage_dice: '1d6' };
+    const action = enemyData.actions[0] || { name: '攻撃', to_hit: 2, damage_dice: '1d6', damage_type: '殴打' };
+    const enemyWeapon = Object.values(itemList).find(
+      (item) => item.type === 'weapon' && item.name === action.name
+    );
+    const canTargetBackline = enemyWeapon?.weapon_category === 'ranged';
+    const eligiblePlayers = alivePlayers.filter((player) =>
+      canTargetBackline ? true : player.position === 'front'
+    );
+    const targetCandidates = eligiblePlayers.length > 0 ? eligiblePlayers : alivePlayers;
+    const target = targetCandidates[Math.floor(Math.random() * targetCandidates.length)];
 
     addLog(`${attacker.name} の ${action.name}！`, 'enemy_action');
 
