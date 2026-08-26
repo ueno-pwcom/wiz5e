@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterData, WallType } from '../types/game';
-import { map1Data } from '../data/map1';
+import { map1Data, map2Data, map3Data } from '../data/map1';
 import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
 import { itemList } from '../data/items';
@@ -69,6 +69,7 @@ interface GameState {
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
   movePlayer: (action: 'forward' | 'backward' | 'turnLeft' | 'turnRight') => void;
+  useStairs: () => void;
 
   // 戦闘用アクション
   startBattle: () => void;
@@ -121,6 +122,27 @@ const initialParty: Character[] = [
  * @brief 初期装備と装備中のアイテムに基づいてプレイヤーの初期インベントリを構築する。
  * @return アイテムIDと数量を含むインベントリエントリの配列。
  */
+const getMapDataById = (mapId: string): DungeonMap | null => {
+  switch (mapId) {
+    case 'dungeon_b1': return map1Data;
+    case 'dungeon_b2': return map2Data;
+    case 'dungeon_b3': return map3Data;
+    default: return null;
+  }
+};
+
+const findStairsPosition = (map: DungeonMap, eventType: 'stairs_up' | 'stairs_down', targetMapId?: string) => {
+  for (const row of map.grid) {
+    for (const tile of row) {
+      if (tile.event?.type !== eventType) continue;
+      if (!targetMapId || tile.event.target_map === targetMapId) {
+        return tile;
+      }
+    }
+  }
+  return null;
+};
+
 const buildInitialInventory = () => {
   const baseInventory = [
     { itemId: 'potion_of_healing', quantity: 3 },
@@ -1187,9 +1209,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       } else if (nextTile.event.type === 'door') {
         triggerEvent('heavy_door');
         return;
-      } else if (nextTile.event.type === 'stairs_up') {
-        addLog('地上へ続く階段がある。', 'info');
-        return;
       }
     }
 
@@ -1299,6 +1318,38 @@ export const useGameStore = create<GameState>((set, get) => ({
       battleReward: null,
       showResultModal: false,
     });
+  },
+
+  useStairs: () => {
+    const { currentMap, playerPosition, addLog, returnToTown } = get();
+    const { x, y, facing } = playerPosition;
+    const currentTile = currentMap.grid[y]?.[x];
+    if (!currentTile?.event) return;
+
+    if (currentTile.event.type === 'stairs_up' && !currentTile.event.target_map) {
+      returnToTown();
+      return;
+    }
+
+    const isDown = currentTile.event.type === 'stairs_down';
+    const targetMapId = currentTile.event.target_map;
+
+    if (!targetMapId) {
+      addLog('階段の先が見つからない。', 'system');
+      return;
+    }
+
+    const targetMap = getMapDataById(targetMapId);
+    if (!targetMap) {
+      addLog('階段の先が見つからない。', 'system');
+      return;
+    }
+
+    const oppositeType = isDown ? 'stairs_up' : 'stairs_down';
+    const targetTile = findStairsPosition(targetMap, oppositeType, currentMap.map_id);
+    const destination = targetTile ?? targetMap.start_position;
+    set({ currentMap: targetMap, playerPosition: { x: destination.x, y: destination.y, facing } });
+    addLog(`階段で ${targetMap.name} へ移動した。`, 'info');
   },
 
   /**

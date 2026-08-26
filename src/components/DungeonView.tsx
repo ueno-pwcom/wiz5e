@@ -8,6 +8,7 @@ export const DungeonView: React.FC = () => {
   const playerPosition = useGameStore((state) => state.playerPosition);
   const currentMap = useGameStore((state) => state.currentMap);
   const movePlayer = useGameStore((state) => state.movePlayer);
+  const useStairs = useGameStore((state) => state.useStairs);
   const enterCamp = useGameStore((state) => state.enterCamp);
   const returnToTown = useGameStore((state) => state.returnToTown);
   const triggerEvent = useGameStore((state) => state.triggerEvent);
@@ -352,13 +353,82 @@ export const DungeonView: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [movePlayer]);
 
-  const getFacingIcon = (facing: Direction) => {
+  const getFacingMarkerStyle = (facing: Direction): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      width: 0,
+      height: 0,
+      borderLeft: '5px solid transparent',
+      borderRight: '5px solid transparent',
+      borderBottom: '10px solid #60a5fa',
+      transform: 'rotate(0deg)',
+    };
+
     switch (facing) {
-      case 'N': return '▲';
-      case 'E': return '►';
-      case 'S': return '▼';
-      case 'W': return '◄';
+      case 'N':
+        return baseStyle;
+      case 'E':
+        return { ...baseStyle, transform: 'rotate(90deg)' };
+      case 'S':
+        return { ...baseStyle, transform: 'rotate(180deg)' };
+      case 'W':
+        return { ...baseStyle, transform: 'rotate(270deg)' };
+      default:
+        return baseStyle;
     }
+  };
+
+  const getFloorLabel = (map: DungeonMap) => {
+    const match = map.map_id.match(/b\d+/i);
+    if (match) return match[0].toUpperCase();
+    const nameMatch = map.name.match(/B\d+/i);
+    return nameMatch ? nameMatch[0].toUpperCase() : 'B1';
+  };
+
+  const getStairsMarker = (type: 'stairs_up' | 'stairs_down'): React.ReactNode => {
+    const wrapperStyle: React.CSSProperties = {
+      position: 'relative',
+      width: '14px',
+      height: '14px',
+      display: 'grid',
+      placeItems: 'center'
+    };
+    const railStyle: React.CSSProperties = {
+      position: 'absolute',
+      width: '2px',
+      height: '12px',
+      backgroundColor: '#fbbf24',
+      borderRadius: '1px'
+    };
+    const rungStyle: React.CSSProperties = {
+      position: 'absolute',
+      width: '10px',
+      height: '1px',
+      backgroundColor: '#fbbf24'
+    };
+    const arrowStyle: React.CSSProperties = {
+      position: 'absolute',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: 0,
+      height: 0,
+      borderLeft: '4px solid transparent',
+      borderRight: '4px solid transparent',
+      borderBottom: type === 'stairs_up' ? '6px solid #fbbf24' : undefined,
+      borderTop: type === 'stairs_down' ? '6px solid #fbbf24' : undefined,
+      top: type === 'stairs_down' ? '1px' : undefined,
+      bottom: type === 'stairs_up' ? '1px' : undefined
+    };
+
+    return (
+      <div style={wrapperStyle}>
+        <div style={{ ...railStyle, left: '2px' }} />
+        <div style={{ ...railStyle, right: '2px' }} />
+        <div style={{ ...rungStyle, top: '3px' }} />
+        <div style={{ ...rungStyle, top: '6px' }} />
+        <div style={{ ...rungStyle, top: '9px' }} />
+        <div style={arrowStyle} />
+      </div>
+    );
   };
 
   const getWallBorder = (wall: string) => {
@@ -395,7 +465,7 @@ export const DungeonView: React.FC = () => {
           }}
         />
 
-        {currentTile?.event?.type === 'stairs_up' && (
+        {(currentTile?.event?.type === 'stairs_up' && !currentTile.event.target_map) && (
           <div style={{
             position: 'absolute',
             left: '50%',
@@ -431,11 +501,83 @@ export const DungeonView: React.FC = () => {
             </button>
           </div>
         )}
+        {(currentTile?.event?.type === 'stairs_up' && currentTile.event.target_map) && (
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: '12px',
+            backgroundColor: 'rgba(17, 24, 39, 0.9)',
+            border: '1px solid #f59e0b',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 'bold' }}>
+              🪜 上の階へ続く階段がある
+            </div>
+            <button
+              onClick={useStairs}
+              style={{
+                backgroundColor: '#fbbf24',
+                color: '#111827',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 12px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              上の階へ移動する
+            </button>
+          </div>
+        )}
+        {currentTile?.event?.type === 'stairs_down' && (
+          <div style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: '12px',
+            backgroundColor: 'rgba(17, 24, 39, 0.9)',
+            border: '1px solid #38bdf8',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <div style={{ color: '#38bdf8', fontSize: '12px', fontWeight: 'bold' }}>
+              🪜 下の階へ続く階段がある
+            </div>
+            <button
+              onClick={useStairs}
+              style={{
+                backgroundColor: '#38bdf8',
+                color: '#111827',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 12px',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              下の階へ移動する
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ backgroundColor: '#111827', border: '1px solid #374151', padding: '12px', color: '#fff' }}>
         <div style={{ fontSize: '12px', marginBottom: '8px', color: '#9ca3af' }}>
-          [{playerPosition.facing}] 座標: X:{String(playerPosition.x).padStart(2, '0')} Y:{String(playerPosition.y).padStart(2, '0')}
+          [{getFloorLabel(currentMap)}] [{playerPosition.facing}] 座標: X:{String(playerPosition.x).padStart(2, '0')} Y:{String(playerPosition.y).padStart(2, '0')}
         </div>
 
         {/* 動的グリッドミニマップ */}
@@ -448,32 +590,45 @@ export const DungeonView: React.FC = () => {
           margin: '0 auto 12px',
           padding: '4px',
           display: 'grid',
-          gridTemplateColumns: `repeat(${currentMap.width}, 1fr)`,
-          gridTemplateRows: `repeat(${currentMap.height}, 1fr)`,
+          gridTemplateColumns: `repeat(5, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(5, minmax(0, 1fr))`,
           gap: '2px'
         }}>
-          {currentMap.grid.map((row, y) =>
-            row.map((tile, x) => {
-              const isPlayerHere = playerPosition.x === x && playerPosition.y === y;
+          {Array.from({ length: 5 }, (_, rowIndex) => {
+            const y = playerPosition.y - 2 + rowIndex;
+            return Array.from({ length: 5 }, (_, colIndex) => {
+              const x = playerPosition.x - 2 + colIndex;
+              const tile = currentMap.grid[y]?.[x] ?? null;
+              const isPlayerHere = rowIndex === 2 && colIndex === 2;
+              const cellBackground = isPlayerHere ? '#1e3a8a' : tile ? '#1f2937' : '#000';
               return (
-                <div key={`${x}-${y}`} style={{
-                  backgroundColor: isPlayerHere ? '#1e3a8a' : '#1f2937',
-                  borderTop: getWallBorder(tile.walls.N),
-                  borderRight: getWallBorder(tile.walls.E),
-                  borderBottom: getWallBorder(tile.walls.S),
-                  borderLeft: getWallBorder(tile.walls.W),
+                <div key={`${colIndex}-${rowIndex}`} style={{
+                  backgroundColor: cellBackground,
+                  borderTop: tile ? getWallBorder(tile.walls.N) : '1px solid #374151',
+                  borderRight: tile ? getWallBorder(tile.walls.E) : '1px solid #374151',
+                  borderBottom: tile ? getWallBorder(tile.walls.S) : '1px solid #374151',
+                  borderLeft: tile ? getWallBorder(tile.walls.W) : '1px solid #374151',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  fontSize: '10px',
-                  color: isPlayerHere ? '#60a5fa' : '#4b5563',
-                  fontWeight: 'bold'
+                  position: 'relative',
+                  aspectRatio: '1 / 1'
                 }}>
-                  {isPlayerHere ? getFacingIcon(playerPosition.facing) : (tile.event?.type === 'stairs_up' ? '▲' : tile.event ? '?' : '')}
+                  {isPlayerHere ? (
+                    <div style={getFacingMarkerStyle(playerPosition.facing)} />
+                  ) : tile ? (
+                    tile.event?.type === 'stairs_up'
+                      ? getStairsMarker('stairs_up')
+                      : tile.event?.type === 'stairs_down'
+                        ? getStairsMarker('stairs_down')
+                        : tile.event
+                          ? '?'
+                          : null
+                  ) : null}
                 </div>
               );
-            })
-          )}
+            });
+          }).flat()}
         </div>
 
         {/* コントロールボタン */}

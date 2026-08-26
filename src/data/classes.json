@@ -1,7 +1,7 @@
 {
   "fighter": {
     "id": "fighter",
-    "name": "ファイター",
+    "name": "Fighter",
     "hit_die": 10,
     "hp_static_increase": 6,
     "proficiencies": [
@@ -20,7 +20,7 @@
   },
   "rogue": {
     "id": "rogue",
-    "name": "ローグ",
+    "name": "Rogue",
     "hit_die": 8,
     "hp_static_increase": 5,
     "proficiencies": [
@@ -42,7 +42,7 @@
   },
   "cleric": {
     "id": "cleric",
-    "name": "クレリック",
+    "name": "Cleric",
     "hit_die": 8,
     "hp_static_increase": 5,
     "proficiencies": [
@@ -61,7 +61,7 @@
   },
   "wizard": {
     "id": "wizard",
-    "name": "ウィザード",
+    "name": "Wizard",
     "hit_die": 6,
     "hp_static_increase": 4,
     "proficiencies": [

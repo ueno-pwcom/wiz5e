@@ -1,64 +1,111 @@
 import type { DungeonMap } from '../types/game';
 
-// 5x5のサンプルマップ
-// 各タイルの壁指定: N(北), E(東), S(南), W(西)
+const createEmptyGrid = (width: number, height: number): DungeonMap['grid'] => {
+  const grid: DungeonMap['grid'] = [];
+
+  for (let y = 0; y < height; y += 1) {
+    const row = [];
+    for (let x = 0; x < width; x += 1) {
+      row.push({
+        x,
+        y,
+        walls: {
+          N: y === 0 ? 'wall' : 'none',
+          E: x === width - 1 ? 'wall' : 'none',
+          S: y === height - 1 ? 'wall' : 'none',
+          W: x === 0 ? 'wall' : 'none'
+        },
+        event: null
+      });
+    }
+    grid.push(row);
+  }
+
+  return grid;
+};
+
+const buildB1Grid = (): DungeonMap['grid'] => {
+  const grid = createEmptyGrid(15, 15);
+  grid[1][12].event = { type: 'stairs_down', target_map: 'dungeon_b2' };
+  grid[3][3].event = { type: 'chest', chest_id: 'chest_b1_1' };
+  grid[10][4].event = { type: 'door' };
+  grid[14][7].event = { type: 'stairs_up' };
+  return grid;
+};
+
+const buildB2Grid = (): DungeonMap['grid'] => {
+  const grid = createEmptyGrid(15, 15);
+  grid[1][12].event = { type: 'stairs_up', target_map: 'dungeon_b1' };
+  grid[13][2].event = { type: 'stairs_down', target_map: 'dungeon_b3' };
+  grid[7][7].event = { type: 'chest', chest_id: 'chest_b2_1' };
+  grid[5][10].event = { type: 'trap' };
+  return grid;
+};
+
+const buildB3Grid = (): DungeonMap['grid'] => {
+  const grid = createEmptyGrid(15, 15);
+  grid[13][2].event = { type: 'stairs_up', target_map: 'dungeon_b2' };
+  grid[2][12].event = { type: 'boss' };
+  grid[8][8].event = { type: 'chest', chest_id: 'chest_b3_1' };
+  return grid;
+};
+
 export const map1Data: DungeonMap = {
   map_id: 'dungeon_b1',
-  name: '地下迷宮 1階',
-  width: 5,
-  height: 5,
+  name: '地下迷宮 B1F',
+  width: 15,
+  height: 15,
   start_position: {
-    x: 2,
-    y: 4,
+    x: 7,
+    y: 14,
     facing: 'N'
   },
   encounter_table: {
-    rate: 0.15, // 移動時15%の確率でエンカウント
+    rate: 0.0,
     monsters: [
       { id: 'goblin', weight: 70 },
       { id: 'skeleton', weight: 30 }
     ]
   },
-  grid: [
-    // Y=0
-    [
-      { x: 0, y: 0, walls: { N: 'wall', E: 'none', S: 'none', W: 'wall' }, event: null },
-      { x: 1, y: 0, walls: { N: 'wall', E: 'wall', S: 'none', W: 'none' }, event: null },
-      { x: 2, y: 0, walls: { N: 'wall', E: 'none', S: 'wall', W: 'wall' }, event: { type: 'chest', chest_id: 'chest_1' } },
-      { x: 3, y: 0, walls: { N: 'wall', E: 'none', S: 'none', W: 'none' }, event: null },
-      { x: 4, y: 0, walls: { N: 'wall', E: 'wall', S: 'none', W: 'none' }, event: null }
-    ],
-    // Y=1
-    [
-      { x: 0, y: 1, walls: { N: 'none', E: 'wall', S: 'none', W: 'wall' }, event: null },
-      { x: 1, y: 1, walls: { N: 'none', E: 'wall', S: 'door', W: 'wall' }, event: null },
-      { x: 2, y: 1, walls: { N: 'wall', E: 'wall', S: 'none', W: 'wall' }, event: null },
-      { x: 3, y: 1, walls: { N: 'none', E: 'none', S: 'none', W: 'wall' }, event: null },
-      { x: 4, y: 1, walls: { N: 'none', E: 'wall', S: 'wall', W: 'none' }, event: null }
-    ],
-    // Y=2
-    [
-      { x: 0, y: 2, walls: { N: 'none', E: 'none', S: 'none', W: 'wall' }, event: null },
-      { x: 1, y: 2, walls: { N: 'door', E: 'wall', S: 'none', W: 'none' }, event: null },
-      { x: 2, y: 2, walls: { N: 'none', E: 'none', S: 'none', W: 'wall' }, event: null },
-      { x: 3, y: 2, walls: { N: 'none', E: 'wall', S: 'none', W: 'none' }, event: null },
-      { x: 4, y: 2, walls: { N: 'wall', E: 'wall', S: 'none', W: 'wall' }, event: null }
-    ],
-    // Y=3
-    [
-      { x: 0, y: 3, walls: { N: 'none', E: 'wall', S: 'wall', W: 'wall' }, event: null },
-      { x: 1, y: 3, walls: { N: 'none', E: 'none', S: 'wall', W: 'wall' }, event: null },
-      { x: 2, y: 3, walls: { N: 'none', E: 'none', S: 'none', W: 'none' }, event: null },
-      { x: 3, y: 3, walls: { N: 'none', E: 'wall', S: 'wall', W: 'none' }, event: null },
-      { x: 4, y: 3, walls: { N: 'none', E: 'wall', S: 'none', W: 'wall' }, event: null }
-    ],
-    // Y=4 (スタート位置 X:2, Y:4)
-    [
-      { x: 0, y: 4, walls: { N: 'wall', E: 'wall', S: 'wall', W: 'wall' }, event: null },
-      { x: 1, y: 4, walls: { N: 'wall', E: 'wall', S: 'wall', W: 'wall' }, event: null },
-      { x: 2, y: 4, walls: { N: 'none', E: 'wall', S: 'door', W: 'wall' }, event: { type: 'stairs_up' } },
-      { x: 3, y: 4, walls: { N: 'wall', E: 'wall', S: 'wall', W: 'wall' }, event: null },
-      { x: 4, y: 4, walls: { N: 'none', E: 'wall', S: 'wall', W: 'wall' }, event: null }
+  grid: buildB1Grid()
+};
+
+export const map2Data: DungeonMap = {
+  map_id: 'dungeon_b2',
+  name: '地下迷宮 B2F',
+  width: 15,
+  height: 15,
+  start_position: {
+    x: 12,
+    y: 1,
+    facing: 'S'
+  },
+  encounter_table: {
+    rate: 0.18,
+    monsters: [
+      { id: 'skeleton', weight: 60 },
+      { id: 'zombie', weight: 40 }
     ]
-  ]
+  },
+  grid: buildB2Grid()
+};
+
+export const map3Data: DungeonMap = {
+  map_id: 'dungeon_b3',
+  name: '地下迷宮 B3F',
+  width: 15,
+  height: 15,
+  start_position: {
+    x: 2,
+    y: 13,
+    facing: 'N'
+  },
+  encounter_table: {
+    rate: 0.20,
+    monsters: [
+      { id: 'skeleton', weight: 40 },
+      { id: 'wraith', weight: 60 }
+    ]
+  },
+  grid: buildB3Grid()
 };
