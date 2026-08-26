@@ -14,6 +14,7 @@ export const BattleView: React.FC = () => {
   const useItem = useGameStore((state) => state.useItem);
   const inventory = useGameStore((state) => state.inventory);
   const party = useGameStore((state) => state.party);
+  const battleShake = useGameStore((state) => state.battleShake);
   // const addLog = useGameStore((state) => state.addLog);
  
   const [selectedAction, setSelectedAction] = useState<'none' | 'attack' | 'spell' | 'item'>('none');
@@ -57,7 +58,7 @@ export const BattleView: React.FC = () => {
   };
 
   return (
-    <div className="battle-view">
+    <div className={`battle-view ${battleShake ? 'battle-view-shake' : ''}`}>
       {/* イニシアチブバー */}
       <div className="battle-view-initiative-bar">
         <span className="battle-view-initiative-label">行動順:</span>

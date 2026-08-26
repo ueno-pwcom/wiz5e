@@ -62,6 +62,7 @@ interface GameState {
   battleReward: BattleReward | null;
   showResultModal: boolean;
   inventory: { itemId: string; quantity: number }[];
+  battleShake: boolean;
   activeEvent: DungeonEvent | null;
   eventResult: EventResult | null;
   selectedActorId: string;
@@ -197,6 +198,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   battleReward: null,
   showResultModal: false,
   inventory: buildInitialInventory(),
+  battleShake: false,
   activeEvent: null,
   eventResult: null,
   selectedActorId: '',
@@ -614,10 +616,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
 
       addLog(`${target.name} は ${damage} のダメージを受けた！`, 'critical');
-
-      if (target.hp.current === 0) {
-        addLog(`${target.name} は倒れた！`, 'critical');
-      }
+      set({ battleShake: true });
+      setTimeout(() => set({ battleShake: false }), 150);
     }
 
     set({ combatants: [...combatants], party: [...get().party] });
