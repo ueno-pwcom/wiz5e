@@ -62,6 +62,21 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+body * {
+  cursor: default;
+  caret-color: transparent;
+}
+
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  cursor: text;
+  caret-color: auto;
+}
+
 body {
   margin: 0;
 }
