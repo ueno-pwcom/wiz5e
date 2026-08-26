@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterData, WallType } from '../types/game';
+import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, WallType } from '../types/game';
 import { map1Data, map2Data, map3Data } from '../data/map1';
 import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
@@ -143,6 +143,10 @@ const findStairsPosition = (map: DungeonMap, eventType: 'stairs_up' | 'stairs_do
   return null;
 };
 
+const getPartyPositionRole = (index: number): PositionRole => {
+  return index < 3 ? 'front' : 'back';
+};
+
 const buildInitialInventory = () => {
   const baseInventory = [
     { itemId: 'potion_of_healing', quantity: 3 }
@@ -236,7 +240,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newCombatants: Combatant[] = [];
 
     // 生存しているプレイヤーキャラクターを追加
-    party.filter(p => p.is_alive).forEach(p => {
+    party.forEach((p, index) => {
+      if (!p.is_alive) return;
       const dexMod = getAbilityModifier(p.stats.dex);
       const initRoll = rollD20(dexMod);
       newCombatants.push({
@@ -246,7 +251,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         initiative: initRoll.total,
         ac: p.ac,
         hp: { ...p.hp },
-        position: p.position,
+        position: getPartyPositionRole(index),
         ref: p
       });
     });

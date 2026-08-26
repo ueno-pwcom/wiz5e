@@ -21,6 +21,14 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
   const character = propCharacter ?? party.find((c) => c.id === selectedCharacterId);
   if (!character) return null;
 
+  const getPartyPositionRole = (charId: string) => {
+    const index = party.findIndex((p) => p.id === charId);
+    if (index === -1) return '控え';
+    return index < 3 ? '前衛' : '後衛';
+  };
+
+  const characterRoleLabel = getPartyPositionRole(character.id);
+
   const closeModal = () => {
     if (onClose) {
       onClose();
@@ -149,7 +157,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
 
             {/* 状態・装備 */}
             <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
-              <div>隊列: <span style={{ color: '#fff' }}>{character.position === 'front' ? '前衛' : '後衛'}</span></div>
+              <div>隊列: <span style={{ color: '#fff' }}>{characterRoleLabel}</span></div>
               <div>装備中の武器: <span style={{ color: '#fff' }}>{equippedWeapon?.name || 'なし'}</span></div>
               <div>装備中の防具: <span style={{ color: '#fff' }}>{equippedArmor?.name || 'なし'}</span></div>
               <div>装備中の盾: <span style={{ color: '#fff' }}>{equippedShield?.name || 'なし'}</span></div>
