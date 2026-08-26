@@ -50,11 +50,13 @@
 }
 
 .status-panel-row-down {
-  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.16);
+  border-color: transparent;
 }
 
 .status-panel-row-half {
-  border-color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.14);
+  border-color: transparent;
 }
 
 .status-panel-cell {

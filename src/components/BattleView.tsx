@@ -26,6 +26,7 @@ export const BattleView: React.FC = () => {
   const availableSpells = playerChar
     ? Object.values(spellList).filter((spell) => spell.classes.includes(playerChar.class_id))
     : [];
+  const hasSpells = availableSpells.length > 0;
 
   // 攻撃または呪文の対象を選択した時の処理
   const handleSelectTarget = (targetId: string) => {
@@ -122,16 +123,18 @@ export const BattleView: React.FC = () => {
               ⚔️ 攻撃
             </button>
 
-            <button
-              disabled={!isPlayerTurn}
-              className={`battle-view-command-button spell ${selectedAction === 'spell' ? 'active' : ''} ${!isPlayerTurn ? 'disabled' : ''}`}
-              onClick={() => setSelectedAction(selectedAction === 'spell' ? 'none' : 'spell')}
-            >
-              🪄 呪文
-            </button>
+            {hasSpells && (
+              <button
+                disabled={!isPlayerTurn}
+                className={`battle-view-command-button spell ${selectedAction === 'spell' ? 'active' : ''} ${!isPlayerTurn ? 'disabled' : ''}`}
+                onClick={() => setSelectedAction(selectedAction === 'spell' ? 'none' : 'spell')}
+              >
+                🪄 呪文
+              </button>
+            )}
 
             {/* 呪文サブメニュー */}
-            {selectedAction === 'spell' && isPlayerTurn && (
+            {selectedAction === 'spell' && isPlayerTurn && hasSpells && (
               <div className="battle-view-spell-menu">
                 <div className="battle-view-spell-menu-title">使用する呪文を選択:</div>
                 {availableSpells.map((spell) => {
