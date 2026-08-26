@@ -27,6 +27,12 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
     return index < 3 ? '前衛' : '後衛';
   };
 
+  const classNameMap: Record<string, string> = {
+    fighter: 'ファイター',
+    wizard: 'ウィザード',
+    cleric: 'クレリック',
+    rogue: 'ローグ'
+  };
   const characterRoleLabel = getPartyPositionRole(character.id);
 
   const closeModal = () => {
@@ -64,7 +70,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
           <div>
             <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>{character.name}</h2>
             <span style={{ fontSize: '12px', color: '#9ca3af' }}>
-              Level {character.level} / クラスID: {character.class_id}
+              Level {character.level} / {classNameMap[character.class_id] ?? character.class_id}
             </span>
           </div>
           <button onClick={closeModal} style={closeBtnStyle}>✕</button>
