@@ -135,6 +135,157 @@
   margin-bottom: 12px;
 }
 
+.character-detail-back-button {
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  background-color: #2563eb;
+  border: 1px solid #2563eb;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.character-detail-back-button:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+.character-detail-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.character-detail-stat-box {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.character-detail-stat-label {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-bottom: 2px;
+}
+
+.character-detail-stat-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.character-detail-stat-value--hp {
+  color: #ef4444;
+}
+
+.character-detail-stat-value--ac {
+  color: #60a5fa;
+}
+
+.character-detail-stat-value--hd {
+  color: #f59e0b;
+}
+
+.character-detail-section {
+  margin-bottom: 16px;
+}
+
+.character-detail-ability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.character-detail-ability-box {
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  padding: 6px;
+  text-align: center;
+}
+
+.character-detail-ability-value {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.character-detail-ability-mod {
+  font-size: 11px;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.character-detail-equipment-panel {
+  background-color: #111827;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.character-detail-equipment-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.character-detail-equipment-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.character-detail-equipment-label {
+  color: #6b7280;
+}
+
+.character-detail-equipment-value {
+  font-weight: bold;
+  color: #fff;
+}
+
+.character-detail-equipment-value.empty {
+  color: #6b7280;
+}
+
+.character-detail-slot-row {
+  display: flex;
+  gap: 8px;
+}
+
+.character-detail-slot-box {
+  background-color: #111827;
+  border: 1px solid #374151;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.character-detail-section-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.character-detail-highlight {
+  color: #fff;
+}
+
+.character-detail-status-danger {
+  color: #ef4444;
+}
+
+.character-detail-status-normal {
+  color: #10b981;
+}
+
 .character-detail-action-button {
   width: 100%;
   background-color: #2563eb;

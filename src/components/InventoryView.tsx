@@ -1,34 +1,44 @@
 // src/components/InventoryView.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { itemList } from '../data/items';
+import './InventoryView.css';
 
 interface InventoryViewProps {
-  targetCharacterId: string;
+  selectedTargetId: string;
+  onChangeTargetId: (id: string) => void;
 }
 
-export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId }) => {
+export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: initialTargetId, onChangeTargetId }) => {
   const inventory = useGameStore((state) => state.inventory);
   const party = useGameStore((state) => state.party);
   const useItem = useGameStore((state) => state.useItem);
   const equipItem = useGameStore((state) => state.equipItem);
   const unequipItem = useGameStore((state) => state.unequipItem);
 
-  const [selectedTargetId, setSelectedTargetId] = useState<string>(targetCharacterId);
+  const [selectedTargetId, setSelectedTargetId] = useState<string>(initialTargetId);
+
+  useEffect(() => {
+    setSelectedTargetId(initialTargetId);
+  }, [initialTargetId]);
+
+  useEffect(() => {
+    onChangeTargetId(selectedTargetId);
+  }, [selectedTargetId, onChangeTargetId]);
 
   return (
-    <div style={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px', padding: '16px', color: '#fff' }}>
-      <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #374151', paddingBottom: '8px' }}>
+    <div className="inventory-view">
+      <h2 className="inventory-view-title">
         🎒 所持品・装備（インベントリ）
       </h2>
 
       {/* 対象キャラクター選択 */}
-      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '12px', color: '#9ca3af' }}>使用・装備対象:</span>
+      <div className="inventory-view-target-row">
+        <span className="inventory-view-target-label">使用・装備対象:</span>
         <select
           value={selectedTargetId}
           onChange={(e) => setSelectedTargetId(e.target.value)}
-          style={{ backgroundColor: '#1f2937', color: '#fff', border: '1px solid #4b5563', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}
+          className="inventory-view-select"
         >
           {party.map((m) => (
             <option key={m.id} value={m.id}>
@@ -39,9 +49,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId 
       </div>
 
       {/* アイテム一覧 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div className="inventory-view-list">
         {inventory.length === 0 ? (
-          <div style={{ color: '#6b7280', fontSize: '12px' }}>所持品はありません。</div>
+          <div className="inventory-view-empty">所持品はありません。</div>
         ) : (
           inventory.map(({ itemId, quantity }) => {
             const item = itemList[itemId];
@@ -69,23 +79,23 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId 
             const itemSlot: 'weapon' | 'armor' | 'shield' = item.type === 'weapon' ? 'weapon' : item.slot === 'shield' ? 'shield' : 'armor';
 
             return (
-              <div key={itemId} style={{ backgroundColor: '#1f2937', border: isEquipped ? '1px solid #3b82f6' : '1px solid #374151', padding: '10px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div key={itemId} className={`inventory-view-item-card ${isEquipped ? 'equipped' : ''}`}>
+                <div className="inventory-view-item-info">
+                  <div className="inventory-view-item-name">
                     <span>{item.name}</span>
-                    <span style={{ color: '#f59e0b', fontSize: '11px' }}>x{availableQuantity}</span>
+                    <span className="inventory-view-item-quantity">x{availableQuantity}</span>
                     {isEquipped && (
-                      <span style={{ backgroundColor: '#1d4ed8', color: '#fff', fontSize: '10px', padding: '2px 6px', borderRadius: '4px' }}>
+                      <span className="inventory-view-item-equipped-label">
                         装備中
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '2px' }}>{item.description}</div>
+                  <div className="inventory-view-item-desc">{item.description}</div>
                 </div>
 
                 <div>
                   {item.type === 'consumable' && (
-                    <button onClick={() => useItem(itemId, selectedTargetId)} style={actionBtnStyle}>
+                    <button onClick={() => useItem(itemId, selectedTargetId)} className="inventory-view-button">
                       使用する
                     </button>
                   )}
@@ -94,14 +104,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId 
                     isEquipped ? (
                       <button
                         onClick={() => unequipItem(selectedTargetId, itemSlot)}
-                        style={{ ...actionBtnStyle, backgroundColor: '#dc2626' }}
+                        className="inventory-view-button unequip"
                       >
                         外す
                       </button>
                     ) : (
                       <button
                         onClick={() => equipItem(selectedTargetId, itemId)}
-                        style={{ ...actionBtnStyle, backgroundColor: '#2563eb' }}
+                        className="inventory-view-button equip"
                       >
                         装備する
                       </button>
@@ -117,14 +127,3 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ targetCharacterId 
   );
 };
 
-const actionBtnStyle: React.CSSProperties = {
-  backgroundColor: '#059669',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '4px',
-  padding: '6px 12px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  cursor: 'pointer',
-  whiteSpace: 'nowrap'
-};

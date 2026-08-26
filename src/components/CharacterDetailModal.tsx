@@ -1,5 +1,5 @@
 // src/components/CharacterDetailModal.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './CharacterDetailModal.css';
 import { useGameStore } from '../store/useGameStore';
 import { InventoryView } from './InventoryView';
@@ -18,7 +18,13 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
   const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
   const [showInventory, setShowInventory] = useState(false);
 
-  const character = propCharacter ?? party.find((c) => c.id === selectedCharacterId);
+  const [activeCharacterId, setActiveCharacterId] = useState<string | null>(propCharacter?.id ?? selectedCharacterId);
+
+  useEffect(() => {
+    setActiveCharacterId(propCharacter?.id ?? selectedCharacterId);
+  }, [propCharacter, selectedCharacterId]);
+
+  const character = party.find((c) => c.id === activeCharacterId) ?? propCharacter;
   if (!character) return null;
 
   const getPartyPositionRole = (charId: string) => {
@@ -63,83 +69,84 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
   const equippedShield = character.equipped_shield_id ? itemList[character.equipped_shield_id] : null;
 
   return (
-    <div style={overlayStyle} onClick={closeModal}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div className="character-detail-overlay" onClick={closeModal}>
+      <div className="character-detail-modal" onClick={(e) => e.stopPropagation()}>
         {/* ヘッダー */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #374151', paddingBottom: '8px', marginBottom: '12px' }}>
+        <div className="character-detail-header">
           <div>
-            <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>{character.name}</h2>
-            <span style={{ fontSize: '12px', color: '#9ca3af' }}>
+            <h2 className="character-detail-title">{character.name}</h2>
+            <span className="character-detail-subtitle">
               Level {character.level} / {classNameMap[character.class_id] ?? character.class_id}
             </span>
           </div>
-          <button onClick={closeModal} style={closeBtnStyle}>✕</button>
+          <button onClick={closeModal} className="character-detail-close-button">✕</button>
         </div>
 
         {showInventory ? (
           <div>
             <button
+              className="character-detail-back-button"
               onClick={() => setShowInventory(false)}
-              style={{ marginBottom: '12px', padding: '4px 8px', cursor: 'pointer' }}
             >
               ← ステータス詳細へ戻る
             </button>
-            <InventoryView targetCharacterId={character.id} />
+            <InventoryView
+              selectedTargetId={activeCharacterId ?? character.id}
+              onChangeTargetId={(id) => setActiveCharacterId(id)}
+            />
           </div>
         ) : (
           <>
             {/* 基本ステータス要約 */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px', textAlign: 'center' }}>
-              <div style={statBoxStyle}>
-                <span style={statLabelStyle}>HP</span>
-                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#ef4444' }}>
+            <div className="character-detail-stat-grid">
+              <div className="character-detail-stat-box">
+                <span className="character-detail-stat-label">HP</span>
+                <span className="character-detail-stat-value character-detail-stat-value--hp">
                   {character.hp.current} / {character.hp.max}
                 </span>
               </div>
-              <div style={statBoxStyle}>
-                <span style={statLabelStyle}>AC (アーマークラス)</span>
-                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#60a5fa' }}>{character.ac}</span>
+              <div className="character-detail-stat-box">
+                <span className="character-detail-stat-label">AC (アーマークラス)</span>
+                <span className="character-detail-stat-value character-detail-stat-value--ac">{character.ac}</span>
               </div>
-              <div style={statBoxStyle}>
-                <span style={statLabelStyle}>ヒットダイス残</span>
-                <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#f59e0b' }}>{character.hit_dice_remaining}</span>
+              <div className="character-detail-stat-box">
+                <span className="character-detail-stat-label">ヒットダイス残</span>
+                <span className="character-detail-stat-value character-detail-stat-value--hd">{character.hit_dice_remaining}</span>
               </div>
             </div>
 
             {/* 能力値グリッド */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e5e7eb', marginBottom: '6px' }}>能力値 (Ability Scores)</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+            <div className="character-detail-section">
+              <div className="character-detail-section-title">能力値 (Ability Scores)</div>
+              <div className="character-detail-ability-grid">
                 {abilities.map((a) => (
-                  <div key={a.label} style={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '4px', padding: '6px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '10px', color: '#9ca3af' }}>{a.label}</div>
-                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff' }}>{a.val}</div>
-                    <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 'bold' }}>({formatMod(a.val)})</div>
+                  <div key={a.label} className="character-detail-ability-box">
+                    <div className="character-detail-stat-label">{a.label}</div>
+                    <div className="character-detail-ability-value">{a.val}</div>
+                    <div className="character-detail-ability-mod">({formatMod(a.val)})</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#111827', padding: '12px', borderRadius: '6px', marginBottom: '12px' }}>
-              <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 'bold', marginBottom: '8px' }}>
-                🛡️ 現在の装備
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#6b7280' }}>主武器:</span>
-                  <span style={{ fontWeight: 'bold', color: equippedWeapon ? '#fff' : '#6b7280' }}>
+            <div className="character-detail-equipment-panel">
+              <div className="character-detail-section-title">🛡️ 現在の装備</div>
+              <div className="character-detail-equipment-column">
+                <div className="character-detail-equipment-row">
+                  <span className="character-detail-equipment-label">主武器:</span>
+                  <span className={`character-detail-equipment-value ${equippedWeapon ? '' : 'empty'}`}>
                     {equippedWeapon ? `${equippedWeapon.name} (${equippedWeapon.damage_dice})` : 'なし (素手)'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#6b7280' }}>防具:</span>
-                  <span style={{ fontWeight: 'bold', color: equippedArmor ? '#fff' : '#6b7280' }}>
+                <div className="character-detail-equipment-row">
+                  <span className="character-detail-equipment-label">防具:</span>
+                  <span className={`character-detail-equipment-value ${equippedArmor ? '' : 'empty'}`}>
                     {equippedArmor ? `${equippedArmor.name} (AC ${equippedArmor.ac_bonus})` : 'なし (服)'}
                   </span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#6b7280' }}>盾:</span>
-                  <span style={{ fontWeight: 'bold', color: equippedShield ? '#fff' : '#6b7280' }}>
+                <div className="character-detail-equipment-row">
+                  <span className="character-detail-equipment-label">盾:</span>
+                  <span className={`character-detail-equipment-value ${equippedShield ? '' : 'empty'}`}>
                     {equippedShield ? `${equippedShield.name} (+${equippedShield.ac_bonus})` : 'なし'}
                   </span>
                 </div>
@@ -148,13 +155,13 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
 
             {/* 呪文スロット（所持キャラのみ） */}
             {character.spell_slots && Object.keys(character.spell_slots).length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#e5e7eb', marginBottom: '6px' }}>呪文スロット (Spell Slots)</div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="character-detail-section">
+                <div className="character-detail-section-title">呪文スロット (Spell Slots)</div>
+                <div className="character-detail-slot-row">
                   {Object.entries(character.spell_slots).map(([lvl, slot]) => (
-                    <div key={lvl} style={{ backgroundColor: '#111827', border: '1px solid #374151', padding: '6px 12px', borderRadius: '4px', fontSize: '12px' }}>
-                      <span style={{ color: '#9ca3af' }}>Lv.{lvl}: </span>
-                      <span style={{ color: '#818cf8', fontWeight: 'bold' }}>{slot.current} / {slot.max}</span>
+                    <div key={lvl} className="character-detail-slot-box">
+                      <span className="character-detail-stat-label">Lv.{lvl}: </span>
+                      <span className="character-detail-ability-value">{slot.current} / {slot.max}</span>
                     </div>
                   ))}
                 </div>
@@ -162,29 +169,16 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
             )}
 
             {/* 状態・装備 */}
-            <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
-              <div>隊列: <span style={{ color: '#fff' }}>{characterRoleLabel}</span></div>
-              <div>装備中の武器: <span style={{ color: '#fff' }}>{equippedWeapon?.name || 'なし'}</span></div>
-              <div>装備中の防具: <span style={{ color: '#fff' }}>{equippedArmor?.name || 'なし'}</span></div>
-              <div>装備中の盾: <span style={{ color: '#fff' }}>{equippedShield?.name || 'なし'}</span></div>
-              <div>状態異常: <span style={{ color: character.status_effects.length ? '#ef4444' : '#10b981' }}>
+            <div className="character-detail-section-note">
+              <div>隊列: <span className="character-detail-highlight">{characterRoleLabel}</span></div>
+              <div>状態異常: <span className={character.status_effects.length ? 'character-detail-status-danger' : 'character-detail-status-normal'}>
                 {character.status_effects.length ? character.status_effects.join(', ') : '正常'}
               </span></div>
             </div>
 
             <button
               onClick={() => setShowInventory(true)}
-              style={{
-                width: '100%',
-                backgroundColor: '#2563eb',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '8px',
-                marginTop: '12px',
-                fontWeight: 'bold',
-                cursor: 'pointer'
-              }}
+              className="character-detail-action-button"
             >
               🎒 所持品・装備を変更する
             </button>
