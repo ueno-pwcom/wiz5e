@@ -145,8 +145,7 @@ const findStairsPosition = (map: DungeonMap, eventType: 'stairs_up' | 'stairs_do
 
 const buildInitialInventory = () => {
   const baseInventory = [
-    { itemId: 'potion_of_healing', quantity: 3 },
-    { itemId: 'longsword', quantity: 1 }
+    { itemId: 'potion_of_healing', quantity: 3 }
   ];
 
   const equippedCounts = initialParty.reduce<Record<string, number>>((counts, member) => {
