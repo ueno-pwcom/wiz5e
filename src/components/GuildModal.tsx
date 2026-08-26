@@ -82,11 +82,13 @@ const CLASS_TEMPLATES: Record<string, Omit<Character, 'id' | 'name' | 'stats'>> 
 };
 
 export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
-  const { characterRoster, party, createCharacter, addToParty, removeFromParty } = useGameStore();
+  const { characterRoster, party, createCharacter, addToParty, removeFromParty, renameCharacter } = useGameStore();
 
   const [activeTab, setActiveTab] = useState<'roster' | 'create'>('roster');
   const [newCharName, setNewCharName] = useState('');
   const [selectedClass, setSelectedClass] = useState<CharacterClassName>('fighter');
+  const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState('');
   
   // ランダム生成された能力値を保持する State
   const [rolledStats, setRolledStats] = useState<AbilityScores>(generateRandomStats);
@@ -171,10 +173,45 @@ export const GuildModal: React.FC<GuildModalProps> = ({ onClose }) => {
                     </div>
                     {party.map((char, index) => {
                       const role = getPartyPositionRole(index);
+                      const isEditing = editingCharacterId === char.id;
                       return (
                         <div key={char.id} className="guild-modal-row guild-modal-party-row">
                           <div className="guild-modal-cell guild-modal-cell-name">
-                            <div className="guild-modal-card-name">{char.name}</div>
+                            {isEditing ? (
+                              <input
+                                value={editingName}
+                                onChange={(e) => setEditingName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    renameCharacter(char.id, editingName);
+                                    setEditingCharacterId(null);
+                                  }
+                                  if (e.key === 'Escape') {
+                                    setEditingCharacterId(null);
+                                    setEditingName('');
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingName.trim()) {
+                                    renameCharacter(char.id, editingName);
+                                  }
+                                  setEditingCharacterId(null);
+                                }}
+                                autoFocus
+                                className="guild-modal-input guild-modal-input-small"
+                              />
+                            ) : (
+                              <div
+                                className="guild-modal-card-name"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => {
+                                  setEditingCharacterId(char.id);
+                                  setEditingName(char.name);
+                                }}
+                              >
+                                {char.name}
+                              </div>
+                            )}
                           </div>
                           <div className="guild-modal-cell guild-modal-cell-level">Lv.{char.level}</div>
                           <div className="guild-modal-cell guild-modal-cell-class">{classNames[char.class_id] ?? char.class_id}</div>

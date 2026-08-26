@@ -97,6 +97,7 @@ interface GameState {
   enterCamp: () => void;
   addToParty: (characterId: string) => void;
   removeFromParty: (characterId: string) => void;
+  renameCharacter: (characterId: string, newName: string) => void;
   createCharacter: (newChar: Character) => void;
   enterDungeon: () => void;
 
@@ -111,12 +112,14 @@ interface GameState {
 
 // テスト用初期パーティデータ
 const initialParty: Character[] = [
-  { id: '1', name: 'ナグロー', class_id: 'fighter', level: 1, xp: 0, stats: { str: 16, dex: 12, con: 14, int: 10, wis: 10, cha: 8 }, hp: { current: 12, max: 12 }, hit_dice_remaining: 1, spell_slots: {}, ac: 16, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'longsword' },
-  { id: '2', name: 'アリア', class_id: 'fighter', level: 1, xp: 0, stats: { str: 15, dex: 12, con: 14, int: 10, wis: 12, cha: 8 }, hp: { current: 12, max: 12 }, hit_dice_remaining: 1, spell_slots: {}, ac: 16, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'longsword' },
-  { id: '3', name: 'フラン', class_id: 'cleric', level: 1, xp: 0, stats: { str: 14, dex: 8, con: 14, int: 10, wis: 16, cha: 12 }, hp: { current: 10, max: 10 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 18, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'mace' },
-  { id: '4', name: 'ロンド', class_id: 'rogue', level: 1, xp: 0, stats: { str: 10, dex: 16, con: 12, int: 14, wis: 10, cha: 12 }, hp: { current: 9, max: 9 }, hit_dice_remaining: 1, spell_slots: {}, ac: 14, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'shortsword' },
-  { id: '5', name: 'シオン', class_id: 'wizard', level: 1, xp: 0, stats: { str: 8, dex: 14, con: 12, int: 16, wis: 12, cha: 10 }, hp: { current: 7, max: 7 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 12, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'dagger' },
+  { id: '1', name: 'ケール', class_id: 'fighter', level: 1, xp: 0, stats: { str: 16, dex: 12, con: 14, int: 10, wis: 10, cha: 8 }, hp: { current: 12, max: 12 }, hit_dice_remaining: 1, spell_slots: {}, ac: 16, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'longsword' },
+  { id: '2', name: 'ナグール', class_id: 'fighter', level: 1, xp: 0, stats: { str: 15, dex: 12, con: 14, int: 10, wis: 12, cha: 8 }, hp: { current: 12, max: 12 }, hit_dice_remaining: 1, spell_slots: {}, ac: 16, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'longsword' },
+  { id: '3', name: 'イヤス', class_id: 'cleric', level: 1, xp: 0, stats: { str: 14, dex: 8, con: 14, int: 10, wis: 16, cha: 12 }, hp: { current: 10, max: 10 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 18, position: 'front', is_alive: true, status_effects: [], equipped_weapon_id: 'mace' },
+  { id: '4', name: 'ドロン', class_id: 'rogue', level: 1, xp: 0, stats: { str: 10, dex: 16, con: 12, int: 14, wis: 10, cha: 12 }, hp: { current: 9, max: 9 }, hit_dice_remaining: 1, spell_slots: {}, ac: 14, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'shortsword' },
+  { id: '5', name: 'マホー', class_id: 'wizard', level: 1, xp: 0, stats: { str: 8, dex: 14, con: 12, int: 16, wis: 12, cha: 10 }, hp: { current: 7, max: 7 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 12, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'dagger' },
 ];
+
+const initialPartyWithEquipmentAc = initialParty.map(getCharacterWithCalculatedAc);
 
 /**
  * @brief 初期装備と装備中のアイテムに基づいてプレイヤーの初期インベントリを構築する。
@@ -147,6 +150,13 @@ const getPartyPositionRole = (index: number): PositionRole => {
   return index < 3 ? 'front' : 'back';
 };
 
+function getCharacterWithCalculatedAc(character: Character): Character {
+  return {
+    ...character,
+    ac: calculateCharacterAc(character, character.equipped_armor_id ?? null, character.equipped_shield_id ?? null)
+  };
+}
+
 const buildInitialInventory = () => {
   const baseInventory = [
     { itemId: 'potion_of_healing', quantity: 3 }
@@ -174,8 +184,8 @@ const buildInitialInventory = () => {
 export const useGameStore = create<GameState>((set, get) => ({
   scene: 'dungeon',
   gold: 100,
-  party: initialParty,
-  characterRoster: [...initialParty],
+  party: initialPartyWithEquipmentAc,
+  characterRoster: [...initialPartyWithEquipmentAc],
   logs: [
     { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '地下迷宮 1階に入った。', type: 'system' }
   ],
@@ -1384,6 +1394,18 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @brief 新しいキャラクターをキャラクターロスターに追加する。
    * @param newChar 追加するキャラクター情報。
    */
+  renameCharacter: (characterId: string, newName: string) => {
+    if (!newName.trim()) return;
+    set((state) => ({
+      party: state.party.map((member) =>
+        member.id === characterId ? { ...member, name: newName.trim() } : member
+      ),
+      characterRoster: state.characterRoster.map((member) =>
+        member.id === characterId ? { ...member, name: newName.trim() } : member
+      )
+    }));
+  },
+
   createCharacter: (newChar: Character) => {
     set((state) => {
       const nextRoster = [...state.characterRoster, newChar];
