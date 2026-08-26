@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { itemList } from '../data/items';
+import './ShopModal.css';
 
 interface Props {
   onClose: () => void;
@@ -61,10 +62,9 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
                   <button
                     disabled={!canAfford}
                     onClick={() => buyItem(id, price)}
+                    className={`shop-modal-button ${!canAfford ? 'disabled' : ''}`}
                     style={{
-                      ...actionBtnStyle,
-                      backgroundColor: canAfford ? '#10b981' : '#4b5563',
-                      cursor: canAfford ? 'pointer' : 'not-allowed'
+                      backgroundColor: canAfford ? '#10b981' : '#4b5563'
                     }}
                   >
                     {price} G
@@ -108,7 +108,8 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
                         </div>
                         <button
                           onClick={() => sellItem(inv.itemId, sellPrice)}
-                          style={{ ...actionBtnStyle, backgroundColor: '#f59e0b' }}
+                          className="shop-modal-button"
+                          style={{ backgroundColor: '#f59e0b' }}
                         >
                           +{sellPrice} G で売る
                         </button>
@@ -127,7 +128,8 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
                     </div>
                     <button
                       onClick={() => sellItem(inv.itemId, sellPrice)}
-                      style={{ ...actionBtnStyle, backgroundColor: '#f59e0b' }}
+                      className="shop-modal-button"
+                      style={{ backgroundColor: '#f59e0b' }}
                     >
                       +{sellPrice} G で売る
                     </button>
