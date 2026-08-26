@@ -7,21 +7,21 @@
 }
 
 .battle-view-enter {
-  animation: battleEnter 0.4s ease-out forwards;
+  animation: battleEnter 0.8s ease-out forwards;
 }
 
 @keyframes battleEnter {
   0% {
     opacity: 0;
-    transform: perspective(800px) rotateY(90deg) scale(0.95);
+    transform: perspective(800px) rotateX(90deg) scale(0.1);
   }
   60% {
     opacity: 1;
-    transform: perspective(800px) rotateY(-10deg) scale(1.02);
+    transform: perspective(800px) rotateX(-10deg) scale(1.02);
   }
   100% {
     opacity: 1;
-    transform: perspective(800px) rotateY(0deg) scale(1);
+    transform: perspective(800px) rotateX(0deg) scale(1);
   }
 }
 

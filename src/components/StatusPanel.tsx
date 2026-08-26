@@ -29,9 +29,10 @@ export const StatusPanel: React.FC<Props> = ({ party, gold, onSelectCharacter })
     const isCurrentTurn = showFocus && char.id === currentTurnId;
     const hpHalfDown = char.hp.current > 0 && char.hp.current <= Math.floor(char.hp.max / 2);
     const isDown = char.hp.current <= 0;
+    const rowClickable = scene === 'camp' || (Boolean(onSelectCharacter) && scene !== 'battle');
     const rowClass = [
       'status-panel-row',
-      (scene === 'camp' || Boolean(onSelectCharacter)) ? 'status-panel-row-clickable' : '',
+      rowClickable ? 'status-panel-row-clickable' : '',
       isCurrentTurn ? 'status-panel-row-current' : '',
       isDown ? 'status-panel-row-down' : '',
       hpHalfDown ? 'status-panel-row-half' : ''
@@ -45,7 +46,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold, onSelectCharacter })
           if (scene === 'camp') {
             setSelectedCharacterId(char.id);
           }
-          if (onSelectCharacter) {
+          if (onSelectCharacter && scene !== 'battle') {
             onSelectCharacter(char);
           }
         }}

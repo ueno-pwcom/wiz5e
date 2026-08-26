@@ -439,34 +439,9 @@ export const DungeonView: React.FC = () => {
   };
 
   const getStairsMarker = (type: 'stairs_up' | 'stairs_down'): React.ReactNode => {
-    const wrapperStyle: React.CSSProperties = {
-      position: 'relative',
-      width: '14px',
-      height: '14px',
-      display: 'grid',
-      placeItems: 'center'
-    };
-    const stepStyle: React.CSSProperties = {
-      position: 'absolute',
-      height: '2px',
-      backgroundColor: '#fbbf24',
-      borderRadius: '1px'
-    };
-    const stepPositions = [2, 6, 10];
-
     return (
-      <div style={wrapperStyle}>
-        {stepPositions.map((top, index) => (
-          <div
-            key={index}
-            style={{
-              ...stepStyle,
-              top: `${top}px`,
-              left: type === 'stairs_up' ? `${index * 4}px` : `${10 - index * 4}px`,
-              width: `${8 + index * 4}px`
-            }}
-          />
-        ))}
+      <div style={{ fontSize: '14px', lineHeight: 1 }}>
+        🪜
       </div>
     );
   };
