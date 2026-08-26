@@ -150,9 +150,9 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
             {/* 状態・装備 */}
             <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
               <div>隊列: <span style={{ color: '#fff' }}>{character.position === 'front' ? '前衛' : '後衛'}</span></div>
-              <div>装備中の武器ID: <span style={{ color: '#fff' }}>{character.equipped_weapon_id || 'なし'}</span></div>
-              <div>装備中の防具ID: <span style={{ color: '#fff' }}>{character.equipped_armor_id || 'なし'}</span></div>
-              <div>装備中の盾ID: <span style={{ color: '#fff' }}>{character.equipped_shield_id || 'なし'}</span></div>
+              <div>装備中の武器: <span style={{ color: '#fff' }}>{equippedWeapon?.name || 'なし'}</span></div>
+              <div>装備中の防具: <span style={{ color: '#fff' }}>{equippedArmor?.name || 'なし'}</span></div>
+              <div>装備中の盾: <span style={{ color: '#fff' }}>{equippedShield?.name || 'なし'}</span></div>
               <div>状態異常: <span style={{ color: character.status_effects.length ? '#ef4444' : '#10b981' }}>
                 {character.status_effects.length ? character.status_effects.join(', ') : '正常'}
               </span></div>
