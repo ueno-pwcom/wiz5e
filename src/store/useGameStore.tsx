@@ -9,6 +9,13 @@ import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
 
+/**
+ * @brief 装備と敏捷値からキャラクターのアーマークラス（AC）を計算する。
+ * @param character ACを計算するキャラクター。
+ * @param armorId 装備中の鎧のアイテムID（省略可）。
+ * @param shieldId 装備中の盾のアイテムID（省略可）。
+ * @return 計算されたAC値。
+ */
 const calculateCharacterAc = (character: Character, armorId: string | null | undefined, shieldId: string | null | undefined): number => {
   const armor = armorId ? itemList[armorId] : null;
   const shield = shieldId ? itemList[shieldId] : null;
@@ -110,6 +117,10 @@ const initialParty: Character[] = [
   { id: '5', name: 'シオン', class_id: 'wizard', level: 1, xp: 0, stats: { str: 8, dex: 14, con: 12, int: 16, wis: 12, cha: 10 }, hp: { current: 7, max: 7 }, hit_dice_remaining: 1, spell_slots: { 1: { current: 2, max: 2 } }, ac: 12, position: 'back', is_alive: true, status_effects: [], equipped_weapon_id: 'dagger' },
 ];
 
+/**
+ * @brief 初期装備と装備中のアイテムに基づいてプレイヤーの初期インベントリを構築する。
+ * @return アイテムIDと数量を含むインベントリエントリの配列。
+ */
 const buildInitialInventory = () => {
   const baseInventory = [
     { itemId: 'potion_of_healing', quantity: 3 },
@@ -155,8 +166,17 @@ export const useGameStore = create<GameState>((set, get) => ({
   eventResult: null,
   selectedActorId: '',
 
+  /**
+   * @brief 現在のゲームシーンを変更する。
+   * @param scene 遷移先のシーン名。
+   */
   setScene: (scene) => set({ scene }),
 
+  /**
+   * @brief ゲームのログに新しいメッセージを追加する。
+   * @param text ログ本文。
+   * @param type ログ種別。
+   */
   addLog: (text, type = 'info') =>
     set((state) => ({
       logs: [
@@ -165,6 +185,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       ]
     })),
 
+  /**
+   * @brief 新しい戦闘を開始し、イニシアチブ順を決定する。
+   */
   // 1. 戦闘開始＆イニシアチブ決定
   startBattle: () => {
     const { currentMap, party, addLog } = get();
@@ -248,6 +271,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief 現在のプレイヤーの攻撃を対象に実行する。
+   * @param targetId 攻撃対象のコンバタントID。
+   */
   // 2. プレイヤーの攻撃実行
   executePlayerAttack: (targetId: string) => {
     const { combatants, currentTurnIndex, addLog, nextTurn } = get();
@@ -302,6 +329,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief 現在のターンでプレイヤーの防御行動を実行する。
+   */
   executePlayerDefend: () => {
     const { combatants, currentTurnIndex, addLog, nextTurn } = get();
     const attacker = combatants[currentTurnIndex];
@@ -314,6 +344,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     nextTurn();
   },
 
+  /**
+   * @brief 現在の戦闘から逃走を試みる。
+   * @return 逃走に成功した場合は true、それ以外は false。
+   */
   attemptRun: () => {
     const { combatants, currentTurnIndex, addLog } = get();
     const attacker = combatants[currentTurnIndex];
@@ -362,6 +396,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     setTimeout(() => get().processEnemyTurn(), 1000);
   },
 
+  /**
+   * @brief プレイヤーの呪文を使用して対象に効果を適用する。
+   * @param spellId 使用する呪文のID。
+   * @param targetId 呪文の対象となるコンバタントID。
+   */
   executePlayerSpell: (spellId: string, targetId: string) => {
     const { combatants, currentTurnIndex, party, addLog, nextTurn, checkBattleStatus } = get();
     const attacker = combatants[currentTurnIndex];
@@ -481,6 +520,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief 敵のターンとして攻撃行動を処理する。
+   */
   // 3. 敵の行動ロジック
   processEnemyTurn: () => {
     const { combatants, currentTurnIndex, addLog, nextTurn } = get();
@@ -541,6 +583,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief 次のターンを進行する。
+   */
   // ターン進行
   nextTurn: () => {
     const { combatants, currentTurnIndex, skipPlayerTurnsUntilIndex, addLog } = get();
@@ -577,6 +622,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief 戦闘の勝敗を判定する。
+   * @return 戦闘が終了した場合は true、それ以外は false。
+   */
   // 勝敗チェック
   checkBattleStatus: () => {
     const { combatants, addLog } = get();
@@ -609,6 +658,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     return false;
   },
 
+  /**
+   * @brief キャラクターの経験値を確認し、レベルアップがあれば処理する。
+   * @param character レベルアップをチェックするキャラクター。
+   * @return 更新されたキャラクター。
+   */
   // ★ キャラクターのレベルアップチェック & ステータス更新
   checkLevelUp: (character: Character) => {
     const currentLevel = character.level;
@@ -650,6 +704,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     return character;
   },
 
+  /**
+   * @brief 戦闘報酬を獲得し、パーティに分配する。
+   */
   claimBattleReward: () => {
     const { party, battleReward, checkLevelUp, setScene } = get();
     if (!battleReward) return;
@@ -678,6 +735,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     setScene('dungeon');
   },
 
+  /**
+   * @brief 指定したイベントを発生させる。
+   * @param eventId 発生させるイベントのID。
+   */
   // イベントの発生
   triggerEvent: (eventId: string) => {
     const event = dungeonEvents[eventId];
@@ -691,10 +752,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  /**
+   * @brief イベント処理中のアクターを選択する。
+   * @param characterId 選択するキャラクターのID。
+   */
   setSelectedActor: (characterId: string) => {
     set({ selectedActorId: characterId });
   },
 
+  /**
+   * @brief イベントの選択肢を処理し、技能判定と報酬・ペナルティを適用する。
+   * @param option 選択したイベントオプション。
+   */
   // イベント選択肢の実行と技能判定
   resolveEventOption: (option: EventOption) => {
     const { party, selectedActorId, inventory, addLog } = get();
@@ -783,10 +852,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief イベントモーダルを閉じる。
+   */
   closeEventModal: () => {
     set({ activeEvent: null, eventResult: null });
   },
 
+  /**
+   * @brief 消費アイテムを使用して対象キャラクターを回復する。
+   * @param itemId 使用するアイテムのID。
+   * @param targetCharacterId 使用対象のキャラクターID。
+   */
   // ★ 消費アイテム（ポーション等）の使用
   useItem: (itemId: string, targetCharacterId: string) => {
     const { inventory, party, addLog } = get();
@@ -816,6 +893,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief キャラクターに武器または防具を装備させる。
+   * @param characterId 装備変更対象のキャラクターID。
+   * @param itemId 装備するアイテムのID。
+   */
   // ★ 武器・防具の装備変更
   equipItem: (characterId: string, itemId: string) => {
     const { party, addLog } = get();
@@ -854,6 +936,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ party: updatedParty });
   },
 
+  /**
+   * @brief キャラクターの装備を外す。
+   * @param characterId 装備解除対象のキャラクターID。
+   * @param slot 外すスロット。
+   */
   unequipItem: (characterId: string, slot: 'weapon' | 'armor' | 'shield') => {
     const { party, addLog } = get();
 
@@ -885,6 +972,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ party: updatedParty });
   },
 
+  /**
+   * @brief 宿屋で全員のHPを回復する。
+   * @param cost 宿泊に必要なゴールド。
+   * @return 宿泊に成功した場合は true、それ以外は false。
+   */
   // 🏨 宿屋（大休憩）：全員のHPを最大まで回復
   restAtInn: (cost: number) => {
     const { gold, party, addLog } = get();
@@ -908,6 +1000,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     return true;
   },
 
+  /**
+   * @brief アイテムを購入してインベントリに追加する。
+   * @param itemId 購入するアイテムのID。
+   * @param price 購入価格。
+   * @return 購入に成功した場合は true、それ以外は false。
+   */
   // 🛒 アイテム購入
   buyItem: (itemId: string, price: number) => {
     const { gold, inventory, addLog } = get();
@@ -937,6 +1035,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     return true;
   },
 
+  /**
+   * @brief アイテムを売却してゴールドを増やす。
+   * @param itemId 売却するアイテムのID。
+   * @param price 売却価格。
+   */
   // 💰 アイテム売却
   sellItem: (itemId: string, price: number) => {
     const { gold, inventory, addLog } = get();
@@ -962,6 +1065,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     addLog(`アイテムを売却した (+${price} G)`, 'info');
   },
 
+  /**
+   * @brief 神殿で単体キャラクターのHPを回復する。
+   * @param characterId 回復対象のキャラクターID。
+   * @param cost 回復に必要なゴールド。
+   * @return 回復に成功した場合は true、それ以外は false。
+   */
   // ⛪ 単体手当て・回復
   healCharacter: (characterId: string, cost: number) => {
     const { gold, party, addLog } = get();
@@ -981,6 +1090,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     return true;
   },
 
+  /**
+   * @brief 神殿でキャラクターを蘇生する。
+   * @param characterId 蘇生対象のキャラクターID。
+   * @param cost 蘇生に必要なゴールド。
+   * @return 蘇生に成功した場合は true、それ以外は false。
+   */
   // ⛪ 蘇生処理（HP 1 で復活）
   reviveCharacter: (characterId: string, cost: number) => {
     const { gold, party, addLog } = get();
@@ -1001,12 +1116,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     return true;
   },
 
+  /**
+   * @brief キャンプへ移動し、戦闘状態を解除する。
+   */
   enterCamp: () => {
     const { addLog } = get();
     set({ scene: 'camp', combatants: [], currentTurnIndex: 0 });
     addLog('キャンプ地に移動した。', 'info');
   },
 
+  /**
+   * @brief プレイヤーを移動または向きを変更する。
+   * @param action 移動方向または回転アクション。
+   */
   movePlayer: (action) => {
     const { playerPosition, currentMap, addLog, startBattle, triggerEvent } = get();
     const directions: Direction[] = ['N', 'E', 'S', 'W'];
@@ -1076,6 +1198,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
+  /**
+   * @brief 小休憩を行い、ヒットダイスを消費してHPを回復する。
+   */
   // ★ 小休憩 (Short Rest): ヒット・ダイスを1つ消費してHP回復
   shortRest: () => {
     const { party, addLog } = get();
@@ -1109,6 +1234,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ party: updatedParty });
   },
 
+  /**
+   * @brief 大休憩を行い、パーティ全員のHP・ヒットダイス・呪文スロットを全回復する。
+   */
   // ★ 大休憩 (Long Rest): 全HP回復・ヒットダイス全回復・呪文スロット全回復
   longRest: () => {
     const { party, addLog } = get();
@@ -1140,6 +1268,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // 🏰 地上（街）へ帰還する
+  /**
+   * @brief 地下迷宮へ移動し、ダンジョン開始状態に戻す。
+   */
   enterDungeon: () => {
     const { currentMap, addLog } = get();
     set({
@@ -1154,6 +1285,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     addLog('🏰 街から地下迷宮のスタート地点へ入った。', 'info');
   },
 
+  /**
+   * @brief 街へ帰還し、シーンを town に変更する。
+   */
   returnToTown: () => {
     const { addLog } = get();
     addLog('🏰 階段を上り、無事に地上（街）へ帰還した。', 'info');
@@ -1167,6 +1301,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  /**
+   * @brief キャラクターをパーティに追加する。
+   * @param characterId 追加するキャラクターのID。
+   */
   addToParty: (characterId: string) => {
     set((state) => {
       const char = state.characterRoster.find((c) => c.id === characterId);
@@ -1177,12 +1315,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  /**
+   * @brief キャラクターをパーティから削除する。
+   * @param characterId 削除するキャラクターのID。
+   */
   removeFromParty: (characterId: string) => {
     set((state) => ({
       party: state.party.filter((c) => c.id !== characterId),
     }));
   },
 
+  /**
+   * @brief 新しいキャラクターをキャラクターロスターに追加する。
+   * @param newChar 追加するキャラクター情報。
+   */
   createCharacter: (newChar: Character) => {
     set((state) => {
       const nextRoster = [...state.characterRoster, newChar];
@@ -1192,5 +1338,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   selectedCharacterId: null,
+  /**
+   * @brief 選択中のキャラクターIDを設定する。
+   * @param id 設定するキャラクターID。
+   */
   setSelectedCharacterId: (id) => set({ selectedCharacterId: id }),
 }));
