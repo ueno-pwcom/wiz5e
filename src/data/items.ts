@@ -39,14 +39,7 @@ export const itemList: Record<string, ItemData> = {
     value_gp: 150,
     heal_dice: '4d4+4',
   },
-  antitoxin: {
-    id: 'antitoxin',
-    name: '気つけ薬（毒消し薬）',
-    type: 'consumable',
-    description: '体内の中和を促す薬。気休め程度の怪我も癒す（1d4回復）。',
-    value_gp: 50,
-    heal_dice: '1d4',
-  },
+
 
   // ==========================================
   // 武器 (weapon)

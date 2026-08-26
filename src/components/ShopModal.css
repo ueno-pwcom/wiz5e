@@ -13,51 +13,6 @@
 
 .shop-modal {
   background-color: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 8px;
-  padding: 16px;
-  width: 360px;
-  color: #fff;
-}
-
-.shop-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.shop-modal-title {
-  margin: 0;
-  font-size: 18px;
-  color: #f59e0b;
-}
-
-.shop-modal-gold {
-  font-size: 14px;
-  font-weight: bold;
-  color: #fbbf24;
-}
-
-.shop-modal-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.shop-modal-tab-button {
-  flex: 1;
-  padding: 6px;
-  border: none;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.shop-modal {
-  background-color: #1f2937;
   border: 1px solid rgba(251, 191, 36, 0.25);
   border-radius: 20px;
   padding: 20px;
@@ -92,24 +47,26 @@
 
 .shop-modal-tabs {
   display: flex;
-  gap: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(15, 23, 42, 0.8);
   margin-bottom: 12px;
 }
 
 .shop-modal-tab-button {
   flex: 1;
-  padding: 6px;
+  padding: 14px 18px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
   cursor: pointer;
-  background-color: #374151;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .shop-modal-tab-button.active {
-  background-color: #2563eb;
+  color: #f8fafc;
+  background: rgba(251, 191, 36, 0.12);
+  border-bottom: 2px solid #f59e0b;
 }
 
 .shop-modal-content {
