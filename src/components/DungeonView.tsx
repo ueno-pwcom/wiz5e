@@ -26,7 +26,7 @@ export const DungeonView: React.FC = () => {
   const tileSize = 1;
   const wallHeight = tileSize;
   const cameraHeight = wallHeight * 0.65;
-  const wallThickness = 0.06;
+  const wallThickness = 0.01;
 
   const directionVectors: Record<Direction, { dx: number; dz: number }> = {
     N: { dx: 0, dz: -1 },

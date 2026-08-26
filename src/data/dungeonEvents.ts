@@ -85,6 +85,12 @@ export const dungeonEvents: Record<string, DungeonEvent> = {
         check: { ability: 'int', dc: 12, label: '【知力/捜査】DC 12' },
         successText: '壁の不自然な窪みを発見して押すと、石扉が滑らかにスライドして開いた！',
         failureText: '仕掛けらしきものは見つからなかった。'
+      },
+      {
+        id: 'ignore',
+        label: '立ち去る',
+        successText: '大きな扉に用はないと判断し、その場を離れることにした。',
+        failureText: ''
       }
     ]
   },
