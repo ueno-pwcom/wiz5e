@@ -21,6 +21,13 @@ export const rollD20 = (modifier: number = 0): D20Result => {
   };
 };
 
+export const rollD20WithDisadvantage = (modifier: number = 0): D20Result => {
+  const first = rollD20(modifier);
+  const second = rollD20(modifier);
+  const result = first.natural <= second.natural ? first : second;
+  return result;
+};
+
 // 能力値から修正値を計算 ( 例: 14 -> +2, 8 -> -1 )
 export const getAbilityModifier = (score: number): number => {
   return Math.floor((score - 10) / 2);

@@ -8,7 +8,7 @@ export const BattleView: React.FC = () => {
   const combatants = useGameStore((state) => state.combatants);
   const currentTurnIndex = useGameStore((state) => state.currentTurnIndex);
   const executePlayerAttack = useGameStore((state) => state.executePlayerAttack);
-  const executePlayerDefend = useGameStore((state) => state.executePlayerDefend);
+  const executePlayerEvade = useGameStore((state) => state.executePlayerEvade);
   const executePlayerSpell = useGameStore((state) => state.executePlayerSpell);
   // const addLog = useGameStore((state) => state.addLog);
  
@@ -159,10 +159,10 @@ export const BattleView: React.FC = () => {
               onClick={() => {
                 setSelectedAction('none');
                 setSelectedSpell(null);
-                executePlayerDefend();
+                executePlayerEvade();
               }}
             >
-              🛡️ 防御
+              🌀 回避
             </button>
 
             {/* ★ 逃げるボタンの追加 */}

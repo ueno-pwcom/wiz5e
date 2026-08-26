@@ -201,6 +201,7 @@ export interface Combatant {
   };
   position: PositionRole;
   ref: Character | MonsterData;
+  is_evading: boolean;
 }
 
 export interface LogMessage {

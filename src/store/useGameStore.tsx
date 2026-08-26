@@ -7,7 +7,7 @@ import { itemList } from '../data/items';
 import { dungeonEvents } from '../data/dungeonEvents';
 import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
-import { getAbilityModifier, rollD20, rollDiceString } from '../utils/dice';
+import { getAbilityModifier, rollD20, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
 
 /**
  * @brief 装備と敏捷値からキャラクターのアーマークラス（AC）を計算する。
@@ -74,7 +74,7 @@ interface GameState {
   // 戦闘用アクション
   startBattle: () => void;
   executePlayerAttack: (targetId: string) => void;
-  executePlayerDefend: () => void;
+  executePlayerEvade: () => void;
   attemptRun: () => void;
   executePlayerSpell: (spellId: string, targetId: string) => void;
   processEnemyTurn: () => void;
@@ -286,7 +286,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         ac: monsterInstance.ac,
         hp: monsterInstance.hp,
         position: 'front',
-        ref: monsterInstance
+        ref: monsterInstance,
+        is_evading: false
       });
     }
 
@@ -318,6 +319,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const target = combatants.find(c => c.id === targetId);
 
     if (!attacker || !target || !attacker.is_player) return;
+
+    attacker.is_evading = false;
 
     const playerChar = attacker.ref as Character;
     const weapon = playerChar.equipped_weapon_id ? itemList[playerChar.equipped_weapon_id] : null;
@@ -368,13 +371,14 @@ export const useGameStore = create<GameState>((set, get) => ({
   /**
    * @brief 現在のターンでプレイヤーの防御行動を実行する。
    */
-  executePlayerDefend: () => {
+  executePlayerEvade: () => {
     const { combatants, currentTurnIndex, addLog, nextTurn } = get();
     const attacker = combatants[currentTurnIndex];
 
     if (!attacker || !attacker.is_player) return;
 
-    addLog(`${attacker.name} は身構えた（防御）。`, 'player_action');
+    attacker.is_evading = true;
+    addLog(`${attacker.name} は回避姿勢を取った。`, 'player_action');
 
     // ターンを進行
     nextTurn();
@@ -389,6 +393,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const attacker = combatants[currentTurnIndex];
 
     if (!attacker || !attacker.is_player) return;
+
+    attacker.is_evading = false;
 
     const aliveEnemies = combatants.filter((c) => !c.is_player && c.hp.current > 0);
     if (aliveEnemies.length === 0) return;
@@ -441,6 +447,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { combatants, currentTurnIndex, party, addLog, nextTurn, checkBattleStatus } = get();
     const attacker = combatants[currentTurnIndex];
     if (!attacker || !attacker.is_player) return;
+
+    attacker.is_evading = false;
 
     const playerChar = attacker.ref as Character;
     const spell = spellList[spellId];
@@ -578,7 +586,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     addLog(`${attacker.name} の ${action.name}！`, 'enemy_action');
 
-    const attackRoll = rollD20(action.to_hit);
+    const attackRoll = target.is_evading ? rollD20WithDisadvantage(action.to_hit) : rollD20(action.to_hit);
 
     let isHit = false;
     if (attackRoll.isCritical) {
