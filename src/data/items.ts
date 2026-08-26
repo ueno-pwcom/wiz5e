@@ -71,6 +71,16 @@ export const itemList: Record<string, ItemData> = {
     value_gp: 10,
     damage_dice: '1d6',
   },
+  scimitar: {
+    id: 'scimitar',
+    name: 'シミター',
+    type: 'weapon',
+    weapon_category: 'melee',
+    weapon_property: 'finesse',
+    description: '湾曲した刃を持つ片手剣。斬撃に優れ、軽快に扱える。',
+    value_gp: 25,
+    damage_dice: '1d6',
+  },
   longsword: {
     id: 'longsword',
     name: 'ロングソード',
