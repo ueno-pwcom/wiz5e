@@ -318,7 +318,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       battleRound: 1
     });
 
-    addLog(`モンスターが現れた！ (${newCombatants.filter(c => !c.is_player).map(c => c.name).join(', ')})`, 'critical');
+    addLog(`モンスターが現れた！ (${newCombatants.filter(c => !c.is_player).map(c => c.name).join(', ')})`, 'info');
 
     // 最初のターンが敵の場合は自動で敵の行動を実行
     if (!newCombatants[0].is_player) {
@@ -382,7 +382,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
       const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
-      addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, 'critical');
+      addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, attackRoll.isCritical ? 'critical' : 'player_action');
       set({ combatants: [...combatants], enemyShakeTargetId: target.id });
       setTimeout(() => set({ enemyShakeTargetId: null }), 150);
 
@@ -511,7 +511,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // 攻撃・回復の計算用変数
     let logMessage = '';
-    let logType: 'heal' | 'critical' | 'info' = 'info';
+    let logType: LogMessage['type'] = 'info';
 
     // --- 2. 戦闘参加者（combatants）の不変更新 ---
     const updatedCombatants = combatants.map((c) => {
@@ -544,11 +544,66 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         // 攻撃呪文の場合
         else if (spell.damage_dice && !c.is_player) {
-          const damage = rollDiceString(spell.damage_dice);
-          const newHp = Math.max(0, c.hp.current - damage);
+          const spellcastingAbility = classesData[playerChar.class_id]?.spellcasting_ability ?? 'int';
+          const spellAttackMod = getAbilityModifier(playerChar.stats[spellcastingAbility]) + getProficiencyBonus(playerChar.level);
+          let damage = 0;
+          let hitOrAffected = true;
+          let detailText = '';
+          let spellAttackCritical = false;
 
-          logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！`;
-          logType = 'critical';
+          if (spell.save_type === null) {
+            if (spell.auto_hit) {
+              damage = rollDiceString(spell.damage_dice);
+              detailText = ' 自動命中';
+            } else {
+              const attackRoll = rollD20(spellAttackMod);
+              const attackBonusText = `${spellAttackMod >= 0 ? '+' : ''}${spellAttackMod}`;
+              if (attackRoll.isCritical) {
+                spellAttackCritical = true;
+                damage = rollDiceString(spell.damage_dice, true);
+                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}（クリティカル）`;
+              } else if (attackRoll.isFumble) {
+                hitOrAffected = false;
+                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}（ファンブル）`;
+              } else if (attackRoll.total >= c.ac) {
+                damage = rollDiceString(spell.damage_dice);
+                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total} vs AC ${c.ac}`;
+              } else {
+                hitOrAffected = false;
+                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total} vs AC ${c.ac}`;
+              }
+            }
+          } else {
+            const spellSaveDc = 8 + getProficiencyBonus(playerChar.level) + getAbilityModifier(playerChar.stats[spellcastingAbility]);
+            const targetStats = (c.ref as Character | MonsterData).stats;
+            const saveMod = getAbilityModifier(targetStats[spell.save_type]);
+            const saveRoll = rollD20(saveMod);
+            const saveTotal = saveRoll.total;
+            const saveSuccess = saveTotal >= spellSaveDc;
+            detailText = ` セーヴ ${spell.save_type.toUpperCase()} ${saveRoll.natural} + ${saveMod} = ${saveTotal} vs DC ${spellSaveDc}`;
+
+            if (saveSuccess) {
+              if (spell.save_effect === 'none') {
+                hitOrAffected = false;
+              } else if (spell.save_effect === 'half') {
+                damage = Math.floor(rollDiceString(spell.damage_dice) / 2);
+              } else {
+                damage = rollDiceString(spell.damage_dice);
+              }
+            } else {
+              damage = rollDiceString(spell.damage_dice);
+            }
+          }
+
+          if (!hitOrAffected) {
+            logMessage = `${attacker.name} は ${spell.name} を唱えたが、効果がなかった。${detailText}`;
+            logType = 'system';
+            return c;
+          }
+
+          const newHp = Math.max(0, c.hp.current - damage);
+          logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！${detailText}`;
+          logType = spell.auto_hit ? 'player_action' : spellAttackCritical ? 'critical' : 'player_action';
 
           setTimeout(() => set({ enemyShakeTargetId: c.id }), 0);
           setTimeout(() => set({ enemyShakeTargetId: null }), 150);
@@ -653,7 +708,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }
 
-      addLog(`${target.name} は ${damage} のダメージを受けた！`, 'critical');
+addLog(`${target.name} は ${damage} のダメージを受けた！`, attackRoll.isCritical ? 'critical' : 'enemy_action');
       set({ battleShake: true });
       setTimeout(() => set({ battleShake: false }), 150);
     }
@@ -915,7 +970,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         resultMsg += ` (${actor.name} は ${dmg} ダメージを受けた！)`;
       }
 
-      addLog(`[イベント] ${actor.name} の ${option.check.label} 判定: ${total} (出目 ${d20} + 修正値 ${mod}) -> ${passed ? '成功' : '失敗'}`, passed ? 'heal' : 'critical');
+      addLog(`[イベント] ${actor.name} の ${option.check.label} 判定: ${total} (出目 ${d20} + 修正値 ${mod}) -> ${passed ? '成功' : '失敗'}`, passed ? 'info' : 'system');
 
       set({
         eventResult: {

@@ -135,6 +135,7 @@ export interface SpellData {
   damage_type: DamageType | null;
   save_type: AbilityScoreName | null;
   save_effect: 'half' | 'none' | null;
+  auto_hit?: boolean;
   requires_concentration: boolean;
 }
 

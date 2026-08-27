@@ -54,6 +54,20 @@ export const spellList: Record<string, SpellData> = {
     damage_type: '力場',
     save_type: null,
     save_effect: null,
+    auto_hit: true,
+    requires_concentration: false
+  },
+  burning_hands: {
+    id: 'burning_hands',
+    name: 'バーニング・ハンズ',
+    level: 1,
+    school: 'Evocation',
+    classes: ['wizard'],
+    damage_dice: '3d6',
+    heal_dice: null,
+    damage_type: '火',
+    save_type: 'dex',
+    save_effect: 'half',
     requires_concentration: false
   },
   cure_wounds: {
