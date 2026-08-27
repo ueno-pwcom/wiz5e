@@ -68,6 +68,7 @@ export const spellList: Record<string, SpellData> = {
     damage_type: '火',
     save_type: 'dex',
     save_effect: 'half',
+    targets_random: 3,
     requires_concentration: false
   },
   cure_wounds: {

@@ -19,7 +19,12 @@ export const MessageLog: React.FC<Props> = ({ logs }) => {
     <div ref={containerRef} className="message-log">
       {logs.map((log) => (
         <div key={log.id} className={`message-log-entry message-log-${log.type ?? 'default'}`}>
-          &gt; {log.text}
+          &gt; {log.text.split('\n').map((line, index, arr) => (
+            <React.Fragment key={index}>
+              {line}
+              {index < arr.length - 1 ? <br /> : null}
+            </React.Fragment>
+          ))}
         </div>
       ))}
     </div>

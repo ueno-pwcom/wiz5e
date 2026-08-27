@@ -136,6 +136,8 @@ export interface SpellData {
   save_type: AbilityScoreName | null;
   save_effect: 'half' | 'none' | null;
   auto_hit?: boolean;
+  targets_all_enemies?: boolean;
+  targets_random?: number;
   requires_concentration: boolean;
 }
 

@@ -143,7 +143,11 @@ export const BattleView: React.FC = () => {
 
         {/* 対象選択説明 */}
         {selectedAction === 'spell' && selectedSpell && (
-          <div className="battle-view-target-hint">対象の敵または味方を選択してください。</div>
+          <div className="battle-view-target-hint">
+            {selectedSpell.targets_random
+              ? `${selectedSpell.targets_random} 体の敵をランダムに選択して即時発動します。`
+              : '対象の敵または味方を選択してください。'}
+          </div>
         )}
         {selectedAction === 'item' && selectedItem && (
           <div className="battle-view-target-hint">{selectedItem.heal_dice ? '回復対象の味方を選択してください。' : '対象を選択してください。'}</div>
@@ -213,7 +217,16 @@ export const BattleView: React.FC = () => {
                     <button
                       key={spell.id}
                       disabled={!isCantrip && slots <= 0}
-                      onClick={() => setSelectedSpell(spell)}
+                      onClick={() => {
+                    if (!isCantrip && slots <= 0) return;
+                    if (spell.targets_random) {
+                      executePlayerSpell(spell.id, '');
+                      setSelectedAction('none');
+                      setSelectedSpell(null);
+                    } else {
+                      setSelectedSpell(spell);
+                    }
+                  }}
                       className={`battle-view-spell-button ${isSelected ? 'selected' : ''} ${!isCantrip && slots <= 0 ? 'disabled' : ''}`}
                     >
                       {spell.name} (Lv.{spell.level}) [{slotLabel}]

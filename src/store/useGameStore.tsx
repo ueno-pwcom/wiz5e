@@ -384,7 +384,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
       addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, attackRoll.isCritical ? 'critical' : 'player_action');
       set({ combatants: [...combatants], enemyShakeTargetId: target.id });
-      setTimeout(() => set({ enemyShakeTargetId: null }), 150);
+      setTimeout(() => set({ enemyShakeTargetId: null }), 300);
 
       if (target.hp.current === 0) {
         addLog(`${target.name} を倒した！`, 'info');
@@ -510,8 +510,23 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     // 攻撃・回復の計算用変数
-    let logMessage = '';
-    let logType: LogMessage['type'] = 'info';
+    const spellLogEntries: { message: string; type: LogMessage['type'] }[] = [];
+    const multiTargetDetails: string[] = [];
+    let multiTargetLogType: LogMessage['type'] = 'system';
+    const isMultiTargetSpell = Boolean(spell.targets_all_enemies || spell.targets_random);
+    const spellMessagePrefix = `${attacker.name} は ${spell.name} を唱えた！ `;
+    const sharedDamage = isMultiTargetSpell && spell.damage_dice ? rollDiceString(spell.damage_dice) : null;
+    const aliveEnemyIds = combatants.filter((c) => !c.is_player && c.hp.current > 0).map((c) => c.id);
+    const affectedTargetIds = spell.targets_all_enemies
+      ? aliveEnemyIds
+      : spell.targets_random
+        ? aliveEnemyIds.sort(() => Math.random() - 0.5).slice(0, spell.targets_random)
+        : [targetId];
+
+    if (affectedTargetIds.length === 0) {
+      addLog('敵がいないため呪文を唱えられない。', 'system');
+      return;
+    }
 
     // --- 2. 戦闘参加者（combatants）の不変更新 ---
     const updatedCombatants = combatants.map((c) => {
@@ -527,14 +542,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
 
       // 対象への効果適用
-      if (c.id === targetId) {
+      if (affectedTargetIds.includes(c.id)) {
         // 回復呪文の場合
         if (spell.heal_dice && c.is_player) {
           const healAmount = rollDiceString(spell.heal_dice);
           const newHp = Math.min(c.hp.max, c.hp.current + healAmount);
 
-          logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} のHPが ${healAmount} 回復！`;
-          logType = 'heal';
+          spellLogEntries.push({
+            message: `${attacker.name} は ${spell.name} を唱えた！ ${c.name} のHPが ${healAmount} 回復！`,
+            type: 'heal'
+          });
 
           return {
             ...c,
@@ -543,7 +560,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
 
         // 攻撃呪文の場合
-        else if (spell.damage_dice && !c.is_player) {
+        if (spell.damage_dice && !c.is_player) {
           const spellcastingAbility = classesData[playerChar.class_id]?.spellcasting_ability ?? 'int';
           const spellAttackMod = getAbilityModifier(playerChar.stats[spellcastingAbility]) + getProficiencyBonus(playerChar.level);
           let damage = 0;
@@ -553,20 +570,20 @@ export const useGameStore = create<GameState>((set, get) => ({
 
           if (spell.save_type === null) {
             if (spell.auto_hit) {
-              damage = rollDiceString(spell.damage_dice);
+              damage = sharedDamage ?? rollDiceString(spell.damage_dice);
               detailText = ' 自動命中';
             } else {
               const attackRoll = rollD20(spellAttackMod);
               const attackBonusText = `${spellAttackMod >= 0 ? '+' : ''}${spellAttackMod}`;
               if (attackRoll.isCritical) {
                 spellAttackCritical = true;
-                damage = rollDiceString(spell.damage_dice, true);
+                damage = sharedDamage ?? rollDiceString(spell.damage_dice, true);
                 detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}（クリティカル）`;
               } else if (attackRoll.isFumble) {
                 hitOrAffected = false;
                 detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}（ファンブル）`;
               } else if (attackRoll.total >= c.ac) {
-                damage = rollDiceString(spell.damage_dice);
+                damage = sharedDamage ?? rollDiceString(spell.damage_dice);
                 detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total} vs AC ${c.ac}`;
               } else {
                 hitOrAffected = false;
@@ -580,33 +597,48 @@ export const useGameStore = create<GameState>((set, get) => ({
             const saveRoll = rollD20(saveMod);
             const saveTotal = saveRoll.total;
             const saveSuccess = saveTotal >= spellSaveDc;
-            detailText = ` セーヴ ${spell.save_type.toUpperCase()} ${saveRoll.natural} + ${saveMod} = ${saveTotal} vs DC ${spellSaveDc}`;
+            detailText = saveSuccess ? ' セーヴ成功' : ' セーヴ失敗';
 
             if (saveSuccess) {
               if (spell.save_effect === 'none') {
                 hitOrAffected = false;
               } else if (spell.save_effect === 'half') {
-                damage = Math.floor(rollDiceString(spell.damage_dice) / 2);
+                damage = sharedDamage !== null ? Math.floor(sharedDamage / 2) : Math.floor(rollDiceString(spell.damage_dice) / 2);
               } else {
-                damage = rollDiceString(spell.damage_dice);
+                damage = sharedDamage ?? rollDiceString(spell.damage_dice);
               }
             } else {
-              damage = rollDiceString(spell.damage_dice);
+              damage = sharedDamage ?? rollDiceString(spell.damage_dice);
             }
           }
 
           if (!hitOrAffected) {
-            logMessage = `${attacker.name} は ${spell.name} を唱えたが、効果がなかった。${detailText}`;
-            logType = 'system';
+            spellLogEntries.push({
+              message: `${attacker.name} は ${spell.name} を唱えたが、効果がなかった。${detailText}`,
+              type: 'system'
+            });
             return c;
           }
 
           const newHp = Math.max(0, c.hp.current - damage);
-          logMessage = `${attacker.name} は ${spell.name} を唱えた！ ${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！${detailText}`;
-          logType = spell.auto_hit ? 'player_action' : spellAttackCritical ? 'critical' : 'player_action';
+          const entryMessage = `${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！${detailText}`;
+          const entryType = spell.auto_hit ? 'player_action' : spellAttackCritical ? 'critical' : 'player_action';
+          if (isMultiTargetSpell) {
+            multiTargetDetails.push(entryMessage);
+            if (entryType === 'critical') {
+              multiTargetLogType = 'critical';
+            } else if (multiTargetLogType !== 'critical') {
+              multiTargetLogType = entryType;
+            }
+          } else {
+            spellLogEntries.push({
+              message: `${spellMessagePrefix}${entryMessage}`,
+              type: entryType
+            });
+          }
 
           setTimeout(() => set({ enemyShakeTargetId: c.id }), 0);
-          setTimeout(() => set({ enemyShakeTargetId: null }), 150);
+          setTimeout(() => set({ enemyShakeTargetId: null }), 300);
 
           return {
             ...c,
@@ -618,16 +650,29 @@ export const useGameStore = create<GameState>((set, get) => ({
       return c;
     });
 
-    // 対象が見つからなかった場合などログがないなら処理中断
-    if (!logMessage) return;
+    if (spellLogEntries.length === 0 && multiTargetDetails.length === 0) return;
 
-    // ログ出力
-    addLog(logMessage, logType);
+    if (isMultiTargetSpell) {
+      const multiTargetMessage = `${spellMessagePrefix}\n${multiTargetDetails.join('\n')}`;
+      addLog(multiTargetMessage.trim(), multiTargetLogType);
+    }
 
-    // 対象を倒したかどうかのチェック
-    const targetCombatant = updatedCombatants.find((c) => c.id === targetId);
-    if (targetCombatant && targetCombatant.hp.current === 0 && spell.damage_dice) {
-      addLog(`${targetCombatant.name} を倒した！`, 'info');
+    spellLogEntries.forEach((entry) => {
+      addLog(entry.message, entry.type);
+    });
+
+    // 範囲攻撃で全体を倒した場合も考慮
+    if (spell.targets_all_enemies || spell.targets_random) {
+      updatedCombatants
+        .filter((c) => !c.is_player && c.hp.current === 0)
+        .forEach((targetCombatant) => {
+          addLog(`${targetCombatant.name} を倒した！`, 'info');
+        });
+    } else {
+      const targetCombatant = updatedCombatants.find((c) => c.id === targetId);
+      if (targetCombatant && targetCombatant.hp.current === 0 && spell.damage_dice) {
+        addLog(`${targetCombatant.name} を倒した！`, 'info');
+      }
     }
 
     // --- 3. パーティデータの不変同期 ---
@@ -785,14 +830,19 @@ addLog(`${target.name} は ${damage} のダメージを受けた！`, attackRoll
           xp: totalXp,
           gold: totalGold,
           items: ['ポーション']
-        },
-        showResultModal: true
+        }
       });
+      setTimeout(() => {
+        set({ showResultModal: true });
+      }, 300);
       return true;
     }
 
     if (alivePlayers.length === 0) {
       addLog('パーティは全滅した...', 'critical');
+      setTimeout(() => {
+        set({ showResultModal: true });
+      }, 300);
       return true;
     }
 
