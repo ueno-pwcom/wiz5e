@@ -119,7 +119,7 @@ async function fetchSpells() {
 // 4. モンスターデータの取得 & 整形
 async function fetchMonsters() {
   console.log('Fetching Monsters...');
-  const targetMonsters = ['goblin', 'skeleton', 'zombie', 'bugbear'];
+  const targetMonsters = ['goblin', 'skeleton', 'zombie', 'bugbear', 'orc', 'kobold', 'gnoll', 'hobgoblin', 'troll', 'ogre'];
   const monstersData = {};
 
   for (const index of targetMonsters) {

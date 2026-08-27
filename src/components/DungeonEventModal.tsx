@@ -91,6 +91,7 @@ export const DungeonEventModal: React.FC = () => {
                   <button
                     key={option.id}
                     onClick={() => resolveEventOption(option)}
+                    className="dungeon-event-option-button"
                     style={optionButtonStyle}
                   >
                     <div style={{ fontWeight: 'bold' }}>{option.label}</div>

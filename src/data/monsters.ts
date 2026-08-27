@@ -42,5 +42,68 @@ export const monsterList: Record<string, MonsterData> = {
         damage_type: '刺突'
       }
     ]
+  },
+  kobold: {
+    id: 'kobold',
+    name: 'コボルド',
+    cr: 0.125,
+    xp: 25,
+    ac: 12,
+    hp: {
+      current: 5,
+      max: 5,
+      dice: '2d6-2'
+    },
+    stats: { str: 7, dex: 15, con: 9, int: 8, wis: 7, cha: 8 },
+    actions: [
+      {
+        name: '短剣',
+        to_hit: 4,
+        damage_dice: '1d4+2',
+        damage_type: '刺突'
+      }
+    ]
+  },
+  zombie: {
+    id: 'zombie',
+    name: 'ゾンビ',
+    cr: 0.25,
+    xp: 50,
+    ac: 8,
+    hp: {
+      current: 22,
+      max: 22,
+      dice: '3d8+9'
+    },
+    stats: { str: 13, dex: 6, con: 16, int: 3, wis: 6, cha: 5 },
+    actions: [
+      {
+        name: '打撃',
+        to_hit: 3,
+        damage_dice: '1d6+1',
+        damage_type: '殴打'
+      }
+    ]
+  },
+  hobgoblin: {
+    id: 'hobgoblin',
+    name: 'ホブゴブリン',
+    cr: 0.5,
+    xp: 100,
+    ac: 18,
+    hp: {
+      current: 11,
+      max: 11,
+      dice: '2d8+2'
+    },
+    stats: { str: 13, dex: 12, con: 12, int: 10, wis: 10, cha: 9 },
+    actions: [
+      {
+        name: 'ロングソード',
+        to_hit: 3,
+        damage_dice: '1d8+1',
+        damage_type: '斬撃'
+      }
+    ]
   }
 };
