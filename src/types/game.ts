@@ -161,6 +161,9 @@ export interface MonsterData {
     dice: string;
   };
   stats: AbilityScores;
+  damage_vulnerabilities?: DamageType[];
+  damage_resistances?: DamageType[];
+  damage_immunities?: DamageType[];
   actions: MonsterAction[];
 }
 

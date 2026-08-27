@@ -134,6 +134,25 @@ async function fetchMonsters() {
       damage_type: act.damage?.[0]?.damage_type?.name ? t(act.damage[0].damage_type.name.toLowerCase()) : "打撃"
     }));
 
+    const damageVulnerabilities = (detail.damage_vulnerabilities || [])
+      .map((v) => {
+        if (typeof v === 'string') return t(v.toLowerCase());
+        return v?.name ? t(v.name.toLowerCase()) : null;
+      })
+      .filter(Boolean);
+    const damageResistances = (detail.damage_resistances || [])
+      .map((r) => {
+        if (typeof r === 'string') return t(r.toLowerCase());
+        return r?.name ? t(r.name.toLowerCase()) : null;
+      })
+      .filter(Boolean);
+    const damageImmunities = (detail.damage_immunities || [])
+      .map((i) => {
+        if (typeof i === 'string') return t(i.toLowerCase());
+        return i?.name ? t(i.name.toLowerCase()) : null;
+      })
+      .filter(Boolean);
+
     monstersData[detail.index] = {
       id: detail.index,
       name: t(detail.name),
@@ -153,6 +172,9 @@ async function fetchMonsters() {
         wis: detail.wisdom,
         cha: detail.charisma
       },
+      damage_vulnerabilities: damageVulnerabilities,
+      damage_resistances: damageResistances,
+      damage_immunities: damageImmunities,
       actions: actions
     };
   }

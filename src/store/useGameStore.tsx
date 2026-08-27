@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, WallType } from '../types/game';
 import { map1Data, map2Data, map3Data } from '../data/map1';
 import { spellList } from '../data/spells';
-import { monsterList } from '../data/monsters';
 import { itemList } from '../data/items';
 import { dungeonEvents } from '../data/dungeonEvents';
 import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
+import { monstersData } from '../utils/srdData';
 import { classesData } from '../utils/srdData';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
@@ -38,7 +38,13 @@ const DAMAGE_TYPE_SOUND_MAP: Record<string, string> = {
 };
 
 const BATTLE_BGM_URL = new URL('../assets/sounds/戦闘BGM.mp3', import.meta.url).href;
+const DUNGEON_BGM_URL = new URL('../assets/sounds/ダンジョンBGM.mp3', import.meta.url).href;
+const TOWN_BGM_URL = new URL('../assets/sounds/街BGM.mp3', import.meta.url).href;
+const CAMP_BGM_URL = new URL('../assets/sounds/キャンプBGM.mp3', import.meta.url).href;
 let battleBgmAudio: HTMLAudioElement | null = null;
+let dungeonBgmAudio: HTMLAudioElement | null = null;
+let townBgmAudio: HTMLAudioElement | null = null;
+let campBgmAudio: HTMLAudioElement | null = null;
 
 const getBattleBgmAudio = (): HTMLAudioElement => {
   if (!battleBgmAudio) {
@@ -48,8 +54,68 @@ const getBattleBgmAudio = (): HTMLAudioElement => {
   return battleBgmAudio;
 };
 
+const getDungeonBgmAudio = (): HTMLAudioElement => {
+  if (!dungeonBgmAudio) {
+    dungeonBgmAudio = new Audio(DUNGEON_BGM_URL);
+    dungeonBgmAudio.loop = true;
+  }
+  return dungeonBgmAudio;
+};
+
+const getTownBgmAudio = (): HTMLAudioElement => {
+  if (!townBgmAudio) {
+    townBgmAudio = new Audio(TOWN_BGM_URL);
+    townBgmAudio.loop = true;
+  }
+  return townBgmAudio;
+};
+
+const getCampBgmAudio = (): HTMLAudioElement => {
+  if (!campBgmAudio) {
+    campBgmAudio = new Audio(CAMP_BGM_URL);
+    campBgmAudio.loop = true;
+  }
+  return campBgmAudio;
+};
+
 const playBattleBgm = () => {
+  stopDungeonBgm();
+  stopTownBgm();
+  stopCampBgm();
   const audio = getBattleBgmAudio();
+  audio.currentTime = 0;
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
+};
+
+export const playDungeonBgm = () => {
+  stopBattleBgm();
+  stopTownBgm();
+  stopCampBgm();
+  const audio = getDungeonBgmAudio();
+  audio.currentTime = 0;
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
+};
+
+export const playTownBgm = () => {
+  stopBattleBgm();
+  stopDungeonBgm();
+  stopCampBgm();
+  const audio = getTownBgmAudio();
+  audio.currentTime = 0;
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
+};
+
+export const playCampBgm = () => {
+  stopBattleBgm();
+  stopDungeonBgm();
+  stopTownBgm();
+  const audio = getCampBgmAudio();
   audio.currentTime = 0;
   void audio.play().catch(() => {
     // 自動再生制限などで失敗しても無視
@@ -60,6 +126,24 @@ export const stopBattleBgm = () => {
   if (!battleBgmAudio) return;
   battleBgmAudio.pause();
   battleBgmAudio.currentTime = 0;
+};
+
+export const stopDungeonBgm = () => {
+  if (!dungeonBgmAudio) return;
+  dungeonBgmAudio.pause();
+  dungeonBgmAudio.currentTime = 0;
+};
+
+export const stopTownBgm = () => {
+  if (!townBgmAudio) return;
+  townBgmAudio.pause();
+  townBgmAudio.currentTime = 0;
+};
+
+export const stopCampBgm = () => {
+  if (!campBgmAudio) return;
+  campBgmAudio.pause();
+  campBgmAudio.currentTime = 0;
 };
 
 const getSoundUrlForDamageType = (damageType?: DamageType | null): string => {
@@ -84,6 +168,27 @@ const playMissSound = () => {
   void audio.play().catch(() => {
     // 自動再生制限などで失敗しても無視
   });
+};
+
+const applyDamageTypeModifiers = (damage: number, damageType: DamageType | null | undefined, target: Combatant) => {
+  if (!damageType || target.is_player) {
+    return { adjustedDamage: damage, modifierTag: '' };
+  }
+
+  const monster = target.ref as MonsterData;
+  if (monster.damage_immunities?.includes(damageType)) {
+    return { adjustedDamage: 0, modifierTag: ' 無効' };
+  }
+
+  if (monster.damage_vulnerabilities?.includes(damageType)) {
+    return { adjustedDamage: damage * 2, modifierTag: ' 弱点' };
+  }
+
+  if (monster.damage_resistances?.includes(damageType)) {
+    return { adjustedDamage: Math.floor(damage / 2), modifierTag: ' 耐性' };
+  }
+
+  return { adjustedDamage: damage, modifierTag: '' };
 };
 
 type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
@@ -279,9 +384,16 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @param scene 遷移先のシーン名。
    */
   setScene: (scene) => {
+    if (scene === 'dungeon') {
+      playDungeonBgm();
+    } else if (scene !== 'battle') {
+      stopDungeonBgm();
+    }
+
     if (scene !== 'battle') {
       stopBattleBgm();
     }
+
     set({ scene });
   },
 
@@ -326,7 +438,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         ? 3
         : 4;
     const enemyCount = Math.floor(Math.random() * maxEnemies) + 1;
-    const baseMonster = monsterList[selectedMonsterId];
+    const baseMonster = monstersData[selectedMonsterId];
     if (!baseMonster) return;
 
     // 参加ユニット（Combatant）の生成とイニシアチブ（d20 + DEX修正値）の算出
@@ -378,6 +490,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     // イニシアチブが高い順にソート
     newCombatants.sort((a, b) => b.initiative - a.initiative);
 
+    stopDungeonBgm();
     set({
       scene: 'battle',
       combatants: newCombatants,
@@ -447,13 +560,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       const weaponDice = weapon?.damage_dice || '1d8';
       const diceDamage = rollDiceString(weaponDice, attackRoll.isCritical);
       const damageAbilityMod = isRanged ? dexMod : isFinesse ? Math.max(strMod, dexMod) : strMod;
-      const damage = diceDamage + damageAbilityMod;
-      target.hp.current = Math.max(0, target.hp.current - damage);
+      const rawDamage = diceDamage + damageAbilityMod;
+      const damageType = weapon?.damage_type ?? '殴打';
+      const { adjustedDamage, modifierTag } = applyDamageTypeModifiers(rawDamage, damageType, target);
+      target.hp.current = Math.max(0, target.hp.current - adjustedDamage);
 
       const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
       const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
-      addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, attackRoll.isCritical ? 'critical' : 'player_action');
-      playSoundForDamageType(weapon?.damage_type ?? '殴打');
+      addLog(`${target.name} に ${adjustedDamage} のダメージ！${modifierTag} （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, attackRoll.isCritical ? 'critical' : 'player_action');
+      playSoundForDamageType(damageType);
       set({ combatants: [...combatants], enemyShakeTargetId: target.id });
       setTimeout(() => set({ enemyShakeTargetId: null }), 300);
 
@@ -691,8 +806,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             return c;
           }
 
-          const newHp = Math.max(0, c.hp.current - damage);
-          const entryMessage = `${c.name} に ${damage} の${spell.damage_type || ''}ダメージ！${detailText}`;
+          const damageType = spell.damage_type ?? null;
+          const { adjustedDamage, modifierTag } = applyDamageTypeModifiers(damage, damageType, c);
+          const newHp = Math.max(0, c.hp.current - adjustedDamage);
+          const entryMessage = `${c.name} に ${adjustedDamage} の${spell.damage_type || ''}ダメージ！${modifierTag}${detailText}`;
           const entryType = spell.auto_hit ? 'player_action' : spellAttackCritical ? 'critical' : 'player_action';
           if (isMultiTargetSpell) {
             multiTargetDetails.push(entryMessage);

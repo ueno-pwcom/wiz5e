@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './GameContainer.css';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore, playDungeonBgm, playTownBgm, playCampBgm } from '../store/useGameStore';
 import { DungeonView } from './DungeonView';
 import { BattleView } from './BattleView';
 import { TownView } from './TownView';
@@ -17,6 +17,16 @@ export const GameContainer: React.FC = () => {
   const gold = useGameStore((state) => state.gold);
   const logs = useGameStore((state) => state.logs);
   const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
+
+  useEffect(() => {
+    if (scene === 'dungeon') {
+      playDungeonBgm();
+    } else if (scene === 'town') {
+      playTownBgm();
+    } else if (scene === 'camp') {
+      playCampBgm();
+    }
+  }, [scene]);
 
   return (
     <div className="game-container">
