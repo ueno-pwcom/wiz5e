@@ -320,7 +320,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       randomVal -= monster.weight;
     }
 
-    const enemyCount = Math.floor(Math.random() * 2) + 1; // 1〜2体
+    const maxEnemies = currentMap.map_id === 'dungeon_b1'
+      ? 2
+      : currentMap.map_id === 'dungeon_b2'
+        ? 3
+        : 4;
+    const enemyCount = Math.floor(Math.random() * maxEnemies) + 1;
     const baseMonster = monsterList[selectedMonsterId];
     if (!baseMonster) return;
 
