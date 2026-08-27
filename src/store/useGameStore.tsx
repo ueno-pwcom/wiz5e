@@ -916,8 +916,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   processEnemyTurn: () => {
     const { combatants, currentTurnIndex, addLog, nextTurn } = get();
     const attacker = combatants[currentTurnIndex];
+    const attackerStatusEffects = attacker?.ref?.status_effects ?? [];
 
-    if (!attacker || attacker.is_player || attacker.hp.current <= 0) {
+    if (!attacker || attacker.is_player || attacker.hp.current <= 0 || attackerStatusEffects.includes('unconscious')) {
+      if (attacker && attackerStatusEffects.includes('unconscious')) {
+        addLog(`${attacker.name} は気絶していて行動できない。`, 'system');
+      }
       nextTurn();
       return;
     }
@@ -992,7 +996,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     const count = combatants.length;
     let nextIndex = (currentTurnIndex + 1) % count;
 
-    while (combatants[nextIndex].hp.current <= 0) {
+    const isSkippable = (combatant: Combatant) => {
+      const statusEffects = combatant.ref.status_effects ?? [];
+      return combatant.hp.current <= 0 || statusEffects.includes('unconscious');
+    };
+
+    while (isSkippable(combatants[nextIndex])) {
       nextIndex = (nextIndex + 1) % count;
     }
 
@@ -1003,7 +1012,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       ) {
         addLog(`${combatants[nextIndex].name} は体勢を崩して行動できない。`, 'system');
         nextIndex = (nextIndex + 1) % count;
-        while (combatants[nextIndex].hp.current <= 0) {
+        while (isSkippable(combatants[nextIndex])) {
           nextIndex = (nextIndex + 1) % count;
         }
       }
