@@ -1,4 +1,35 @@
 {
+  "fire-bolt": {
+    "id": "fire-bolt",
+    "name": "ファイア・ボルト",
+    "level": 0,
+    "school": "evocation",
+    "classes": [
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": "1d10",
+    "heal_dice": null,
+    "damage_type": "火",
+    "save_type": null,
+    "save_effect": null,
+    "requires_concentration": false
+  },
+  "sacred-flame": {
+    "id": "sacred-flame",
+    "name": "セイクリッド・フレイム",
+    "level": 0,
+    "school": "evocation",
+    "classes": [
+      "cleric"
+    ],
+    "damage_dice": "1d8",
+    "heal_dice": null,
+    "damage_type": "光輝",
+    "save_type": "dex",
+    "save_effect": "none",
+    "requires_concentration": false
+  },
   "burning-hands": {
     "id": "burning-hands",
     "name": "バーニング・ハンズ",

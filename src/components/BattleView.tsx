@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './BattleView.css';
 import { useGameStore } from '../store/useGameStore';
-import { spellList } from '../data/spells';
+import { spellsData } from '../utils/srdData';
 import { itemList } from '../data/items';
 import type { Character, SpellData, ItemData } from '../types/game';
 
@@ -47,7 +47,7 @@ export const BattleView: React.FC = () => {
   const allies = party.filter((c) => c.hp.current > 0);
 
   const availableSpells = playerChar
-    ? Object.values(spellList).filter((spell) => spell.classes.includes(playerChar.class_id))
+    ? Object.values(spellsData).filter((spell) => spell.classes.includes(playerChar.class_id))
     : [];
   const hasSpells = availableSpells.length > 0;
   const availableItems = inventory

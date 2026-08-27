@@ -16,6 +16,8 @@ const translationMap = {
   // 呪文名
   "Burning Hands": "バーニング・ハンズ",
   "Magic Missile": "マジック・ミサイル",
+  "Fire Bolt": "ファイア・ボルト",
+  "Sacred Flame": "セイクリッド・フレイム",
   "Cure Wounds": "キュア・ウーンズ",
   "Bless": "ブレス",
   "Shield": "シールド",
@@ -25,13 +27,30 @@ const translationMap = {
   "Skeleton": "スケルトン",
   "Zombie": "ゾンビ",
   "Bugbear": "バグベア",
+  "Orc": "オーク",
+  "Kobold": "コボルド",
+  "Gnoll": "グノール",
+  "Hobgoblin": "ホブゴブリン",
+  "Troll": "トロール",
+  "Ogre": "オーガ",
 
-  // 武器名
+  // 武器名 / 行動名
   "Dagger": "ダガー",
   "Shortsword": "ショートソード",
   "Longsword": "ロングソード",
   "Shortbow": "ショートボウ",
+  "Longbow": "ロングボウ",
   "Mace": "メイス",
+  "Scimitar": "シミター",
+  "Morningstar": "モーニングスター",
+  "Javelin": "ジャベリン",
+  "Greataxe": "グレートアックス",
+  "Slam": "打撃",
+  "Bite": "噛みつき",
+  "Spear": "槍",
+  "Claw": "爪",
+  "Greatclub": "グレートクラブ",
+  "Multiattack": "マルチアタック",
 
   // 属性・ダメージ種別
   "slashing": "斬撃",
@@ -87,12 +106,16 @@ async function fetchClasses() {
 // 3. 呪文データの取得 & 整形（簡易化仕様）
 async function fetchSpells() {
   console.log('Fetching Spells...');
-  const targetSpells = ['burning-hands', 'magic-missile', 'cure-wounds', 'bless', 'shield'];
+  const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'cure-wounds', 'bless', 'shield'];
   const spellsData = {};
 
   for (const index of targetSpells) {
     const res = await fetch(`${BASE_URL}/spells/${index}`);
     const detail = await res.json();
+
+    const damageDice = detail.damage?.damage_at_slot_level?.['1']
+      || (detail.level === 0 ? Object.values(detail.damage?.damage_at_character_level || {})[0] : null)
+      || null;
 
     spellsData[detail.index] = {
       id: detail.index,
@@ -100,7 +123,7 @@ async function fetchSpells() {
       level: detail.level,
       school: detail.school.name.toLowerCase(),
       classes: detail.classes.map(c => c.index),
-      damage_dice: detail.damage?.damage_at_slot_level?.['1'] || null,
+      damage_dice: damageDice,
       heal_dice: detail.heal_at_slot_level?.['1'] || null,
       damage_type: detail.damage?.damage_type?.name ? t(detail.damage.damage_type.name.toLowerCase()) : null,
       save_type: detail.dc?.dc_type?.name?.toLowerCase() || null,
@@ -128,7 +151,7 @@ async function fetchMonsters() {
 
     // 攻撃アクションのみ抽出
     const actions = (detail.actions || []).map(act => ({
-      name: act.name,
+      name: t(act.name),
       to_hit: act.attack_bonus || 0,
       damage_dice: act.damage?.[0]?.damage_dice || "1d6",
       damage_type: act.damage?.[0]?.damage_type?.name ? t(act.damage[0].damage_type.name.toLowerCase()) : "打撃"

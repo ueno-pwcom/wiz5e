@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, WallType } from '../types/game';
 import { map1Data, map2Data, map3Data } from '../data/map1';
-import { spellList } from '../data/spells';
 import { itemList } from '../data/items';
 import { dungeonEvents } from '../data/dungeonEvents';
 import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
-import { monstersData } from '../utils/srdData';
+import { monstersData, spellsData } from '../utils/srdData';
 import { classesData } from '../utils/srdData';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
@@ -689,7 +688,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     attacker.is_evading = false;
 
     const playerChar = attacker.ref as Character;
-    const spell = spellList[spellId];
+    const spell = spellsData[spellId];
 
     if (!spell) {
       addLog('指定された呪文が存在しません。', 'system');
