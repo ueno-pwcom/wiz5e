@@ -1407,18 +1407,37 @@ export const useGameStore = create<GameState>((set, get) => ({
       return false;
     }
 
-    const restoredParty = party.map((m) => ({
-      ...m,
-      hp: { ...m.hp, current: m.hp.max },
-      is_alive: true
-    }));
+    const restoredParty = party.map((m) => {
+      const restoredSlots: Record<number, { current: number; max: number }> = {};
+      const memberSpellSlots = m.spell_slots;
+      if (memberSpellSlots) {
+        Object.keys(memberSpellSlots).forEach((levelStr) => {
+          const level = Number(levelStr);
+          const slot = memberSpellSlots[level];
+          if (slot) {
+            restoredSlots[level] = {
+              current: slot.max,
+              max: slot.max
+            };
+          }
+        });
+      }
+
+      return {
+        ...m,
+        hp: { ...m.hp, current: m.hp.max },
+        is_alive: true,
+        hit_dice_remaining: m.level,
+        spell_slots: restoredSlots
+      };
+    });
 
     set({
       gold: gold - cost,
       party: restoredParty
     });
 
-    addLog(`宿屋で大休憩をとり、パーティー全員のHPが全回復した！ (-${cost} G)`, 'heal');
+    addLog(`宿屋で大休憩をとり、パーティー全員のHP・ヒットダイス・呪文スロットが全回復した！ (-${cost} G)`, 'heal');
     return true;
   },
 

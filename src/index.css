@@ -63,9 +63,12 @@
 }
 
 html,
-body,
-body * {
+body {
   cursor: default;
+  caret-color: transparent;
+}
+
+body * {
   caret-color: transparent;
 }
 

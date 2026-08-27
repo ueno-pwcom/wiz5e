@@ -108,9 +108,14 @@ export const BattleView: React.FC = () => {
                   onClick={() => isTargetable && handleSelectTarget(enemy.id)}
                   className={`battle-view-enemy-card ${isTargetable ? 'targetable' : ''} ${enemyShakeTargetId === enemy.id ? 'enemy-shake' : ''}`}
                 >
-                  <div className="battle-view-enemy-icon">👾</div>
+                    <div className="battle-view-enemy-icon">👾</div>
                   <div className="battle-view-enemy-name">{enemy.name}</div>
-                  <div className="battle-view-enemy-hp">HP: {enemy.hp.current} / {enemy.hp.max}</div>
+                  <div className="battle-view-enemy-hp-bar">
+                    <div
+                      className="battle-view-enemy-hp-bar-fill"
+                      style={{ width: `${Math.max(0, Math.min(100, Math.floor((enemy.hp.current / enemy.hp.max) * 100)))}%` }}
+                    />
+                  </div>
                 </div>
               );
             })}

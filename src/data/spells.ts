@@ -15,19 +15,6 @@ export const spellList: Record<string, SpellData> = {
     save_effect: null,
     requires_concentration: false
   },
-  ray_of_frost: {
-    id: 'ray_of_frost',
-    name: 'レイ・オヴ・フロスト',
-    level: 0,
-    school: 'Evocation',
-    classes: ['wizard'],
-    damage_dice: '1d8',
-    heal_dice: null,
-    damage_type: '冷気',
-    save_type: null,
-    save_effect: null,
-    requires_concentration: false
-  },
   sacred_flame: {
     id: 'sacred_flame',
     name: 'セイクレッド・フレイム',

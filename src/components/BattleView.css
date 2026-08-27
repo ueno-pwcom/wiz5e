@@ -165,10 +165,20 @@
   font-size: 13px;
 }
 
-.battle-view-enemy-hp {
-  color: #ef4444;
-  font-size: 11px;
-  margin-top: 4px;
+.battle-view-enemy-hp-bar {
+  width: 100%;
+  height: 10px;
+  background-color: #374151;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid #4b5563;
+}
+
+.battle-view-enemy-hp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f87171, #ef4444);
+  transition: width 0.2s ease;
 }
 
 .battle-view-heal-panel {
