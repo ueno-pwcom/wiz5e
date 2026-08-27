@@ -23,13 +23,13 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Scimitar",
+        "name": "シミター",
         "to_hit": 4,
         "damage_dice": "1d6+2",
         "damage_type": "斬撃"
       },
       {
-        "name": "Shortbow",
+        "name": "ショートボウ",
         "to_hit": 4,
         "damage_dice": "1d6+2",
         "damage_type": "刺突"
@@ -64,13 +64,13 @@
     ],
     "actions": [
       {
-        "name": "Shortsword",
+        "name": "ショートソード",
         "to_hit": 4,
         "damage_dice": "1d6+2",
         "damage_type": "刺突"
       },
       {
-        "name": "Shortbow",
+        "name": "ショートボウ",
         "to_hit": 4,
         "damage_dice": "1d6+2",
         "damage_type": "刺突"
@@ -103,7 +103,7 @@
     ],
     "actions": [
       {
-        "name": "Slam",
+        "name": "打撃",
         "to_hit": 3,
         "damage_dice": "1d6+1",
         "damage_type": "殴打"
@@ -134,13 +134,13 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Morningstar",
+        "name": "モーニングスター",
         "to_hit": 4,
         "damage_dice": "2d8+2",
         "damage_type": "刺突"
       },
       {
-        "name": "Javelin",
+        "name": "ジャベリン",
         "to_hit": 4,
         "damage_dice": "2d6+2",
         "damage_type": "刺突"
@@ -149,7 +149,7 @@
   },
   "orc": {
     "id": "orc",
-    "name": "Orc",
+    "name": "オーク",
     "cr": 0.5,
     "xp": 100,
     "ac": 13,
@@ -171,13 +171,13 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Greataxe",
+        "name": "グレートアックス",
         "to_hit": 5,
         "damage_dice": "1d12+3",
         "damage_type": "斬撃"
       },
       {
-        "name": "Javelin",
+        "name": "ジャベリン",
         "to_hit": 5,
         "damage_dice": "1d6+3",
         "damage_type": "刺突"
@@ -186,7 +186,7 @@
   },
   "kobold": {
     "id": "kobold",
-    "name": "Kobold",
+    "name": "コボルド",
     "cr": 0.125,
     "xp": 25,
     "ac": 12,
@@ -208,13 +208,13 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Dagger",
+        "name": "短剣",
         "to_hit": 4,
         "damage_dice": "1d4+2",
         "damage_type": "刺突"
       },
       {
-        "name": "Sling",
+        "name": "スリング",
         "to_hit": 4,
         "damage_dice": "1d4+2",
         "damage_type": "殴打"
@@ -223,7 +223,7 @@
   },
   "gnoll": {
     "id": "gnoll",
-    "name": "Gnoll",
+    "name": "グノール",
     "cr": 0.5,
     "xp": 100,
     "ac": 15,
@@ -245,19 +245,19 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Bite",
+        "name": "噛みつき",
         "to_hit": 4,
         "damage_dice": "1d4+2",
         "damage_type": "刺突"
       },
       {
-        "name": "Spear",
+        "name": "槍",
         "to_hit": 4,
         "damage_dice": "1d6",
         "damage_type": "打撃"
       },
       {
-        "name": "Longbow",
+        "name": "ロングボウ",
         "to_hit": 3,
         "damage_dice": "1d8+1",
         "damage_type": "刺突"
@@ -266,7 +266,7 @@
   },
   "hobgoblin": {
     "id": "hobgoblin",
-    "name": "Hobgoblin",
+    "name": "ホブゴブリン",
     "cr": 0.5,
     "xp": 100,
     "ac": 18,
@@ -288,13 +288,13 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Longsword",
+        "name": "ロングソード",
         "to_hit": 3,
         "damage_dice": "1d6",
         "damage_type": "打撃"
       },
       {
-        "name": "Longbow",
+        "name": "ロングボウ",
         "to_hit": 3,
         "damage_dice": "1d8+1",
         "damage_type": "刺突"
@@ -303,7 +303,7 @@
   },
   "troll": {
     "id": "troll",
-    "name": "Troll",
+    "name": "トロール",
     "cr": 5,
     "xp": 1800,
     "ac": 15,
@@ -325,19 +325,19 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Multiattack",
+        "name": "マルチアタック",
         "to_hit": 0,
         "damage_dice": "1d6",
         "damage_type": "打撃"
       },
       {
-        "name": "Bite",
+        "name": "噛みつき",
         "to_hit": 7,
         "damage_dice": "1d6+4",
         "damage_type": "刺突"
       },
       {
-        "name": "Claw",
+        "name": "爪",
         "to_hit": 7,
         "damage_dice": "2d6+4",
         "damage_type": "斬撃"
@@ -346,7 +346,7 @@
   },
   "ogre": {
     "id": "ogre",
-    "name": "Ogre",
+    "name": "オーガ",
     "cr": 2,
     "xp": 450,
     "ac": 11,
@@ -368,13 +368,13 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "Greatclub",
+        "name": "グレートクラブ",
         "to_hit": 6,
         "damage_dice": "2d8+4",
         "damage_type": "殴打"
       },
       {
-        "name": "Javelin",
+        "name": "ジャベリン",
         "to_hit": 6,
         "damage_dice": "2d6+4",
         "damage_type": "刺突"

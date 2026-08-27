@@ -45,6 +45,8 @@ let battleBgmAudio: HTMLAudioElement | null = null;
 let dungeonBgmAudio: HTMLAudioElement | null = null;
 let townBgmAudio: HTMLAudioElement | null = null;
 let campBgmAudio: HTMLAudioElement | null = null;
+let pendingBgm: 'battle' | 'dungeon' | 'town' | 'camp' | null = null;
+let bgmUnlockListenerAttached = false;
 
 const getBattleBgmAudio = (): HTMLAudioElement => {
   if (!battleBgmAudio) {
@@ -78,15 +80,46 @@ const getCampBgmAudio = (): HTMLAudioElement => {
   return campBgmAudio;
 };
 
+const attachBgmUnlockListener = () => {
+  if (bgmUnlockListenerAttached) return;
+  bgmUnlockListenerAttached = true;
+  const unlock = () => {
+    if (pendingBgm) {
+      switch (pendingBgm) {
+        case 'battle':
+          playBattleBgm();
+          break;
+        case 'dungeon':
+          playDungeonBgm();
+          break;
+        case 'town':
+          playTownBgm();
+          break;
+        case 'camp':
+          playCampBgm();
+          break;
+      }
+    }
+    pendingBgm = null;
+    bgmUnlockListenerAttached = false;
+  };
+  window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+};
+
+const tryPlayBgm = (audio: HTMLAudioElement, scene: 'battle' | 'dungeon' | 'town' | 'camp') => {
+  audio.currentTime = 0;
+  void audio.play().catch(() => {
+    pendingBgm = scene;
+    attachBgmUnlockListener();
+  });
+};
+
 const playBattleBgm = () => {
   stopDungeonBgm();
   stopTownBgm();
   stopCampBgm();
   const audio = getBattleBgmAudio();
-  audio.currentTime = 0;
-  void audio.play().catch(() => {
-    // 自動再生制限などで失敗しても無視
-  });
+  tryPlayBgm(audio, 'battle');
 };
 
 export const playDungeonBgm = () => {
@@ -94,10 +127,7 @@ export const playDungeonBgm = () => {
   stopTownBgm();
   stopCampBgm();
   const audio = getDungeonBgmAudio();
-  audio.currentTime = 0;
-  void audio.play().catch(() => {
-    // 自動再生制限などで失敗しても無視
-  });
+  tryPlayBgm(audio, 'dungeon');
 };
 
 export const playTownBgm = () => {
@@ -105,10 +135,7 @@ export const playTownBgm = () => {
   stopDungeonBgm();
   stopCampBgm();
   const audio = getTownBgmAudio();
-  audio.currentTime = 0;
-  void audio.play().catch(() => {
-    // 自動再生制限などで失敗しても無視
-  });
+  tryPlayBgm(audio, 'town');
 };
 
 export const playCampBgm = () => {
@@ -116,10 +143,7 @@ export const playCampBgm = () => {
   stopDungeonBgm();
   stopTownBgm();
   const audio = getCampBgmAudio();
-  audio.currentTime = 0;
-  void audio.play().catch(() => {
-    // 自動再生制限などで失敗しても無視
-  });
+  tryPlayBgm(audio, 'camp');
 };
 
 export const stopBattleBgm = () => {
@@ -181,11 +205,11 @@ const applyDamageTypeModifiers = (damage: number, damageType: DamageType | null 
   }
 
   if (monster.damage_vulnerabilities?.includes(damageType)) {
-    return { adjustedDamage: damage * 2, modifierTag: ' 弱点' };
+    return { adjustedDamage: damage * 2, modifierTag: ' 脆弱性' };
   }
 
   if (monster.damage_resistances?.includes(damageType)) {
-    return { adjustedDamage: Math.floor(damage / 2), modifierTag: ' 耐性' };
+    return { adjustedDamage: Math.floor(damage / 2), modifierTag: ' 抵抗' };
   }
 
   return { adjustedDamage: damage, modifierTag: '' };
@@ -357,12 +381,12 @@ const buildInitialInventory = () => {
 };
 
 export const useGameStore = create<GameState>((set, get) => ({
-  scene: 'dungeon',
+  scene: 'town',
   gold: 100,
   party: initialPartyWithEquipmentAc,
   characterRoster: [...initialPartyWithEquipmentAc],
   logs: [
-    { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '地下迷宮 1階に入った。', type: 'system' }
+    { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '街に到着した。', type: 'system' }
   ],
   currentMap: map1Data,
   playerPosition: map1Data.start_position,

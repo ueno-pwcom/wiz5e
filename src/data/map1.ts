@@ -204,8 +204,9 @@ export const map3Data: DungeonMap = {
   encounter_table: {
     rate: 0.20,
     monsters: [
-      { id: 'skeleton', weight: 40 },
-      { id: 'wraith', weight: 60 }
+      { id: 'zombie', weight: 20 },
+      { id: 'bugbear', weight: 30 },
+      { id: 'ogre', weight: 30 }
     ]
   },
   grid: buildB3Grid()
