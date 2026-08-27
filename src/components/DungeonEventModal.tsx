@@ -3,6 +3,7 @@ import React from 'react';
 import './DungeonEventModal.css';
 import { useGameStore } from '../store/useGameStore';
 import { getAbilityModifier } from '../utils/dice';
+import { classesData } from '../utils/srdData';
 
 export const DungeonEventModal: React.FC = () => {
   const activeEvent = useGameStore((state) => state.activeEvent);
@@ -77,8 +78,13 @@ export const DungeonEventModal: React.FC = () => {
               {activeEvent.options.map((option) => {
                 let modText = '';
                 if (option.check && currentActor) {
-                  const mod = getAbilityModifier(currentActor.stats[option.check.ability]);
-                  modText = ` [${mod >= 0 ? '+' : ''}${mod}]`;
+                  const abilityMod = getAbilityModifier(currentActor.stats[option.check.ability]);
+                  const isProficient = option.check.skill
+                    ? classesData[currentActor.class_id]?.proficiencies?.includes(option.check.skill)
+                    : false;
+                  const proficiencyMod = isProficient ? Math.floor((currentActor.level - 1) / 4) + 2 : 0;
+                  const totalMod = abilityMod + proficiencyMod;
+                  modText = ` [${abilityMod >= 0 ? '+' : ''}${abilityMod}${isProficient ? ` + ${proficiencyMod} (習熟) = ${totalMod}` : ''}]`;
                 }
 
                 return (

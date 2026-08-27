@@ -8,6 +8,7 @@ export interface EventOption {
     ability: AbilityType; // 例: 'dex' (手先の早業), 'wis' (知覚), 'str' (運動)
     dc: number;           // 難易度目標値 (例: 12)
     label: string;        // 表示用ラベル
+    skill?: string;       // 習熟判定を適用するスキル名
   };
   successText: string;
   failureText: string;
@@ -42,7 +43,7 @@ export const dungeonEvents: Record<string, DungeonEvent> = {
       {
         id: 'pick_lock',
         label: '鍵を開ける（手先の早業）',
-        check: { ability: 'dex', dc: 13, label: '【器用さ/手先の早業】DC 13' },
+        check: { ability: 'dex', dc: 13, label: '【器用さ/手先の早業】DC 13', skill: 'Sleight of Hand' },
         successText: 'カチリと音がして鍵が開いた！中に残されていた宝を手に入れた。',
         failureText: 'ピックが引っかかり、鍵を開けることができなかった。',
         reward: { gold: 40, items: ['potion_of_healing'] }
@@ -50,7 +51,7 @@ export const dungeonEvents: Record<string, DungeonEvent> = {
       {
         id: 'check_trap',
         label: '罠を警戒して慎重に開ける（知覚）',
-        check: { ability: 'wis', dc: 11, label: '【判断力/知覚】DC 11' },
+        check: { ability: 'wis', dc: 11, label: '【判断力/知覚】DC 11', skill: 'Perception' },
         successText: '箱の隙間に仕掛けられた針の罠を見抜き、安全に取り除いて中身を回収した！',
         failureText: '罠に気づかず箱を開けてしまい、毒針が刺さってしまった！',
         reward: { gold: 25 },
@@ -82,7 +83,7 @@ export const dungeonEvents: Record<string, DungeonEvent> = {
       {
         id: 'find_switch',
         label: '壁の隠しスイッチを探す（捜査）',
-        check: { ability: 'int', dc: 12, label: '【知力/捜査】DC 12' },
+        check: { ability: 'int', dc: 12, label: '【知力/捜査】DC 12', skill: 'Investigation' },
         successText: '壁の不自然な窪みを発見して押すと、石扉が滑らかにスライドして開いた！',
         failureText: '仕掛けらしきものは見つからなかった。'
       },

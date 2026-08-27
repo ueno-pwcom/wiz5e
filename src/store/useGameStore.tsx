@@ -6,6 +6,7 @@ import { monsterList } from '../data/monsters';
 import { itemList } from '../data/items';
 import { dungeonEvents } from '../data/dungeonEvents';
 import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
+import { classesData } from '../utils/srdData';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
 import { getAbilityModifier, rollD20, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
 
@@ -151,6 +152,15 @@ const findStairsPosition = (map: DungeonMap, eventType: 'stairs_up' | 'stairs_do
 
 const getPartyPositionRole = (index: number): PositionRole => {
   return index < 3 ? 'front' : 'back';
+};
+
+const getProficiencyBonus = (level: number): number => {
+  return Math.floor((level - 1) / 4) + 2;
+};
+
+const isActorProficientInSkill = (actor: Character, skillName: string): boolean => {
+  const classData = classesData[actor.class_id];
+  return classData?.proficiencies?.includes(skillName) ?? false;
 };
 
 function getCharacterWithCalculatedAc(character: Character): Character {
@@ -850,7 +860,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (option.check) {
       const d20Result = rollD20(0);
       const d20 = d20Result.total;
-      const mod = getAbilityModifier(actor.stats[option.check.ability]);
+      const abilityMod = getAbilityModifier(actor.stats[option.check.ability]);
+      const proficiencyMod = option.check.skill && isActorProficientInSkill(actor, option.check.skill)
+        ? getProficiencyBonus(actor.level)
+        : 0;
+      const mod = abilityMod + proficiencyMod;
       const total = d20 + mod;
       const passed = total >= option.check.dc;
 
@@ -1270,8 +1284,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (nextTile.event.type === 'chest') {
         triggerEvent('locked_chest');
         return;
-      } else if (nextTile.event.type === 'door') {
+      }
+      if (nextTile.event.type === 'door') {
         triggerEvent('heavy_door');
+        return;
+      }
+      if (nextTile.event.type === 'trap') {
+        triggerEvent('poison_dart_trap');
         return;
       }
     }
