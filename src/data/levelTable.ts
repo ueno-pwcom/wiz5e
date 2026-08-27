@@ -3,7 +3,7 @@
 // D&D 5e 累計必要XPテーブル
 export const XP_TABLE: Record<number, number> = {
   1: 0,
-  2: 100,
+  2: 300,
   3: 900,
   4: 2700,
   5: 6500,

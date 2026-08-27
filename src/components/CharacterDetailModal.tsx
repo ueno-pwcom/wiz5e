@@ -4,6 +4,7 @@ import './CharacterDetailModal.css';
 import { useGameStore } from '../store/useGameStore';
 import { InventoryView } from './InventoryView';
 import { itemList } from '../data/items';
+import { XP_TABLE } from '../data/levelTable';
 import { getAbilityModifier } from '../utils/dice';
 import type { Character } from '../types/game';
 
@@ -55,6 +56,10 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
     return mod >= 0 ? `+${mod}` : `${mod}`;
   };
 
+  const currentXp = character.xp || 0;
+  const nextLevelXp = XP_TABLE[character.level + 1] ?? currentXp;
+  const xpToNextLevel = Math.max(0, nextLevelXp - currentXp);
+
   const abilities = [
     { label: 'STR (筋力)', val: character.stats.str },
     { label: 'DEX (敏捷)', val: character.stats.dex },
@@ -103,6 +108,18 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
                 <span className="character-detail-stat-label">HP</span>
                 <span className="character-detail-stat-value character-detail-stat-value--hp">
                   {character.hp.current} / {character.hp.max}
+                </span>
+              </div>
+              <div className="character-detail-stat-box">
+                <span className="character-detail-stat-label">経験値</span>
+                <span className="character-detail-stat-value character-detail-stat-value--xp">
+                  {currentXp} / {nextLevelXp}
+                </span>
+              </div>
+              <div className="character-detail-stat-box">
+                <span className="character-detail-stat-label">次のレベルまで</span>
+                <span className="character-detail-stat-value character-detail-stat-value--xp-to-next">
+                  {xpToNextLevel} XP
                 </span>
               </div>
               <div className="character-detail-stat-box">
@@ -187,52 +204,4 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
       </div>
     </div>
   );
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  width: '100vw',
-  height: '100vh',
-  backgroundColor: 'rgba(0, 0, 0, 0.75)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 1000
-};
-
-const modalStyle: React.CSSProperties = {
-  backgroundColor: '#1f2937',
-  border: '1px solid #4b5563',
-  borderRadius: '8px',
-  padding: '16px',
-  width: '360px',
-  maxWidth: '90vw',
-  color: '#fff',
-  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
-};
-
-const statBoxStyle: React.CSSProperties = {
-  backgroundColor: '#111827',
-  border: '1px solid #374151',
-  borderRadius: '4px',
-  padding: '6px',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center'
-};
-
-const statLabelStyle: React.CSSProperties = {
-  fontSize: '10px',
-  color: '#9ca3af',
-  marginBottom: '2px'
-};
-
-const closeBtnStyle: React.CSSProperties = {
-  backgroundColor: 'transparent',
-  border: 'none',
-  color: '#9ca3af',
-  fontSize: '16px',
-  cursor: 'pointer'
 };
