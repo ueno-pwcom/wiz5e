@@ -123,6 +123,7 @@ export interface ClassData {
   proficiencies: string[];
   saving_throws: AbilityScoreName[];
   spellcasting_ability: AbilityScoreName | null;
+  level_features?: Record<number, string[]>;
 }
 
 export interface SpellData {
@@ -165,6 +166,7 @@ export interface MonsterData {
   damage_resistances?: DamageType[];
   damage_immunities?: DamageType[];
   actions: MonsterAction[];
+  status_effects: StatusEffect[];
 }
 
 // ==========================================

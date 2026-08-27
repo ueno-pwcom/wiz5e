@@ -16,7 +16,25 @@
       "str",
       "con"
     ],
-    "spellcasting_ability": null
+    "spellcasting_ability": null,
+    "level_features": {
+      "1": [
+        "Fighting Style",
+        "Second Wind"
+      ],
+      "2": [
+        "Action Surge (1 use)"
+      ],
+      "3": [
+        "Martial Archetype"
+      ],
+      "4": [
+        "Ability Score Improvement"
+      ],
+      "5": [
+        "Extra Attack"
+      ]
+    }
   },
   "rogue": {
     "id": "rogue",
@@ -38,7 +56,26 @@
       "dex",
       "int"
     ],
-    "spellcasting_ability": null
+    "spellcasting_ability": null,
+    "level_features": {
+      "1": [
+        "Expertise",
+        "Sneak Attack",
+        "Thieves' Cant"
+      ],
+      "2": [
+        "Cunning Action"
+      ],
+      "3": [
+        "Roguish Archetype"
+      ],
+      "4": [
+        "Ability Score Improvement"
+      ],
+      "5": [
+        "Uncanny Dodge"
+      ]
+    }
   },
   "cleric": {
     "id": "cleric",
@@ -57,7 +94,29 @@
       "wis",
       "cha"
     ],
-    "spellcasting_ability": "wis"
+    "spellcasting_ability": "wis",
+    "level_features": {
+      "1": [
+        "Spellcasting: Cleric",
+        "Divine Domain",
+        "Domain Spells"
+      ],
+      "2": [
+        "Channel Divinity (1/rest)",
+        "Channel Divinity: Turn Undead",
+        "Divine Domain feature"
+      ],
+      "3": [
+        "Domain Spells"
+      ],
+      "4": [
+        "Ability Score Improvement"
+      ],
+      "5": [
+        "Domain Spells",
+        "Destroy Undead (CR 1/2 or below)"
+      ]
+    }
   },
   "wizard": {
     "id": "wizard",
@@ -77,6 +136,20 @@
       "int",
       "wis"
     ],
-    "spellcasting_ability": "int"
+    "spellcasting_ability": "int",
+    "level_features": {
+      "1": [
+        "Spellcasting: Wizard",
+        "Arcane Recovery"
+      ],
+      "2": [
+        "Arcane Tradition"
+      ],
+      "3": [],
+      "4": [
+        "Ability Score Improvement"
+      ],
+      "5": []
+    }
   }
 }

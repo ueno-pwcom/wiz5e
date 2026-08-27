@@ -21,6 +21,7 @@ const translationMap = {
   "Cure Wounds": "キュア・ウーンズ",
   "Bless": "ブレス",
   "Shield": "シールド",
+  "Sleep": "スリープ",
 
   // モンスター名
   "Goblin": "ゴブリン",
@@ -29,7 +30,7 @@ const translationMap = {
   "Bugbear": "バグベア",
   "Orc": "オーク",
   "Kobold": "コボルド",
-  "Gnoll": "グノール",
+  "Gnoll": "ノール",
   "Hobgoblin": "ホブゴブリン",
   "Troll": "トロール",
   "Ogre": "オーガ",
@@ -51,6 +52,7 @@ const translationMap = {
   "Claw": "爪",
   "Greatclub": "グレートクラブ",
   "Multiattack": "マルチアタック",
+  "Sling": "スリング",
 
   // 属性・ダメージ種別
   "slashing": "斬撃",
@@ -85,6 +87,13 @@ async function fetchClasses() {
     const res = await fetch(`${BASE_URL}/classes/${index}`);
     const detail = await res.json();
 
+    const levelFeatures = {};
+    for (let level = 1; level <= 5; level += 1) {
+      const levelRes = await fetch(`${BASE_URL}/classes/${index}/levels/${level}`);
+      const levelDetail = await levelRes.json();
+      levelFeatures[level] = (levelDetail.features || []).map((feature) => t(feature.name));
+    }
+
     classesData[detail.index] = {
       id: detail.index,
       name: t(detail.name),
@@ -92,7 +101,8 @@ async function fetchClasses() {
       hp_static_increase: staticHpIncreaseMap[detail.index] || Math.floor(detail.hit_die / 2) + 1,
       proficiencies: detail.proficiencies.map(p => p.name),
       saving_throws: detail.saving_throws.map(s => s.name.toLowerCase()),
-      spellcasting_ability: detail.spellcasting?.spellcasting_ability?.name?.toLowerCase() || null
+      spellcasting_ability: detail.spellcasting?.spellcasting_ability?.name?.toLowerCase() || null,
+      level_features: levelFeatures
     };
   }
 
@@ -106,7 +116,7 @@ async function fetchClasses() {
 // 3. 呪文データの取得 & 整形（簡易化仕様）
 async function fetchSpells() {
   console.log('Fetching Spells...');
-  const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'cure-wounds', 'bless', 'shield'];
+  const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'sleep', 'cure-wounds', 'bless', 'shield'];
   const spellsData = {};
 
   for (const index of targetSpells) {

@@ -491,7 +491,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         ...baseMonster,
         id: `${baseMonster.id}_${Date.now()}_${i}`,
         name: `${baseMonster.name} ${String.fromCharCode(65 + i)}`,
-        hp: { ...baseMonster.hp }
+        hp: { ...baseMonster.hp },
+        status_effects: []
       };
 
       const dexMod = getAbilityModifier(monsterInstance.stats.dex);

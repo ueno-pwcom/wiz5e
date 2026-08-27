@@ -208,7 +208,7 @@
     "damage_immunities": [],
     "actions": [
       {
-        "name": "短剣",
+        "name": "ダガー",
         "to_hit": 4,
         "damage_dice": "1d4+2",
         "damage_type": "刺突"

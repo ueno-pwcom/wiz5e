@@ -62,6 +62,23 @@
     "save_effect": null,
     "requires_concentration": false
   },
+  "sleep": {
+    "id": "sleep",
+    "name": "スリープ",
+    "level": 1,
+    "school": "enchantment",
+    "classes": [
+      "bard",
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": "5d8",
+    "heal_dice": null,
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "requires_concentration": false
+  },
   "cure-wounds": {
     "id": "cure-wounds",
     "name": "キュア・ウーンズ",
