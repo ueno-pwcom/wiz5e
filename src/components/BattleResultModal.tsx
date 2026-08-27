@@ -1,13 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './BattleResultModal.css';
-import { useGameStore } from '../store/useGameStore';
+import { useGameStore, stopBattleBgm } from '../store/useGameStore';
 import { XP_TABLE } from '../data/levelTable';
+
+const BATTLE_VICTORY_SOUND_URL = new URL('../assets/sounds/戦闘勝利.mp3', import.meta.url).href;
 
 export const BattleResultModal: React.FC = () => {
   const showResultModal = useGameStore((state) => state.showResultModal);
   const battleReward = useGameStore((state) => state.battleReward);
   const claimBattleReward = useGameStore((state) => state.claimBattleReward);
   const party = useGameStore((state) => state.party);
+
+  useEffect(() => {
+    if (!showResultModal || !battleReward) return;
+
+    stopBattleBgm();
+
+    const audio = new Audio(BATTLE_VICTORY_SOUND_URL);
+    audio.loop = false;
+    void audio.play().catch(() => {
+      // 自動再生制限などを無視
+    });
+  }, [showResultModal, battleReward]);
 
   if (!showResultModal || !battleReward) return null;
 

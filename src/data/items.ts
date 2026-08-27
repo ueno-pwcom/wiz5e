@@ -15,6 +15,7 @@ export interface ItemData {
   heal_dice?: string;
   // 武器用
   damage_dice?: string;
+  damage_type?: string;
   // 防具用
   ac_bonus?: number;
 }
@@ -53,6 +54,7 @@ export const itemList: Record<string, ItemData> = {
     description: '小ぶりで扱いやすい短剣。巧妙さや投擲に優れる。',
     value_gp: 2,
     damage_dice: '1d4',
+    damage_type: '刺突',
   },
   shortsword: {
     id: 'shortsword',
@@ -63,6 +65,7 @@ export const itemList: Record<string, ItemData> = {
     description: '素早い刺突に向いた軽快な片手剣。',
     value_gp: 10,
     damage_dice: '1d6',
+    damage_type: '刺突',
   },
   scimitar: {
     id: 'scimitar',
@@ -73,6 +76,7 @@ export const itemList: Record<string, ItemData> = {
     description: '湾曲した刃を持つ片手剣。斬撃に優れ、軽快に扱える。',
     value_gp: 25,
     damage_dice: '1d6',
+    damage_type: '斬撃',
   },
   longsword: {
     id: 'longsword',
@@ -82,6 +86,7 @@ export const itemList: Record<string, ItemData> = {
     description: '汎用性の高い標準的な片手/両手用剣。',
     value_gp: 15,
     damage_dice: '1d8',
+    damage_type: '斬撃',
   },
   greatsword: {
     id: 'greatsword',
@@ -91,6 +96,7 @@ export const itemList: Record<string, ItemData> = {
     description: '両手で振り回す大型の大剣。非常に高い威力を誇る。',
     value_gp: 50,
     damage_dice: '2d6',
+    damage_type: '斬撃',
   },
   battleaxe: {
     id: 'battleaxe',
@@ -100,6 +106,7 @@ export const itemList: Record<string, ItemData> = {
     description: '重厚な刃を持つ戦斧。ドワーフなどに好まれる。',
     value_gp: 10,
     damage_dice: '1d8',
+    damage_type: '斬撃',
   },
   mace: {
     id: 'mace',
@@ -109,6 +116,7 @@ export const itemList: Record<string, ItemData> = {
     description: '金属製の頭部を持つ打撃武器。クレリックの標準装備。',
     value_gp: 5,
     damage_dice: '1d6',
+    damage_type: '殴打',
   },
   shortbow: {
     id: 'shortbow',
@@ -118,6 +126,7 @@ export const itemList: Record<string, ItemData> = {
     description: '小型で扱いやすい弓。遠距離攻撃が可能。',
     value_gp: 25,
     damage_dice: '1d6',
+    damage_type: '刺突',
   },
   longbow: {
     id: 'longbow',
@@ -125,6 +134,7 @@ export const itemList: Record<string, ItemData> = {
     type: 'weapon',    weapon_category: 'ranged',    description: '強力な射程と貫通力を備えた大型の長弓。',
     value_gp: 50,
     damage_dice: '1d8',
+    damage_type: '刺突',
   },
 
   // ==========================================

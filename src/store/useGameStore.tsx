@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Character, Combatant, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, WallType } from '../types/game';
+import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, WallType } from '../types/game';
 import { map1Data, map2Data, map3Data } from '../data/map1';
 import { spellList } from '../data/spells';
 import { monsterList } from '../data/monsters';
@@ -27,6 +27,63 @@ const calculateCharacterAc = (character: Character, armorId: string | null | und
     ac += shield.ac_bonus;
   }
   return ac;
+};
+
+const DAMAGE_TYPE_SOUND_MAP: Record<string, string> = {
+  '殴打': new URL('../assets/sounds/殴打.mp3', import.meta.url).href,
+  '斬撃': new URL('../assets/sounds/斬撃.mp3', import.meta.url).href,
+  '刺突': new URL('../assets/sounds/刺突.mp3', import.meta.url).href,
+  spell: new URL('../assets/sounds/呪文.mp3', import.meta.url).href,
+  default: new URL('../assets/sounds/被ダメ.mp3', import.meta.url).href,
+};
+
+const BATTLE_BGM_URL = new URL('../assets/sounds/戦闘BGM.mp3', import.meta.url).href;
+let battleBgmAudio: HTMLAudioElement | null = null;
+
+const getBattleBgmAudio = (): HTMLAudioElement => {
+  if (!battleBgmAudio) {
+    battleBgmAudio = new Audio(BATTLE_BGM_URL);
+    battleBgmAudio.loop = true;
+  }
+  return battleBgmAudio;
+};
+
+const playBattleBgm = () => {
+  const audio = getBattleBgmAudio();
+  audio.currentTime = 0;
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
+};
+
+export const stopBattleBgm = () => {
+  if (!battleBgmAudio) return;
+  battleBgmAudio.pause();
+  battleBgmAudio.currentTime = 0;
+};
+
+const getSoundUrlForDamageType = (damageType?: DamageType | null): string => {
+  if (!damageType) return DAMAGE_TYPE_SOUND_MAP.default;
+  if (DAMAGE_TYPE_SOUND_MAP[damageType]) {
+    return DAMAGE_TYPE_SOUND_MAP[damageType];
+  }
+  return DAMAGE_TYPE_SOUND_MAP.spell;
+};
+
+const playSoundForDamageType = (damageType?: DamageType | null) => {
+  const soundUrl = getSoundUrlForDamageType(damageType);
+  const audio = new Audio(soundUrl);
+  void audio.play().catch(() => {
+    // ブラウザの自動再生制限などを無視して静かに失敗させる
+  });
+};
+
+const playMissSound = () => {
+  const missUrl = new URL('../assets/sounds/空振り.mp3', import.meta.url).href;
+  const audio = new Audio(missUrl);
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
 };
 
 type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
@@ -221,7 +278,12 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @brief 現在のゲームシーンを変更する。
    * @param scene 遷移先のシーン名。
    */
-  setScene: (scene) => set({ scene }),
+  setScene: (scene) => {
+    if (scene !== 'battle') {
+      stopBattleBgm();
+    }
+    set({ scene });
+  },
 
   /**
    * @brief ゲームのログに新しいメッセージを追加する。
@@ -318,6 +380,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       battleRound: 1
     });
 
+    playBattleBgm();
     addLog(`モンスターが現れた！ (${newCombatants.filter(c => !c.is_player).map(c => c.name).join(', ')})`, 'info');
 
     // 最初のターンが敵の場合は自動で敵の行動を実行
@@ -366,11 +429,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       isHit = true;
     } else if (attackRoll.isFumble) {
       addLog('ファンブル！ 攻撃は大きく外れた。', 'system');
+      playMissSound();
       isHit = false;
     } else if (attackRoll.total >= target.ac) {
       isHit = true;
     } else {
       addLog(`ミス！ ${target.name} の AC ${target.ac} に届かなかった。`, 'system');
+      playMissSound();
     }
 
     if (isHit) {
@@ -383,6 +448,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
       const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
       addLog(`${target.name} に ${damage} のダメージ！ （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, attackRoll.isCritical ? 'critical' : 'player_action');
+      playSoundForDamageType(weapon?.damage_type ?? '殴打');
       set({ combatants: [...combatants], enemyShakeTargetId: target.id });
       setTimeout(() => set({ enemyShakeTargetId: null }), 300);
 
@@ -574,7 +640,7 @@ export const useGameStore = create<GameState>((set, get) => ({
               detailText = ' 自動命中';
             } else {
               const attackRoll = rollD20(spellAttackMod);
-              const attackBonusText = `${spellAttackMod >= 0 ? '+' : ''}${spellAttackMod}`;
+              const attackBonusText = `${spellAttackMod >= 0 ? '+ ' : ''}${spellAttackMod}`;
               if (attackRoll.isCritical) {
                 spellAttackCritical = true;
                 damage = sharedDamage ?? rollDiceString(spell.damage_dice, true);
@@ -637,6 +703,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             });
           }
 
+          playSoundForDamageType(spell.damage_type ?? 'spell');
           setTimeout(() => set({ enemyShakeTargetId: c.id }), 0);
           setTimeout(() => set({ enemyShakeTargetId: null }), 300);
 
@@ -725,6 +792,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const target = targetCandidates[Math.floor(Math.random() * targetCandidates.length)];
 
     addLog(`${attacker.name} の ${action.name}！`, 'enemy_action');
+    playSoundForDamageType(action.damage_type ?? '殴打');
 
     const attackRoll = target.is_evading ? rollD20WithDisadvantage(action.to_hit) : rollD20(action.to_hit);
 
@@ -734,11 +802,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       isHit = true;
     } else if (attackRoll.isFumble) {
       addLog('攻撃は空を切った。', 'system');
+      playMissSound();
       isHit = false;
     } else if (attackRoll.total >= target.ac) {
       isHit = true;
     } else {
       addLog(`${target.name} は攻撃をかわした。`, 'system');
+      playMissSound();
     }
 
     if (isHit) {
@@ -753,7 +823,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }
 
-addLog(`${target.name} は ${damage} のダメージを受けた！`, attackRoll.isCritical ? 'critical' : 'enemy_action');
+      playSoundForDamageType(action.damage_type ?? '殴打');
+      addLog(`${target.name} は ${damage} のダメージを受けた！`, attackRoll.isCritical ? 'critical' : 'enemy_action');
       set({ battleShake: true });
       setTimeout(() => set({ battleShake: false }), 150);
     }
