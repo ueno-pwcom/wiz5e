@@ -153,7 +153,7 @@ export const BattleView: React.FC = () => {
         {/* 対象選択説明 */}
         {selectedAction === 'spell' && selectedSpell && (
           <div className="battle-view-target-hint">
-            {selectedSpell.id === 'sleep'
+            {selectedSpell.id === 'sleep' || selectedSpell.targets_all_enemies
               ? 'この呪文は対象選択不要です。'
               : selectedSpell.targets_random
                 ? `${selectedSpell.targets_random} 体の敵をランダムに選択して即時発動します。`
@@ -230,7 +230,7 @@ export const BattleView: React.FC = () => {
                       disabled={!isCantrip && slots <= 0}
                       onClick={() => {
                     if (!isCantrip && slots <= 0) return;
-                    if (spell.targets_random || spell.id === 'sleep') {
+                    if (spell.targets_random || spell.targets_all_enemies || spell.id === 'sleep') {
                       executePlayerSpell(spell.id, '');
                       setSelectedAction('none');
                       setSelectedSpell(null);

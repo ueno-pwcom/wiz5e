@@ -44,6 +44,7 @@
     "damage_type": "火",
     "save_type": "dex",
     "save_effect": "half",
+    "targets_all_enemies": true,
     "requires_concentration": false
   },
   "magic-missile": {

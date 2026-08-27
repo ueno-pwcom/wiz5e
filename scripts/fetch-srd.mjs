@@ -138,6 +138,7 @@ async function fetchSpells() {
       damage_type: detail.damage?.damage_type?.name ? t(detail.damage.damage_type.name.toLowerCase()) : null,
       save_type: detail.dc?.dc_type?.name?.toLowerCase() || null,
       save_effect: detail.dc?.dc_success || null,
+      targets_all_enemies: detail.index === 'burning-hands',
       requires_concentration: detail.concentration
     };
   }
