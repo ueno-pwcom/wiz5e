@@ -3,7 +3,8 @@ import './BattleView.css';
 import { useGameStore } from '../store/useGameStore';
 import { spellsData } from '../utils/srdData';
 import { itemList } from '../data/items';
-import type { Character, SpellData, ItemData } from '../types/game';
+import { translateStatusEffects } from '../utils/statusEffects.ts';
+import type { Character, SpellData, ItemData, MonsterData } from '../types/game';
 
 export const BattleView: React.FC = () => {
   const combatants = useGameStore((state) => state.combatants);
@@ -110,6 +111,9 @@ export const BattleView: React.FC = () => {
                 >
                     <div className="battle-view-enemy-icon">👾</div>
                   <div className="battle-view-enemy-name">{enemy.name}</div>
+                  <div className="battle-view-enemy-status">
+                    {translateStatusEffects((enemy.ref as MonsterData).status_effects)}
+                  </div>
                   <div className="battle-view-enemy-hp-bar">
                     <div
                       className="battle-view-enemy-hp-bar-fill"
@@ -149,9 +153,11 @@ export const BattleView: React.FC = () => {
         {/* 対象選択説明 */}
         {selectedAction === 'spell' && selectedSpell && (
           <div className="battle-view-target-hint">
-            {selectedSpell.targets_random
-              ? `${selectedSpell.targets_random} 体の敵をランダムに選択して即時発動します。`
-              : '対象の敵または味方を選択してください。'}
+            {selectedSpell.id === 'sleep'
+              ? 'この呪文は対象選択不要です。'
+              : selectedSpell.targets_random
+                ? `${selectedSpell.targets_random} 体の敵をランダムに選択して即時発動します。`
+                : '対象の敵または味方を選択してください。'}
           </div>
         )}
         {selectedAction === 'item' && selectedItem && (
@@ -224,7 +230,7 @@ export const BattleView: React.FC = () => {
                       disabled={!isCantrip && slots <= 0}
                       onClick={() => {
                     if (!isCantrip && slots <= 0) return;
-                    if (spell.targets_random) {
+                    if (spell.targets_random || spell.id === 'sleep') {
                       executePlayerSpell(spell.id, '');
                       setSelectedAction('none');
                       setSelectedSpell(null);

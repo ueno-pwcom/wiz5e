@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, WallType } from '../types/game';
+import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, StatusEffect, WallType } from '../types/game';
 import { map1Data, map2Data, map3Data } from '../data/map1';
 import { itemList } from '../data/items';
 import { dungeonEvents } from '../data/dungeonEvents';
@@ -724,14 +724,39 @@ export const useGameStore = create<GameState>((set, get) => ({
     const multiTargetDetails: string[] = [];
     let multiTargetLogType: LogMessage['type'] = 'system';
     const isMultiTargetSpell = Boolean(spell.targets_all_enemies || spell.targets_random);
+    const isSleepSpell = spell.id === 'sleep';
     const spellMessagePrefix = `${attacker.name} は ${spell.name} を唱えた！ `;
     const sharedDamage = isMultiTargetSpell && spell.damage_dice ? rollDiceString(spell.damage_dice) : null;
     const aliveEnemyIds = combatants.filter((c) => !c.is_player && c.hp.current > 0).map((c) => c.id);
-    const affectedTargetIds = spell.targets_all_enemies
+    const affectedTargetIds = isSleepSpell
       ? aliveEnemyIds
-      : spell.targets_random
-        ? aliveEnemyIds.sort(() => Math.random() - 0.5).slice(0, spell.targets_random)
-        : [targetId];
+      : spell.targets_all_enemies
+        ? aliveEnemyIds
+        : spell.targets_random
+          ? aliveEnemyIds.sort(() => Math.random() - 0.5).slice(0, spell.targets_random)
+          : [targetId];
+    const sleepBudget = isSleepSpell && spell.damage_dice ? rollDiceString(spell.damage_dice) : 0;
+    const sleepTargetIds = isSleepSpell
+      ? (() => {
+          let remaining = sleepBudget;
+          return combatants
+            .filter((c) => !c.is_player && c.hp.current > 0)
+            .filter((c) => {
+              const monsterRef = c.ref as MonsterData;
+              const isUndead = monsterRef.type?.toLowerCase() === 'undead';
+              const isCharmedImmune = monsterRef.condition_immunities?.includes('charmed');
+              return !isUndead && !isCharmedImmune;
+            })
+            .sort((a, b) => a.hp.current - b.hp.current)
+            .reduce<string[]>((ids, enemy) => {
+              if (remaining >= enemy.hp.current) {
+                remaining -= enemy.hp.current;
+                return [...ids, enemy.id];
+              }
+              return ids;
+            }, []);
+        })()
+      : [];
 
     if (affectedTargetIds.length === 0) {
       addLog('敵がいないため呪文を唱えられない。', 'system');
@@ -753,6 +778,29 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       // 対象への効果適用
       if (affectedTargetIds.includes(c.id)) {
+        if (isSleepSpell && !c.is_player) {
+          if (sleepTargetIds.includes(c.id)) {
+            const monsterRef = c.ref as MonsterData;
+            const updatedStatusEffects: StatusEffect[] = monsterRef.status_effects.includes('unconscious')
+              ? monsterRef.status_effects
+              : [...monsterRef.status_effects, 'unconscious'];
+
+            spellLogEntries.push({
+              message: `${c.name} は眠った！`,
+              type: 'system'
+            });
+
+            return {
+              ...c,
+              ref: {
+                ...monsterRef,
+                status_effects: updatedStatusEffects,
+              },
+            } as Combatant;
+          }
+          return c;
+        }
+
         // 回復呪文の場合
         if (spell.heal_dice && c.is_player) {
           const healAmount = rollDiceString(spell.heal_dice);
@@ -863,7 +911,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       return c;
     });
 
-    if (spellLogEntries.length === 0 && multiTargetDetails.length === 0) return;
+    if (spellLogEntries.length === 0 && multiTargetDetails.length === 0) {
+      if (isSleepSpell && sleepTargetIds.length === 0) {
+        spellLogEntries.push({
+          message: `${spellMessagePrefix}しかし、効果を及ぼせる敵はいなかった。`,
+          type: 'system'
+        });
+      } else {
+        return;
+      }
+    }
 
     if (isMultiTargetSpell) {
       const multiTargetMessage = `${spellMessagePrefix}\n${multiTargetDetails.join('\n')}`;
@@ -874,17 +931,18 @@ export const useGameStore = create<GameState>((set, get) => ({
       addLog(entry.message, entry.type);
     });
 
-    // 範囲攻撃で全体を倒した場合も考慮
-    if (spell.targets_all_enemies || spell.targets_random) {
-      updatedCombatants
-        .filter((c) => !c.is_player && c.hp.current === 0)
-        .forEach((targetCombatant) => {
+    if (!isSleepSpell) {
+      if (spell.targets_all_enemies || spell.targets_random) {
+        updatedCombatants
+          .filter((c) => !c.is_player && c.hp.current === 0)
+          .forEach((targetCombatant) => {
+            addLog(`${targetCombatant.name} を倒した！`, 'info');
+          });
+      } else {
+        const targetCombatant = updatedCombatants.find((c) => c.id === targetId);
+        if (targetCombatant && targetCombatant.hp.current === 0 && spell.damage_dice) {
           addLog(`${targetCombatant.name} を倒した！`, 'info');
-        });
-    } else {
-      const targetCombatant = updatedCombatants.find((c) => c.id === targetId);
-      if (targetCombatant && targetCombatant.hp.current === 0 && spell.damage_dice) {
-        addLog(`${targetCombatant.name} を倒した！`, 'info');
+        }
       }
     }
 

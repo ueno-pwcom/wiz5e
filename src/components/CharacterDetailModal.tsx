@@ -6,6 +6,7 @@ import { InventoryView } from './InventoryView';
 import { itemList } from '../data/items';
 import { XP_TABLE } from '../data/levelTable';
 import { getAbilityModifier } from '../utils/dice';
+import { translateStatusEffects } from '../utils/statusEffects.ts';
 import type { Character } from '../types/game';
 
 interface CharacterDetailModalProps {
@@ -189,7 +190,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
             <div className="character-detail-section-note">
               <div>隊列: <span className="character-detail-highlight">{characterRoleLabel}</span></div>
               <div>状態異常: <span className={character.status_effects.length ? 'character-detail-status-danger' : 'character-detail-status-normal'}>
-                {character.status_effects.length ? character.status_effects.join(', ') : '正常'}
+                {translateStatusEffects(character.status_effects)}
               </span></div>
             </div>
 

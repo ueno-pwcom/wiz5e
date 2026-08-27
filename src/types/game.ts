@@ -153,6 +153,7 @@ export interface MonsterAction {
 export interface MonsterData {
   id: string;
   name: string;
+  type?: string;
   cr: number;
   xp: number;
   ac: number;
@@ -165,6 +166,7 @@ export interface MonsterData {
   damage_vulnerabilities?: DamageType[];
   damage_resistances?: DamageType[];
   damage_immunities?: DamageType[];
+  condition_immunities?: string[];
   actions: MonsterAction[];
   status_effects: StatusEffect[];
 }

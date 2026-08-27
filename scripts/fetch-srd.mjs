@@ -186,9 +186,14 @@ async function fetchMonsters() {
       })
       .filter(Boolean);
 
+    const monsterType = typeof detail.type === 'string'
+      ? detail.type.toLowerCase()
+      : detail.type?.name?.toLowerCase() || null;
+
     monstersData[detail.index] = {
       id: detail.index,
       name: t(detail.name),
+      type: monsterType,
       cr: detail.challenge_rating,
       xp: detail.xp,
       ac: detail.armor_class[0]?.value || 10,
@@ -208,6 +213,7 @@ async function fetchMonsters() {
       damage_vulnerabilities: damageVulnerabilities,
       damage_resistances: damageResistances,
       damage_immunities: damageImmunities,
+      condition_immunities: (detail.condition_immunities || []).map(i => i.name.toLowerCase()),
       actions: actions
     };
   }
