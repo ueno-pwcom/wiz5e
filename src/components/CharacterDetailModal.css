@@ -12,10 +12,11 @@
 }
 
 .character-detail-modal {
+  position: relative;
   background-color: #1f2937;
   border: 1px solid #4b5563;
   border-radius: 8px;
-  padding: 16px;
+  padding: 16px 40px;
   width: min(880px, 95vw);
   max-width: 95vw;
   color: #fff;
@@ -51,26 +52,53 @@
   margin-bottom: 12px;
 }
 
-.character-detail-navigation {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
+.character-detail-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(17, 24, 39, 0.95);
+  color: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.character-detail-nav-button {
-  flex: 1;
-  padding: 6px 8px;
-  background-color: #111827;
-  border: 1px solid #374151;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 12px;
-  cursor: pointer;
+.character-detail-nav-button::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  margin: auto;
+  border-style: solid;
+}
+
+.character-detail-nav-button--prev {
+  left: 8px;
+}
+
+.character-detail-nav-button--prev::before {
+  border-width: 6px 8px 6px 0;
+  border-color: transparent #fff transparent transparent;
+}
+
+.character-detail-nav-button--next {
+  right: 8px;
+}
+
+.character-detail-nav-button--next::before {
+  border-width: 6px 0 6px 8px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.character-detail-nav-button:hover {
+  background-color: rgba(37, 99, 235, 0.95);
 }
 
 .character-detail-nav-button:disabled {
-  opacity: 0.45;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 

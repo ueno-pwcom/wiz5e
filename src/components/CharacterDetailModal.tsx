@@ -110,24 +110,18 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
           <button onClick={closeModal} className="character-detail-close-button">✕</button>
         </div>
 
-        <div className="character-detail-navigation">
-          <button
-            type="button"
-            onClick={() => goToCharacter(activeIndex - 1)}
-            disabled={!hasPrev}
-            className="character-detail-nav-button"
-          >
-            ← 前のキャラ
-          </button>
-          <button
-            type="button"
-            onClick={() => goToCharacter(activeIndex + 1)}
-            disabled={!hasNext}
-            className="character-detail-nav-button"
-          >
-            次のキャラ →
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => goToCharacter(activeIndex - 1)}
+          disabled={!hasPrev}
+          className="character-detail-nav-button character-detail-nav-button--prev"
+        />
+        <button
+          type="button"
+          onClick={() => goToCharacter(activeIndex + 1)}
+          disabled={!hasNext}
+          className="character-detail-nav-button character-detail-nav-button--next"
+        />
 
         {showInventory ? (
           <div>
