@@ -438,7 +438,7 @@ export const DungeonView: React.FC = () => {
     return nameMatch ? nameMatch[0].toUpperCase() : 'B1';
   };
 
-  const getStairsMarker = (type: 'stairs_up' | 'stairs_down'): React.ReactNode => {
+  const getStairsMarker = (_type: 'stairs_up' | 'stairs_down'): React.ReactNode => {
     return (
       <div style={{ fontSize: '14px', lineHeight: 1 }}>
         🪜

@@ -4,16 +4,16 @@ const createEmptyGrid = (width: number, height: number): DungeonMap['grid'] => {
   const grid: DungeonMap['grid'] = [];
 
   for (let y = 0; y < height; y += 1) {
-    const row = [];
+    const row: DungeonMap['grid'][number] = [];
     for (let x = 0; x < width; x += 1) {
       row.push({
         x,
         y,
         walls: {
-          N: y === 0 ? 'wall' : 'none',
-          E: x === width - 1 ? 'wall' : 'none',
-          S: y === height - 1 ? 'wall' : 'none',
-          W: x === 0 ? 'wall' : 'none'
+          N: (y === 0 ? 'wall' : 'none'),
+          E: (x === width - 1 ? 'wall' : 'none'),
+          S: (y === height - 1 ? 'wall' : 'none'),
+          W: (x === 0 ? 'wall' : 'none')
         },
         event: null
       });

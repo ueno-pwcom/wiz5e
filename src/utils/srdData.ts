@@ -8,5 +8,13 @@ import type { ClassData, SpellData, MonsterData, EquipmentData } from '../types/
 
 export const classesData = classesJson as Record<string, ClassData>;
 export const spellsData = spellsJson as Record<string, SpellData>;
-export const monstersData = monstersJson as Record<string, MonsterData>;
+export const monstersData = Object.fromEntries(
+  Object.entries(monstersJson).map(([key, value]) => [
+    key,
+    {
+      ...value,
+      status_effects: (value as Partial<MonsterData>).status_effects ?? []
+    }
+  ])
+) as Record<string, MonsterData>;
 export const equipmentData = equipmentJson as Record<string, EquipmentData>;
