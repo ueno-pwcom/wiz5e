@@ -121,6 +121,22 @@
     "targets_all_enemies": false,
     "requires_concentration": true
   },
+  "guiding-bolt": {
+    "id": "guiding-bolt",
+    "name": "ガイディング・ボルト",
+    "level": 1,
+    "school": "evocation",
+    "classes": [
+      "cleric"
+    ],
+    "damage_dice": "4d6",
+    "heal_dice": null,
+    "damage_type": "光輝",
+    "save_type": null,
+    "save_effect": null,
+    "targets_all_enemies": false,
+    "requires_concentration": false
+  },
   "shield": {
     "id": "shield",
     "name": "シールド",

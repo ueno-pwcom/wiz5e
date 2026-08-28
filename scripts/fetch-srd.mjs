@@ -22,6 +22,7 @@ const translationMap = {
   "Bless": "ブレス",
   "Shield": "シールド",
   "Sleep": "スリープ",
+  "Guiding Bolt": "ガイディング・ボルト",
 
   // モンスター名
   "Goblin": "ゴブリン",
@@ -116,7 +117,7 @@ async function fetchClasses() {
 // 3. 呪文データの取得 & 整形（簡易化仕様）
 async function fetchSpells() {
   console.log('Fetching Spells...');
-  const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'sleep', 'cure-wounds', 'bless', 'shield'];
+  const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'sleep', 'cure-wounds', 'bless', 'guiding-bolt', 'shield'];
   const spellsData = {};
 
   for (const index of targetSpells) {

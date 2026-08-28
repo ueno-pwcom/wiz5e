@@ -7,7 +7,8 @@ import { itemList } from '../data/items';
 import { XP_TABLE } from '../data/levelTable';
 import { getAbilityModifier } from '../utils/dice';
 import { translateStatusEffects } from '../utils/statusEffects.ts';
-import type { Character } from '../types/game';
+import { spellsData } from '../utils/srdData';
+import type { Character, SpellData } from '../types/game';
 
 interface CharacterDetailModalProps {
   character?: Character;
@@ -74,6 +75,16 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
   const equippedArmor = character.equipped_armor_id ? itemList[character.equipped_armor_id] : null;
   const equippedShield = character.equipped_shield_id ? itemList[character.equipped_shield_id] : null;
 
+  const availableSpells = Object.values(spellsData)
+    .filter((spell) => spell.classes.includes(character.class_id))
+    .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+
+  const spellsByLevel = availableSpells.reduce<Record<number, SpellData[]>>((acc, spell) => {
+    if (!acc[spell.level]) acc[spell.level] = [];
+    acc[spell.level].push(spell);
+    return acc;
+  }, {});
+
   return (
     <div className="character-detail-overlay" onClick={closeModal}>
       <div className="character-detail-modal" onClick={(e) => e.stopPropagation()}>
@@ -119,7 +130,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
                 </div>
               </div>
 
-              <div className="character-detail-right-panel">
+              <div className="character-detail-center-panel">
                 <div className="character-detail-stat-grid">
                   <div className="character-detail-stat-box">
                     <span className="character-detail-stat-label">HP</span>
@@ -200,6 +211,30 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
                 >
                   🎒 所持品・装備を変更する
                 </button>
+              </div>
+
+              <div className="character-detail-right-panel">
+                <div className="character-detail-section">
+                  <div className="character-detail-section-title">呪文一覧</div>
+                  <div className="character-detail-spell-list">
+                    {availableSpells.length > 0 ? (
+                      Object.entries(spellsByLevel).map(([level, spells]) => (
+                        <div key={level} className="character-detail-spell-level-group">
+                          <div className="character-detail-spell-level-title">Lv.{level}</div>
+                          <div className="character-detail-spell-items">
+                            {spells.map((spell) => (
+                              <div key={spell.id} className="character-detail-spell-item">
+                                <span className="character-detail-spell-name">{spell.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="character-detail-empty-text">習得可能な呪文がありません。</div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </>
