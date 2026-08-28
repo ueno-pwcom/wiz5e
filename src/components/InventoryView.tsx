@@ -33,7 +33,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
       </h2>
 
       {/* 対象キャラクター選択 */}
-      <div className="inventory-view-target-row">
+      {/* <div className="inventory-view-target-row">
         <span className="inventory-view-target-label">使用・装備対象:</span>
         <select
           value={selectedTargetId}
@@ -46,7 +46,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
 
       {/* アイテム一覧 */}
       <div className="inventory-view-list">

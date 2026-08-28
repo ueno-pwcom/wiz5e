@@ -51,6 +51,29 @@
   margin-bottom: 12px;
 }
 
+.character-detail-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.character-detail-nav-button {
+  flex: 1;
+  padding: 6px 8px;
+  background-color: #111827;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.character-detail-nav-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .character-detail-title {
   font-size: 18px;
   font-weight: bold;

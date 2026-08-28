@@ -30,6 +30,17 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
   const character = party.find((c) => c.id === activeCharacterId) ?? propCharacter;
   if (!character) return null;
 
+  const activeIndex = party.findIndex((c) => c.id === activeCharacterId);
+  const hasPrev = activeIndex > 0;
+  const hasNext = activeIndex !== -1 && activeIndex < party.length - 1;
+
+  const goToCharacter = (index: number) => {
+    if (index < 0 || index >= party.length) return;
+    const nextCharacter = party[index];
+    setActiveCharacterId(nextCharacter.id);
+    setSelectedCharacterId(nextCharacter.id);
+  };
+
   const getPartyPositionRole = (charId: string) => {
     const index = party.findIndex((p) => p.id === charId);
     if (index === -1) return '控え';
@@ -97,6 +108,25 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
             </span>
           </div>
           <button onClick={closeModal} className="character-detail-close-button">✕</button>
+        </div>
+
+        <div className="character-detail-navigation">
+          <button
+            type="button"
+            onClick={() => goToCharacter(activeIndex - 1)}
+            disabled={!hasPrev}
+            className="character-detail-nav-button"
+          >
+            ← 前のキャラ
+          </button>
+          <button
+            type="button"
+            onClick={() => goToCharacter(activeIndex + 1)}
+            disabled={!hasNext}
+            className="character-detail-nav-button"
+          >
+            次のキャラ →
+          </button>
         </div>
 
         {showInventory ? (
