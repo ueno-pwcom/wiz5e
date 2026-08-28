@@ -64,7 +64,8 @@
     "save_type": null,
     "save_effect": null,
     "targets_all_enemies": false,
-    "requires_concentration": false
+    "requires_concentration": false,
+    "auto_hit": true
   },
   "sleep": {
     "id": "sleep",

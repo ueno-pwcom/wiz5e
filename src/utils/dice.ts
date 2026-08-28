@@ -35,13 +35,14 @@ export const getAbilityModifier = (score: number): number => {
 
 // ダイス文字列 (例: "1d6+2", "2d8") を解釈してダメージを計算
 export const rollDiceString = (diceStr: string, isCritical: boolean = false): number => {
+  const normalizedDiceStr = diceStr.replace(/\s+/g, '');
   // 例: "1d6+2" -> ["1", "6", "2"]
-  const match = diceStr.match(/^(\d+)d(\d+)(?:\+([+-]?\d+))?$/);
+  const match = normalizedDiceStr.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/);
   if (!match) return 0;
 
   const count = parseInt(match[1], 10);
   const sides = parseInt(match[2], 10);
-  const bonus = match[3] ? parseInt(match[3], 10) : 0;
+  const bonus = match[3] && match[4] ? parseInt(match[3] + match[4], 10) : 0;
 
   // クリティカルヒット時はダイスの個数を2倍にする (D&D 5eルール)
   const totalDiceCount = isCritical ? count * 2 : count;

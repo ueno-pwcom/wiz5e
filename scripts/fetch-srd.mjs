@@ -70,6 +70,35 @@ function t(key) {
   return translationMap[key] || key;
 }
 
+// 追加フィールド定義
+const CUSTOM_SPELL_FIELDS = {
+  'magic-missile': {
+    auto_hit: true
+  }
+};
+
+// ヘルパー関数: 既存JSONを読み込み、存在しなければ空オブジェクトを返す
+async function readExistingData(filename) {
+  try {
+    const filePath = path.join(OUTPUT_DIR, filename);
+    const content = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(content);
+  } catch (error) {
+    return {};
+  }
+}
+
+// 新規データに既存データの追加フィールドを付与
+function mergeWithExistingData(newData, existingData) {
+  const result = { ...newData };
+  Object.entries(existingData).forEach(([key, value]) => {
+    if (!(key in result)) {
+      result[key] = value;
+    }
+  });
+  return result;
+}
+
 // 2. クラスデータの取得 & 整形
 async function fetchClasses() {
   console.log('Fetching Classes...');
@@ -84,6 +113,8 @@ async function fetchClasses() {
     wizard: 4
   };
 
+  const existingClassesData = await readExistingData('classes.json');
+
   for (const index of targetClasses) {
     const res = await fetch(`${BASE_URL}/classes/${index}`);
     const detail = await res.json();
@@ -95,7 +126,7 @@ async function fetchClasses() {
       levelFeatures[level] = (levelDetail.features || []).map((feature) => t(feature.name));
     }
 
-    classesData[detail.index] = {
+    const baseClassData = {
       id: detail.index,
       name: t(detail.name),
       hit_die: detail.hit_die,
@@ -105,6 +136,8 @@ async function fetchClasses() {
       spellcasting_ability: detail.spellcasting?.spellcasting_ability?.name?.toLowerCase() || null,
       level_features: levelFeatures
     };
+
+    classesData[detail.index] = mergeWithExistingData(baseClassData, existingClassesData[detail.index] || {});
   }
 
   await fs.writeFile(
@@ -120,6 +153,8 @@ async function fetchSpells() {
   const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'sleep', 'cure-wounds', 'bless', 'guiding-bolt', 'shield'];
   const spellsData = {};
 
+  const existingSpellsData = await readExistingData('spells.json');
+
   for (const index of targetSpells) {
     const res = await fetch(`${BASE_URL}/spells/${index}`);
     const detail = await res.json();
@@ -128,7 +163,7 @@ async function fetchSpells() {
       || (detail.level === 0 ? Object.values(detail.damage?.damage_at_character_level || {})[0] : null)
       || null;
 
-    spellsData[detail.index] = {
+    const baseSpellData = {
       id: detail.index,
       name: t(detail.name),
       level: detail.level,
@@ -142,6 +177,9 @@ async function fetchSpells() {
       targets_all_enemies: detail.index === 'burning-hands',
       requires_concentration: detail.concentration
     };
+
+    spellsData[detail.index] = mergeWithExistingData(baseSpellData, existingSpellsData[detail.index] || {});
+    spellsData[detail.index] = mergeWithExistingData(spellsData[detail.index], CUSTOM_SPELL_FIELDS[detail.index] || {});
   }
 
   await fs.writeFile(
@@ -156,6 +194,8 @@ async function fetchMonsters() {
   console.log('Fetching Monsters...');
   const targetMonsters = ['goblin', 'skeleton', 'zombie', 'bugbear', 'orc', 'kobold', 'gnoll', 'hobgoblin', 'troll', 'ogre'];
   const monstersData = {};
+
+  const existingMonstersData = await readExistingData('monsters.json');
 
   for (const index of targetMonsters) {
     const res = await fetch(`${BASE_URL}/monsters/${index}`);
@@ -192,7 +232,7 @@ async function fetchMonsters() {
       ? detail.type.toLowerCase()
       : detail.type?.name?.toLowerCase() || null;
 
-    monstersData[detail.index] = {
+    const baseMonsterData = {
       id: detail.index,
       name: t(detail.name),
       type: monsterType,
@@ -218,6 +258,8 @@ async function fetchMonsters() {
       condition_immunities: (detail.condition_immunities || []).map(i => i.name.toLowerCase()),
       actions: actions
     };
+
+    monstersData[detail.index] = mergeWithExistingData(baseMonsterData, existingMonstersData[detail.index] || {});
   }
 
   await fs.writeFile(
@@ -233,11 +275,13 @@ async function fetchEquipment() {
   const targetEquipment = ['dagger', 'shortsword', 'longsword', 'shortbow', 'mace'];
   const equipmentData = {};
 
+  const existingEquipmentData = await readExistingData('equipment.json');
+
   for (const index of targetEquipment) {
     const res = await fetch(`${BASE_URL}/equipment/${index}`);
     const detail = await res.json();
 
-    equipmentData[detail.index] = {
+    const baseEquipmentData = {
       id: detail.index,
       name: t(detail.name),
       cost_gp: detail.cost?.unit === 'gp' ? detail.cost.quantity : (detail.cost?.quantity || 0) / 10,
@@ -245,6 +289,8 @@ async function fetchEquipment() {
       damage_type: detail.damage?.damage_type?.name ? t(detail.damage.damage_type.name.toLowerCase()) : "打撃",
       properties: (detail.properties || []).map(p => p.index)
     };
+
+    equipmentData[detail.index] = mergeWithExistingData(baseEquipmentData, existingEquipmentData[detail.index] || {});
   }
 
   await fs.writeFile(
