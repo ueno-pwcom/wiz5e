@@ -16,10 +16,27 @@
   border: 1px solid #4b5563;
   border-radius: 8px;
   padding: 16px;
-  width: 360px;
-  max-width: 90vw;
+  width: min(720px, 95vw);
+  max-width: 95vw;
   color: #fff;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.character-detail-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.character-detail-left-panel {
+  flex: 0 0 120px;
+  max-width: 120px;
+  min-width: 120px;
+}
+
+.character-detail-right-panel {
+  flex: 1;
 }
 
 .character-detail-header {
@@ -60,7 +77,6 @@
 }
 
 .character-detail-stat-box,
-.character-detail-ability-box,
 .character-detail-slot-box,
 .character-detail-equipment-box,
 .character-detail-drop-items {
@@ -80,12 +96,6 @@
   font-size: 16px;
   font-weight: bold;
   color: #fff;
-}
-
-.character-detail-ability-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
 }
 
 .character-detail-section-title {
@@ -199,7 +209,7 @@
 
 .character-detail-ability-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 6px;
 }
 
@@ -207,7 +217,14 @@
   background-color: #111827;
   border: 1px solid #374151;
   border-radius: 4px;
-  padding: 6px;
+  padding: 4px 6px;
+  width: 100%;
+  max-width: 90px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
@@ -235,6 +252,45 @@
   flex-direction: column;
   gap: 6px;
   font-size: 12px;
+}
+
+.character-detail-action-button {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.character-detail-action-button:hover {
+  background-color: #1d4ed8;
+}
+
+@media (max-width: 760px) {
+  .character-detail-body {
+    flex-direction: column;
+  }
+
+  .character-detail-left-panel {
+    flex: 1;
+  }
+
+  .character-detail-right-panel {
+    flex: 1;
+  }
+
+  .character-detail-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .character-detail-stat-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .character-detail-equipment-row {

@@ -13,6 +13,7 @@
     "damage_type": "火",
     "save_type": null,
     "save_effect": null,
+    "targets_all_enemies": false,
     "requires_concentration": false
   },
   "sacred-flame": {
@@ -28,6 +29,7 @@
     "damage_type": "光輝",
     "save_type": "dex",
     "save_effect": "none",
+    "targets_all_enemies": false,
     "requires_concentration": false
   },
   "burning-hands": {
@@ -61,6 +63,7 @@
     "damage_type": "力場",
     "save_type": null,
     "save_effect": null,
+    "targets_all_enemies": false,
     "requires_concentration": false
   },
   "sleep": {
@@ -78,6 +81,7 @@
     "damage_type": null,
     "save_type": null,
     "save_effect": null,
+    "targets_all_enemies": false,
     "requires_concentration": false
   },
   "cure-wounds": {
@@ -97,6 +101,7 @@
     "damage_type": null,
     "save_type": null,
     "save_effect": null,
+    "targets_all_enemies": false,
     "requires_concentration": false
   },
   "bless": {
@@ -113,6 +118,7 @@
     "damage_type": null,
     "save_type": null,
     "save_effect": null,
+    "targets_all_enemies": false,
     "requires_concentration": true
   },
   "shield": {
@@ -129,6 +135,7 @@
     "damage_type": null,
     "save_type": null,
     "save_effect": null,
+    "targets_all_enemies": false,
     "requires_concentration": false
   }
 }

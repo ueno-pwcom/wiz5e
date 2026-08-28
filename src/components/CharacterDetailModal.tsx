@@ -103,103 +103,105 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
           </div>
         ) : (
           <>
-            {/* 基本ステータス要約 */}
-            <div className="character-detail-stat-grid">
-              <div className="character-detail-stat-box">
-                <span className="character-detail-stat-label">HP</span>
-                <span className="character-detail-stat-value character-detail-stat-value--hp">
-                  {character.hp.current} / {character.hp.max}
-                </span>
-              </div>
-              <div className="character-detail-stat-box">
-                <span className="character-detail-stat-label">経験値</span>
-                <span className="character-detail-stat-value character-detail-stat-value--xp">
-                  {currentXp} / {nextLevelXp}
-                </span>
-              </div>
-              <div className="character-detail-stat-box">
-                <span className="character-detail-stat-label">次のレベルまで</span>
-                <span className="character-detail-stat-value character-detail-stat-value--xp-to-next">
-                  {xpToNextLevel} XP
-                </span>
-              </div>
-              <div className="character-detail-stat-box">
-                <span className="character-detail-stat-label">AC (アーマークラス)</span>
-                <span className="character-detail-stat-value character-detail-stat-value--ac">{character.ac}</span>
-              </div>
-              <div className="character-detail-stat-box">
-                <span className="character-detail-stat-label">ヒットダイス残</span>
-                <span className="character-detail-stat-value character-detail-stat-value--hd">{character.hit_dice_remaining}</span>
-              </div>
-            </div>
-
-            {/* 能力値グリッド */}
-            <div className="character-detail-section">
-              <div className="character-detail-section-title">能力値 (Ability Scores)</div>
-              <div className="character-detail-ability-grid">
-                {abilities.map((a) => (
-                  <div key={a.label} className="character-detail-ability-box">
-                    <div className="character-detail-stat-label">{a.label}</div>
-                    <div className="character-detail-ability-value">{a.val}</div>
-                    <div className="character-detail-ability-mod">({formatMod(a.val)})</div>
+            <div className="character-detail-body">
+              <div className="character-detail-left-panel">
+                <div className="character-detail-section">
+                  <div className="character-detail-section-title">能力値 (Ability Scores)</div>
+                  <div className="character-detail-ability-grid">
+                    {abilities.map((a) => (
+                      <div key={a.label} className="character-detail-ability-box">
+                        <div className="character-detail-stat-label">{a.label}</div>
+                        <div className="character-detail-ability-value">{a.val}</div>
+                        <div className="character-detail-ability-mod">({formatMod(a.val)})</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="character-detail-equipment-panel">
-              <div className="character-detail-section-title">🛡️ 現在の装備</div>
-              <div className="character-detail-equipment-column">
-                <div className="character-detail-equipment-row">
-                  <span className="character-detail-equipment-label">主武器:</span>
-                  <span className={`character-detail-equipment-value ${equippedWeapon ? '' : 'empty'}`}>
-                    {equippedWeapon ? `${equippedWeapon.name} (${equippedWeapon.damage_dice})` : 'なし (素手)'}
-                  </span>
-                </div>
-                <div className="character-detail-equipment-row">
-                  <span className="character-detail-equipment-label">防具:</span>
-                  <span className={`character-detail-equipment-value ${equippedArmor ? '' : 'empty'}`}>
-                    {equippedArmor ? `${equippedArmor.name} (AC ${equippedArmor.ac_bonus})` : 'なし (服)'}
-                  </span>
-                </div>
-                <div className="character-detail-equipment-row">
-                  <span className="character-detail-equipment-label">盾:</span>
-                  <span className={`character-detail-equipment-value ${equippedShield ? '' : 'empty'}`}>
-                    {equippedShield ? `${equippedShield.name} (+${equippedShield.ac_bonus})` : 'なし'}
-                  </span>
                 </div>
               </div>
-            </div>
 
-            {/* 呪文スロット（所持キャラのみ） */}
-            {character.spell_slots && Object.keys(character.spell_slots).length > 0 && (
-              <div className="character-detail-section">
-                <div className="character-detail-section-title">呪文スロット (Spell Slots)</div>
-                <div className="character-detail-slot-row">
-                  {Object.entries(character.spell_slots).map(([lvl, slot]) => (
-                    <div key={lvl} className="character-detail-slot-box">
-                      <span className="character-detail-stat-label">Lv.{lvl}: </span>
-                      <span className="character-detail-ability-value">{slot.current} / {slot.max}</span>
+              <div className="character-detail-right-panel">
+                <div className="character-detail-stat-grid">
+                  <div className="character-detail-stat-box">
+                    <span className="character-detail-stat-label">HP</span>
+                    <span className="character-detail-stat-value character-detail-stat-value--hp">
+                      {character.hp.current} / {character.hp.max}
+                    </span>
+                  </div>
+                  <div className="character-detail-stat-box">
+                    <span className="character-detail-stat-label">経験値</span>
+                    <span className="character-detail-stat-value character-detail-stat-value--xp">
+                      {currentXp} / {nextLevelXp}
+                    </span>
+                  </div>
+                  <div className="character-detail-stat-box">
+                    <span className="character-detail-stat-label">次のレベルまで</span>
+                    <span className="character-detail-stat-value character-detail-stat-value--xp-to-next">
+                      {xpToNextLevel} XP
+                    </span>
+                  </div>
+                  <div className="character-detail-stat-box">
+                    <span className="character-detail-stat-label">AC (アーマークラス)</span>
+                    <span className="character-detail-stat-value character-detail-stat-value--ac">{character.ac}</span>
+                  </div>
+                  <div className="character-detail-stat-box">
+                    <span className="character-detail-stat-label">ヒットダイス残</span>
+                    <span className="character-detail-stat-value character-detail-stat-value--hd">{character.hit_dice_remaining}</span>
+                  </div>
+                </div>
+
+                <div className="character-detail-equipment-panel">
+                  <div className="character-detail-section-title">🛡️ 現在の装備</div>
+                  <div className="character-detail-equipment-column">
+                    <div className="character-detail-equipment-row">
+                      <span className="character-detail-equipment-label">主武器:</span>
+                      <span className={`character-detail-equipment-value ${equippedWeapon ? '' : 'empty'}`}>
+                        {equippedWeapon ? `${equippedWeapon.name} (${equippedWeapon.damage_dice})` : 'なし (素手)'}
+                      </span>
                     </div>
-                  ))}
+                    <div className="character-detail-equipment-row">
+                      <span className="character-detail-equipment-label">防具:</span>
+                      <span className={`character-detail-equipment-value ${equippedArmor ? '' : 'empty'}`}>
+                        {equippedArmor ? `${equippedArmor.name} (AC ${equippedArmor.ac_bonus})` : 'なし (服)'}
+                      </span>
+                    </div>
+                    <div className="character-detail-equipment-row">
+                      <span className="character-detail-equipment-label">盾:</span>
+                      <span className={`character-detail-equipment-value ${equippedShield ? '' : 'empty'}`}>
+                        {equippedShield ? `${equippedShield.name} (+${equippedShield.ac_bonus})` : 'なし'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
+
+                {character.spell_slots && Object.keys(character.spell_slots).length > 0 && (
+                  <div className="character-detail-section">
+                    <div className="character-detail-section-title">呪文スロット (Spell Slots)</div>
+                    <div className="character-detail-slot-row">
+                      {Object.entries(character.spell_slots).map(([lvl, slot]) => (
+                        <div key={lvl} className="character-detail-slot-box">
+                          <span className="character-detail-stat-label">Lv.{lvl}: </span>
+                          <span className="character-detail-ability-value">{slot.current} / {slot.max}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="character-detail-section-note">
+                  <div>隊列: <span className="character-detail-highlight">{characterRoleLabel}</span></div>
+                  <div>状態異常: <span className={character.status_effects.length ? 'character-detail-status-danger' : 'character-detail-status-normal'}>
+                    {translateStatusEffects(character.status_effects)}
+                  </span></div>
+                </div>
+
+                <button
+                  onClick={() => setShowInventory(true)}
+                  className="character-detail-action-button"
+                >
+                  🎒 所持品・装備を変更する
+                </button>
               </div>
-            )}
-
-            {/* 状態・装備 */}
-            <div className="character-detail-section-note">
-              <div>隊列: <span className="character-detail-highlight">{characterRoleLabel}</span></div>
-              <div>状態異常: <span className={character.status_effects.length ? 'character-detail-status-danger' : 'character-detail-status-normal'}>
-                {translateStatusEffects(character.status_effects)}
-              </span></div>
             </div>
-
-            <button
-              onClick={() => setShowInventory(true)}
-              className="character-detail-action-button"
-            >
-              🎒 所持品・装備を変更する
-            </button>
           </>
         )}
       </div>
