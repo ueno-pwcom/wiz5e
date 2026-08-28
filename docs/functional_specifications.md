@@ -20,16 +20,19 @@
 * フロントエンド: React + Vite
 * 状態管理: Zustand (`src/store/useGameStore.tsx`)
 * 型定義: TypeScript (`src/types/game.ts`)
-* データ: `src/data/spells.ts`, `src/data/monsters.ts`, `src/data/map1.ts`, `src/data/items.ts`, `src/data/dungeonEvents.ts`
+* データ: `src/data/*.json` + `src/data/*.ts` + `src/utils/srdData.ts`
 
 ### 2.2 データアーキテクチャ
-各種データはコード内のモジュールで定義され、ゲームロジックが直接参照する。
+各種データはコード内のモジュールや JSON によって定義され、ゲームロジックが直接参照する。
 
-* `src/data/spells.ts`: 呪文データ
-* `src/data/monsters.ts`: モンスター定義
-* `src/data/map1.ts`: ダンジョンフロア定義
+* `src/data/classes.json`: クラスデータ
+* `src/data/spells.json`: 呪文データ
+* `src/data/monsters.json`: モンスターデータ
+* `src/data/equipment.json`: 装備データ
 * `src/data/items.ts`: アイテム・装備定義
+* `src/data/map1.ts`: ダンジョンフロア定義
 * `src/data/dungeonEvents.ts`: 探索イベントデータ
+* `src/utils/srdData.ts`: JSON データを型安全に読み込むラッパー
 
 ---
 
