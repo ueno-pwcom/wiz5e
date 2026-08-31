@@ -46,6 +46,21 @@ let townBgmAudio: HTMLAudioElement | null = null;
 let campBgmAudio: HTMLAudioElement | null = null;
 let pendingBgm: 'battle' | 'dungeon' | 'town' | 'camp' | null = null;
 let bgmUnlockListenerAttached = false;
+let soundEnabled = true;
+
+const stopAllBgms = () => {
+  stopBattleBgm();
+  stopDungeonBgm();
+  stopTownBgm();
+  stopCampBgm();
+};
+
+const setSoundEnabledValue = (enabled: boolean) => {
+  soundEnabled = enabled;
+  if (!enabled) {
+    stopAllBgms();
+  }
+};
 
 const getBattleBgmAudio = (): HTMLAudioElement => {
   if (!battleBgmAudio) {
@@ -106,6 +121,7 @@ const attachBgmUnlockListener = () => {
 };
 
 const tryPlayBgm = (audio: HTMLAudioElement, scene: 'battle' | 'dungeon' | 'town' | 'camp') => {
+  if (!soundEnabled) return;
   audio.currentTime = 0;
   void audio.play().catch(() => {
     pendingBgm = scene;
@@ -178,6 +194,7 @@ const getSoundUrlForDamageType = (damageType?: DamageType | null): string => {
 };
 
 const playSoundForDamageType = (damageType?: DamageType | null) => {
+  if (!soundEnabled) return;
   const soundUrl = getSoundUrlForDamageType(damageType);
   const audio = new Audio(soundUrl);
   void audio.play().catch(() => {
@@ -186,6 +203,7 @@ const playSoundForDamageType = (damageType?: DamageType | null) => {
 };
 
 const playMissSound = () => {
+  if (!soundEnabled) return;
   const missUrl = new URL('../assets/sounds/空振り.mp3', import.meta.url).href;
   const audio = new Audio(missUrl);
   void audio.play().catch(() => {
@@ -297,6 +315,8 @@ interface GameState {
 
   selectedCharacterId: string | null;
   setSelectedCharacterId: (id: string | null) => void;
+  soundEnabled: boolean;
+  toggleSoundEnabled: () => void;
 }
 
 // テスト用初期パーティデータ
@@ -401,23 +421,47 @@ export const useGameStore = create<GameState>((set, get) => ({
   activeEvent: null,
   eventResult: null,
   selectedActorId: '',
+  soundEnabled: true,
 
   /**
    * @brief 現在のゲームシーンを変更する。
    * @param scene 遷移先のシーン名。
    */
   setScene: (scene) => {
-    if (scene === 'dungeon') {
-      playDungeonBgm();
-    } else if (scene !== 'battle') {
-      stopDungeonBgm();
-    }
-
-    if (scene !== 'battle') {
-      stopBattleBgm();
-    }
+    stopAllBgms();
 
     set({ scene });
+
+    if (!soundEnabled) return;
+
+    if (scene === 'dungeon') {
+      playDungeonBgm();
+    } else if (scene === 'town') {
+      playTownBgm();
+    } else if (scene === 'camp') {
+      playCampBgm();
+    } else if (scene === 'battle') {
+      playBattleBgm();
+    }
+  },
+
+  toggleSoundEnabled: () => {
+    const nextValue = !get().soundEnabled;
+    setSoundEnabledValue(nextValue);
+    set({ soundEnabled: nextValue });
+
+    if (!nextValue) return;
+
+    const scene = get().scene;
+    if (scene === 'dungeon') {
+      playDungeonBgm();
+    } else if (scene === 'town') {
+      playTownBgm();
+    } else if (scene === 'camp') {
+      playCampBgm();
+    } else if (scene === 'battle') {
+      playBattleBgm();
+    }
   },
 
   /**

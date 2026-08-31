@@ -16,9 +16,12 @@ export const GameContainer: React.FC = () => {
   const party = useGameStore((state) => state.party);
   const gold = useGameStore((state) => state.gold);
   const logs = useGameStore((state) => state.logs);
+  const soundEnabled = useGameStore((state) => state.soundEnabled);
+  const toggleSoundEnabled = useGameStore((state) => state.toggleSoundEnabled);
   const setSelectedCharacterId = useGameStore((state) => state.setSelectedCharacterId);
 
   useEffect(() => {
+    if (!soundEnabled) return;
     if (scene === 'dungeon') {
       playDungeonBgm();
     } else if (scene === 'town') {
@@ -26,7 +29,7 @@ export const GameContainer: React.FC = () => {
     } else if (scene === 'camp') {
       playCampBgm();
     }
-  }, [scene]);
+  }, [scene, soundEnabled]);
 
   return (
     <div className="game-container">
@@ -36,6 +39,9 @@ export const GameContainer: React.FC = () => {
         <button onClick={() => setScene('battle')}>戦闘画面</button>
         <button onClick={() => setScene('town')}>街画面</button>
         <button onClick={() => setScene('camp')}>キャンプ画面</button>
+        <button onClick={toggleSoundEnabled}>
+          サウンド: {soundEnabled ? 'ON' : 'OFF'}
+        </button>
       </div>
 
       {/* メイン画面ビュー切り替え */}
