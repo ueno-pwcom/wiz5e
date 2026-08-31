@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import './BattleResultModal.css';
 import { useGameStore, stopBattleBgm } from '../store/useGameStore';
 import { XP_TABLE } from '../data/levelTable';
+import { itemList } from '../data/items';
 
 const BATTLE_VICTORY_SOUND_URL = new URL('../assets/sounds/戦闘勝利.mp3', import.meta.url).href;
 
@@ -27,6 +28,10 @@ export const BattleResultModal: React.FC = () => {
 
   const aliveCount = party.filter((m) => m.is_alive).length;
   const xpPerMember = Math.floor(battleReward.xp / (aliveCount || 1));
+  const dropItemCounts = battleReward.items.reduce<Record<string, number>>((counts, itemId) => {
+    counts[itemId] = (counts[itemId] ?? 0) + 1;
+    return counts;
+  }, {});
 
   return (
     <div className="battle-result-overlay">
@@ -95,7 +100,14 @@ export const BattleResultModal: React.FC = () => {
           {battleReward.items.length > 0 && (
             <div className="battle-result-drop-items">
               <span className="battle-result-drop-items-label">入手アイテム: </span>
-              {battleReward.items.join(', ')}
+              {Object.entries(dropItemCounts).map(([itemId, quantity], index) => {
+                const itemName = itemList[itemId]?.name ?? itemId;
+                return (
+                  <span key={itemId}>
+                    {itemName}{quantity > 1 ? ` x${quantity}` : ''}{index < Object.entries(dropItemCounts).length - 1 ? '、' : ''}
+                  </span>
+                );
+              })}
             </div>
           )}
         </div>

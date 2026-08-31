@@ -160,7 +160,7 @@ export const map1Data: DungeonMap = {
     facing: 'N'
   },
   encounter_table: {
-    rate: 0.15,
+    rate: 0.10,
     monsters: [
       { id: 'zombie', weight: 10 },
       { id: 'kobold', weight: 50 },
@@ -181,7 +181,7 @@ export const map2Data: DungeonMap = {
     facing: 'S'
   },
   encounter_table: {
-    rate: 0.18,
+    rate: 0.12,
     monsters: [
       { id: 'hobgoblin', weight: 30 },
       { id: 'goblin', weight: 40 },
@@ -202,7 +202,7 @@ export const map3Data: DungeonMap = {
     facing: 'N'
   },
   encounter_table: {
-    rate: 0.20,
+    rate: 0.15,
     monsters: [
       { id: 'zombie', weight: 20 },
       { id: 'bugbear', weight: 30 },

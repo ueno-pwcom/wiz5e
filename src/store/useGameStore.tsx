@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, StatusEffect, WallType } from '../types/game';
 import { map1Data, map2Data, map3Data } from '../data/map1';
 import { itemList } from '../data/items';
+import { monsterDropTables } from '../data/dropTables';
 import { dungeonEvents } from '../data/dungeonEvents';
 import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
 import { monstersData, spellsData } from '../utils/srdData';
 import { classesData } from '../utils/srdData';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
-import { getAbilityModifier, rollD20, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
+import { getAbilityModifier, rollD20, rollD20WithAdvantage, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
 
 /**
  * @brief 装備と敏捷値からキャラクターのアーマークラス（AC）を計算する。
@@ -209,6 +210,42 @@ const playMissSound = () => {
   void audio.play().catch(() => {
     // 自動再生制限などで失敗しても無視
   });
+};
+
+const getDropTableForMonster = (monster: MonsterData) => {
+  return monsterDropTables[monster.type ?? 'default'] ?? monsterDropTables.default;
+};
+
+const chooseWeightedDrop = (entries: { itemId: string; weight: number }[]): string | null => {
+  const totalWeight = entries.reduce((sum, entry) => sum + entry.weight, 0);
+  if (totalWeight <= 0) return null;
+
+  let target = Math.random() * totalWeight;
+  for (const entry of entries) {
+    if (target < entry.weight) {
+      return entry.itemId;
+    }
+    target -= entry.weight;
+  }
+
+  return entries[entries.length - 1]?.itemId ?? null;
+};
+
+const determineMonsterDrops = (monsters: Combatant[]): string[] => {
+  const droppedItems: string[] = [];
+
+  monsters.forEach((enemy) => {
+    const monster = enemy.ref as MonsterData;
+    const table = getDropTableForMonster(monster);
+    if (Math.random() <= table.dropChance) {
+      const itemId = chooseWeightedDrop(table.entries);
+      if (itemId) {
+        droppedItems.push(itemId);
+      }
+    }
+  });
+
+  return droppedItems;
 };
 
 const applyDamageTypeModifiers = (damage: number, damageType: DamageType | null | undefined, target: Combatant) => {
@@ -604,19 +641,29 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    const attackRoll = isRanged && playerChar.position === 'front'
-      ? rollD20WithDisadvantage(attackBonus)
-      : rollD20(attackBonus);
-    addLog(`${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`, 'player_action');
+    const targetStatusEffects = target.ref.status_effects ?? [];
+    const targetIsUnconscious = targetStatusEffects.includes('unconscious');
+    const attackRoll = targetIsUnconscious
+      ? rollD20WithAdvantage(attackBonus)
+      : isRanged && playerChar.position === 'front'
+        ? rollD20WithDisadvantage(attackBonus)
+        : rollD20(attackBonus);
+
+    addLog(
+      `${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`,
+      'player_action'
+    );
 
     let isHit = false;
-    if (attackRoll.isCritical) {
-      addLog('クリティカルヒット！', 'critical');
-      isHit = true;
-    } else if (attackRoll.isFumble) {
+    let isCriticalHit = attackRoll.isCritical;
+
+    if (attackRoll.isFumble) {
       addLog('ファンブル！ 攻撃は大きく外れた。', 'system');
       playMissSound();
       isHit = false;
+    } else if (targetIsUnconscious && attackRoll.total >= target.ac) {
+      isHit = true;
+      isCriticalHit = true;
     } else if (attackRoll.total >= target.ac) {
       isHit = true;
     } else {
@@ -625,8 +672,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     if (isHit) {
+      if (isCriticalHit) {
+        addLog('クリティカルヒット！', 'critical');
+      }
       const weaponDice = weapon?.damage_dice || '1d8';
-      const diceDamage = rollDiceString(weaponDice, attackRoll.isCritical);
+      const diceDamage = rollDiceString(weaponDice, isCriticalHit);
       const damageAbilityMod = isRanged ? dexMod : isFinesse ? Math.max(strMod, dexMod) : strMod;
       const rawDamage = diceDamage + damageAbilityMod;
       const damageType = weapon?.damage_type ?? '殴打';
@@ -634,8 +684,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       target.hp.current = Math.max(0, target.hp.current - adjustedDamage);
 
       const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
-      const diceExpression = attackRoll.isCritical ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
-      addLog(`${target.name} に ${adjustedDamage} のダメージ！${modifierTag} （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, attackRoll.isCritical ? 'critical' : 'player_action');
+      const diceExpression = isCriticalHit ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
+      addLog(
+        `${target.name} に ${adjustedDamage} のダメージ！${modifierTag} （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, 
+        isCriticalHit ? 'critical' : 'player_action'
+      );
       playSoundForDamageType(damageType);
       set({ combatants: [...combatants], enemyShakeTargetId: target.id });
       setTimeout(() => set({ enemyShakeTargetId: null }), 300);
@@ -1151,13 +1204,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       const totalEnemies = combatants.filter((c) => !c.is_player);
       const totalXp = totalEnemies.length * 50;
       const totalGold = totalEnemies.length * 15;
+      const dropItems = determineMonsterDrops(totalEnemies);
 
       addLog('戦闘に勝利した！', 'info');
       set({
         battleReward: {
           xp: totalXp,
           gold: totalGold,
-          items: ['ポーション']
+          items: dropItems
         }
       });
       setTimeout(() => {
@@ -1227,7 +1281,7 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @brief 戦闘報酬を獲得し、パーティに分配する。
    */
   claimBattleReward: () => {
-    const { party, battleReward, checkLevelUp, setScene } = get();
+    const { party, battleReward, checkLevelUp, setScene, inventory } = get();
     if (!battleReward) return;
 
     const aliveMembers = party.filter((m) => m.is_alive);
@@ -1244,11 +1298,25 @@ export const useGameStore = create<GameState>((set, get) => ({
       return checkLevelUp(updatedXpMember);
     });
 
+    const updatedInventory = [...inventory];
+    battleReward.items.forEach((itemId) => {
+      const existingIndex = updatedInventory.findIndex((i) => i.itemId === itemId);
+      if (existingIndex >= 0) {
+        updatedInventory[existingIndex] = {
+          ...updatedInventory[existingIndex],
+          quantity: updatedInventory[existingIndex].quantity + 1
+        };
+      } else {
+        updatedInventory.push({ itemId, quantity: 1 });
+      }
+    });
+
     set({
       party: updatedParty,
       battleReward: null,
       showResultModal: false,
-      gold: (get().gold || 0) + battleReward.gold
+      gold: (get().gold || 0) + battleReward.gold,
+      inventory: updatedInventory
     });
 
     setScene('dungeon');
