@@ -667,9 +667,7 @@ export const DungeonView: React.FC = () => {
 
               switch (currentTile.event.type) {
                 case 'chest':
-                  if (currentTile.event.chest_id === 'chest_1') {
-                    triggerEvent('locked_chest');
-                  }
+                  triggerEvent('locked_chest');
                   break;
                 case 'door':
                   triggerEvent('heavy_door');

@@ -1353,7 +1353,7 @@ export const useGameStore = create<GameState>((set, get) => ({
    */
   // イベント選択肢の実行と技能判定
   resolveEventOption: (option: EventOption) => {
-    const { party, selectedActorId, inventory, addLog } = get();
+    const { party, selectedActorId, inventory, addLog, activeEvent, currentMap, playerPosition } = get();
     const actor = party.find((m) => m.id === selectedActorId) || party[0];
 
     if (!actor) return;
@@ -1370,39 +1370,47 @@ export const useGameStore = create<GameState>((set, get) => ({
       const passed = total >= option.check.dc;
 
       let resultMsg = passed ? option.successText : option.failureText;
+      let chestRewardMessages: string[] = [];
+      let updatedInventory = [...inventory];
+      let updatedGold = get().gold || 0;
 
       if (passed && option.reward) {
         let rewardLogText = '';
 
         // 1. ゴールドの加算処理
         if (option.reward.gold) {
-          const currentGold = get().gold || 0;
-          set({ gold: currentGold + option.reward.gold });
+          updatedGold += option.reward.gold;
           rewardLogText += `💰 ${option.reward.gold} G `;
+          chestRewardMessages.push(`${option.reward.gold} G`);
         }
 
         // 2. アイテムのインベントリ追加処理
-        if (option.reward.items && option.reward.items.length > 0) {
-          const currentInventory = [...get().inventory];
 
+        if (option.reward.items && option.reward.items.length > 0) {
           option.reward.items.forEach((itemId) => {
-            const existingIndex = currentInventory.findIndex((i) => i.itemId === itemId);
+            const existingIndex = updatedInventory.findIndex((i) => i.itemId === itemId);
 
             if (existingIndex >= 0) {
-              currentInventory[existingIndex] = {
-                ...currentInventory[existingIndex],
-                quantity: currentInventory[existingIndex].quantity + 1
+              updatedInventory[existingIndex] = {
+                ...updatedInventory[existingIndex],
+                quantity: updatedInventory[existingIndex].quantity + 1
               };
             } else {
-              currentInventory.push({
+              updatedInventory.push({
                 itemId: itemId,
                 quantity: 1
               });
             }
           });
 
-          set({ inventory: currentInventory });
-          rewardLogText += `📦 アイテム獲得! `;
+          const itemNames = option.reward.items
+            .map((itemId) => itemList[itemId]?.name ?? itemId)
+            .join('、');
+          rewardLogText += `📦 ${itemNames} `;
+
+          if (activeEvent?.type === 'chest') {
+            chestRewardMessages.push(itemNames);
+          }
         }
 
         if (rewardLogText) {
@@ -1416,9 +1424,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         resultMsg += ` (${actor.name} は ${dmg} ダメージを受けた！)`;
       }
 
-      addLog(`[イベント] ${actor.name} の ${option.check.label} 判定: ${total} (出目 ${d20} + 修正値 ${mod}) -> ${passed ? '成功' : '失敗'}`, passed ? 'info' : 'system');
-
-      set({
+      const nextState: Partial<GameState> = {
         eventResult: {
           passed,
           roll: d20,
@@ -1428,8 +1434,36 @@ export const useGameStore = create<GameState>((set, get) => ({
           message: resultMsg
         },
         party: [...party],
-        inventory: [...inventory]
-      });
+        inventory: updatedInventory,
+        gold: updatedGold
+      };
+
+      const currentTile = currentMap.grid[playerPosition.y]?.[playerPosition.x];
+      const shouldRemoveChest =
+        activeEvent?.type === 'chest' &&
+        currentTile?.event?.type === 'chest' &&
+        option.id !== 'ignore' &&
+        (passed || option.id === 'check_trap');
+
+      if (shouldRemoveChest) {
+        const updatedGrid = currentMap.grid.map((row, rowIndex) =>
+          row.map((tile, colIndex) => {
+            if (rowIndex === playerPosition.y && colIndex === playerPosition.x) {
+              return { ...tile, event: null };
+            }
+            return tile;
+          })
+        );
+        nextState.currentMap = { ...currentMap, grid: updatedGrid };
+      }
+
+      addLog(`[イベント] ${actor.name} の ${option.check.label} 判定: ${total} (出目 ${d20} + 修正値 ${mod}) -> ${passed ? '成功' : '失敗'}`, passed ? 'info' : 'system');
+
+      if (activeEvent?.type === 'chest' && chestRewardMessages.length > 0) {
+        addLog(`📦 ${chestRewardMessages.join('、')} を入手した！`, 'info');
+      }
+
+      set(nextState as any);
     } else {
       set({
         eventResult: {
