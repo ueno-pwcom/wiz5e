@@ -63,7 +63,7 @@ export const DungeonEventModal: React.FC = () => {
               <select
                 value={selectedActorId}
                 onChange={(e) => setSelectedActor(e.target.value)}
-                style={{ backgroundColor: '#1f2937', color: '#fff', border: '1px solid #4b5563', borderRadius: '4px', padding: '4px 8px', fontSize: '12px' }}
+                style={{ backgroundColor: '#1f2937', color: '#fff', border: '1px solid #4b5563', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', cursor: 'pointer' }}
               >
                 {party.filter(m => m.is_alive).map((m) => (
                   <option key={m.id} value={m.id}>
