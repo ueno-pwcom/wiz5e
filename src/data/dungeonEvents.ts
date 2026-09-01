@@ -21,6 +21,8 @@ export interface EventOption {
   penalty?: {
     damageDice?: string; // 例: '1d10' (罠のダメージ)
   };
+  // 実行に必要な習熟
+  requiredProficiency?: string;
 }
 
 export interface DungeonEvent {
@@ -41,21 +43,22 @@ export const dungeonEvents: Record<string, DungeonEvent> = {
     icon: '📦',
     options: [
       {
+        id: 'check_trap',
+        label: '罠を警戒して慎重に調べる（知覚）',
+        check: { ability: 'wis', dc: 11, label: '【判断力/知覚】DC 11', skill: 'Perception' },
+        successText: '箱の隙間に仕掛けられた針の罠を見抜き、解除して安全に開錠できるようにした。',
+        failureText: '罠に気づかず箱を触ってしまい、毒針が刺さってしまった！',
+        penalty: { damageDice: '1d6' }
+      },
+      {
         id: 'pick_lock',
         label: '鍵を開ける（手先の早業）',
         check: { ability: 'dex', dc: 13, label: '【器用さ/手先の早業】DC 13', skill: 'Sleight of Hand' },
         successText: 'カチリと音がして鍵が開いた！中に残されていた宝を手に入れた。',
-        failureText: 'ピックが引っかかり、鍵を開けることができなかった。',
+        failureText: 'ピックが引っかかり、鍵を開けることができなかった。手元が滑り、小さな切り傷を負ってしまった。',
+        penalty: { damageDice: '1d4' },
+        requiredProficiency: "Thieves' Tools",
         reward: { gold: 40, items: ['potion_of_healing'] }
-      },
-      {
-        id: 'check_trap',
-        label: '罠を警戒して慎重に開ける（知覚）',
-        check: { ability: 'wis', dc: 11, label: '【判断力/知覚】DC 11', skill: 'Perception' },
-        successText: '箱の隙間に仕掛けられた針の罠を見抜き、安全に取り除いて中身を回収した！',
-        failureText: '罠に気づかず箱を開けてしまい、毒針が刺さってしまった！',
-        reward: { gold: 25 },
-        penalty: { damageDice: '1d6' }
       },
       {
         id: 'ignore',

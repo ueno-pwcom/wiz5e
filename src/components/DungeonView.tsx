@@ -7,6 +7,7 @@ import type { Direction, DungeonMap } from '../types/game';
 export const DungeonView: React.FC = () => {
   const playerPosition = useGameStore((state) => state.playerPosition);
   const currentMap = useGameStore((state) => state.currentMap);
+  const activeEvent = useGameStore((state) => state.activeEvent);
   const movePlayer = useGameStore((state) => state.movePlayer);
   const useStairs = useGameStore((state) => state.useStairs);
   const enterCamp = useGameStore((state) => state.enterCamp);
@@ -397,6 +398,7 @@ export const DungeonView: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeEvent) return;
       if (e.key === 'ArrowUp' || e.key === 'w') movePlayer('forward');
       if (e.key === 'ArrowDown' || e.key === 's') movePlayer('backward');
       if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer('turnLeft');
@@ -405,7 +407,7 @@ export const DungeonView: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [movePlayer]);
+  }, [movePlayer, activeEvent]);
 
   const getFacingMarkerStyle = (facing: Direction): React.CSSProperties => {
     const baseStyle: React.CSSProperties = {
@@ -649,11 +651,11 @@ export const DungeonView: React.FC = () => {
         {/* コントロールボタン */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '8px' }}>
           <div></div>
-          <button style={btnStyle} onClick={() => movePlayer('forward')}>▲</button>
+          <button style={btnStyle} onClick={() => !activeEvent && movePlayer('forward')} disabled={!!activeEvent}>▲</button>
           <div></div>
-          <button style={btnStyle} onClick={() => movePlayer('turnLeft')}>◄</button>
-          <button style={btnStyle} onClick={() => movePlayer('backward')}>▼</button>
-          <button style={btnStyle} onClick={() => movePlayer('turnRight')}>►</button>
+          <button style={btnStyle} onClick={() => !activeEvent && movePlayer('turnLeft')} disabled={!!activeEvent}>◄</button>
+          <button style={btnStyle} onClick={() => !activeEvent && movePlayer('backward')} disabled={!!activeEvent}>▼</button>
+          <button style={btnStyle} onClick={() => !activeEvent && movePlayer('turnRight')} disabled={!!activeEvent}>►</button>
         </div>
 
         <div style={{ display: 'flex', gap: '4px' }}>

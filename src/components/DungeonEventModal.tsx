@@ -13,6 +13,10 @@ export const DungeonEventModal: React.FC = () => {
   const setSelectedActor = useGameStore((state) => state.setSelectedActor);
   const resolveEventOption = useGameStore((state) => state.resolveEventOption);
   const closeEventModal = useGameStore((state) => state.closeEventModal);
+  const resumeEvent = useGameStore((state) => state.resumeEvent);
+  const eventContext = useGameStore((state) => state.eventContext);
+  const currentMap = useGameStore((state) => state.currentMap);
+  const playerPosition = useGameStore((state) => state.playerPosition);
 
   if (!activeEvent) return null;
 
@@ -53,6 +57,11 @@ export const DungeonEventModal: React.FC = () => {
             <button onClick={closeEventModal} style={{ ...buttonStyle, marginTop: '16px', backgroundColor: '#374151' }}>
               探索を再開する
             </button>
+            {activeEvent?.type === 'chest' && eventContext?.trapCleared && currentMap.grid[playerPosition.y]?.[playerPosition.x]?.event?.type === 'chest' && (
+              <button onClick={resumeEvent} style={{ ...buttonStyle, marginTop: '8px', backgroundColor: '#10b981' }}>
+                鍵を開ける（続ける）
+              </button>
+            )}
           </div>
         ) : (
           /* 選択肢とキャラクター選択（判定前） */
@@ -87,17 +96,33 @@ export const DungeonEventModal: React.FC = () => {
                   modText = ` [${abilityMod >= 0 ? '+' : ''}${abilityMod}${isProficient ? ` + ${proficiencyMod} (習熟) = ${totalMod}` : ''}]`;
                 }
 
+                const requiredProficiency = option.requiredProficiency;
+                const hasRequiredProficiency = requiredProficiency
+                  ? classesData[currentActor.class_id]?.proficiencies?.includes(requiredProficiency)
+                  : true;
+                const isDisabled = !!requiredProficiency && !hasRequiredProficiency;
+
                 return (
                   <button
                     key={option.id}
-                    onClick={() => resolveEventOption(option)}
+                    onClick={() => !isDisabled && resolveEventOption(option)}
                     className="dungeon-event-option-button"
-                    style={optionButtonStyle}
+                    style={{
+                      ...optionButtonStyle,
+                      opacity: isDisabled ? 0.55 : 1,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer'
+                    }}
+                    disabled={isDisabled}
                   >
                     <div style={{ fontWeight: 'bold' }}>{option.label}</div>
                     {option.check && (
                       <div style={{ fontSize: '10px', color: '#f59e0b', marginTop: '2px' }}>
                         {option.check.label} (補正: {modText})
+                      </div>
+                    )}
+                    {isDisabled && (
+                      <div style={{ fontSize: '10px', color: '#f87171', marginTop: '2px' }}>
+                        必要習熟: {requiredProficiency}
                       </div>
                     )}
                   </button>

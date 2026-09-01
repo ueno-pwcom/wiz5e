@@ -308,7 +308,9 @@ interface GameState {
   enemyShakeTargetId: string | null;
   activeEvent: DungeonEvent | null;
   eventResult: EventResult | null;
+  eventContext: { eventId: string; trapCleared?: boolean } | null;
   selectedActorId: string;
+  resumeEvent: () => void;
 
   setScene: (scene: GameScene) => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
@@ -457,6 +459,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   enemyShakeTargetId: null,
   activeEvent: null,
   eventResult: null,
+  eventContext: null,
   selectedActorId: '',
   soundEnabled: true,
 
@@ -1332,9 +1335,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { party } = get();
     if (!event) return;
 
+    const previousContext = get().eventContext;
+    const isSameChestEvent = previousContext?.eventId === eventId && event.type === 'chest';
+
     set({
       activeEvent: event,
       eventResult: null,
+      eventContext: isSameChestEvent
+        ? previousContext
+        : event.type === 'chest'
+          ? { eventId, trapCleared: false }
+          : null,
       selectedActorId: party[0]?.id || ''
     });
   },
@@ -1353,10 +1364,24 @@ export const useGameStore = create<GameState>((set, get) => ({
    */
   // イベント選択肢の実行と技能判定
   resolveEventOption: (option: EventOption) => {
-    const { party, selectedActorId, inventory, addLog, activeEvent, currentMap, playerPosition } = get();
+    const { party, selectedActorId, inventory, addLog, activeEvent, currentMap, playerPosition, eventContext } = get();
     const actor = party.find((m) => m.id === selectedActorId) || party[0];
 
     if (!actor) return;
+
+    if (option.requiredProficiency && !isActorProficientInSkill(actor, option.requiredProficiency)) {
+      set({
+        eventResult: {
+          passed: false,
+          roll: 0,
+          modifier: 0,
+          total: 0,
+          dc: 0,
+          message: `${actor.name} は ${option.requiredProficiency} に習熟していないため、この行動を行えない。`
+        }
+      });
+      return;
+    }
 
     if (option.check) {
       const d20Result = rollD20(0);
@@ -1366,8 +1391,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         ? getProficiencyBonus(actor.level)
         : 0;
       const mod = abilityMod + proficiencyMod;
+      const effectiveDc = option.id === 'pick_lock' && eventContext?.trapCleared
+        ? Math.max(1, option.check.dc - 2)
+        : option.check.dc;
       const total = d20 + mod;
-      const passed = total >= option.check.dc;
+      const passed = total >= effectiveDc;
 
       let resultMsg = passed ? option.successText : option.failureText;
       let chestRewardMessages: string[] = [];
@@ -1424,6 +1452,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         resultMsg += ` (${actor.name} は ${dmg} ダメージを受けた！)`;
       }
 
+      // 罠を調べていない状態で開錠すると、罠ダメージが追加される
+      if (option.id === 'pick_lock' && activeEvent?.options.some((opt) => opt.id === 'check_trap') && !eventContext?.trapCleared) {
+        const trapDice = activeEvent.options.find((opt) => opt.id === 'check_trap')?.penalty?.damageDice ?? '1d6';
+        const trapDmg = rollDiceString(trapDice);
+        actor.hp.current = Math.max(0, actor.hp.current - trapDmg);
+        resultMsg += ` (${actor.name} は罠のトリガーによりさらに ${trapDmg} ダメージを受けた！)`;
+      }
+
       const nextState: Partial<GameState> = {
         eventResult: {
           passed,
@@ -1435,15 +1471,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
         party: [...party],
         inventory: updatedInventory,
-        gold: updatedGold
+        gold: updatedGold,
+        eventContext: eventContext
       };
 
       const currentTile = currentMap.grid[playerPosition.y]?.[playerPosition.x];
       const shouldRemoveChest =
         activeEvent?.type === 'chest' &&
         currentTile?.event?.type === 'chest' &&
-        option.id !== 'ignore' &&
-        (passed || option.id === 'check_trap');
+        option.id === 'pick_lock' &&
+        passed;
 
       if (shouldRemoveChest) {
         const updatedGrid = currentMap.grid.map((row, rowIndex) =>
@@ -1461,6 +1498,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       if (activeEvent?.type === 'chest' && chestRewardMessages.length > 0) {
         addLog(`📦 ${chestRewardMessages.join('、')} を入手した！`, 'info');
+      }
+
+      if (option.id === 'check_trap' && passed) {
+        nextState.eventContext = eventContext
+          ? { ...eventContext, trapCleared: true }
+          : activeEvent?.type === 'chest'
+            ? { eventId: activeEvent.id, trapCleared: true }
+            : null;
       }
 
       set(nextState as any);
@@ -1483,9 +1528,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   closeEventModal: () => {
     set({ activeEvent: null, eventResult: null });
   },
+  resumeEvent: () => {
+    set({ eventResult: null });
+  },
 
   /**
-   * @brief 消費アイテムを使用して対象キャラクターを回復する。
    * @param itemId 使用するアイテムのID。
    * @param targetCharacterId 使用対象のキャラクターID。
    */
