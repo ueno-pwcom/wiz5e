@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './DungeonView.css';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useGameStore } from '../store/useGameStore';
 import type { Direction, DungeonMap } from '../types/game';
 
@@ -23,6 +24,9 @@ export const DungeonView: React.FC = () => {
   const wallGroupRef = useRef<THREE.Group | null>(null);
   const chestGroupRef = useRef<THREE.Group | null>(null);
   const stairsGroupRef = useRef<THREE.Group | null>(null);
+  const chestModelRef = useRef<THREE.Group | null>(null);
+  const [chestModelLoaded, setChestModelLoaded] = useState(false);
+  const chestModelUrl = new URL('../assets/models/chest.glb', import.meta.url).href;
 
   const tileSize = 1;
   const wallHeight = tileSize;
@@ -153,15 +157,25 @@ export const DungeonView: React.FC = () => {
 
   const buildChests = (map: DungeonMap) => {
     const group = new THREE.Group();
-    const chestBaseMaterial = new THREE.MeshStandardMaterial({ color: 0x8d5a2b, roughness: 0.6, metalness: 0.2 });
-    const chestLidMaterial = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.5, metalness: 0.7 });
-    const chestLockMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.75, metalness: 0.8 });
+    const model = chestModelRef.current;
 
     map.grid.forEach((row) => {
       row.forEach((tile) => {
         if (tile.event?.type !== 'chest') return;
 
+        if (model) {
+          const clone = model.clone(true);
+          clone.position.set(tile.x + 0.5, 0.18, tile.y + 0.5);
+          clone.scale.setScalar(0.33);
+          group.add(clone);
+          return;
+        }
+
         const chest = new THREE.Group();
+        const chestBaseMaterial = new THREE.MeshStandardMaterial({ color: 0x8d5a2b, roughness: 0.6, metalness: 0.2 });
+        const chestLidMaterial = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.5, metalness: 0.7 });
+        const chestLockMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.75, metalness: 0.8 });
+
         const base = new THREE.Mesh(
           new THREE.BoxGeometry(0.5, 0.25, 0.35),
           chestBaseMaterial
@@ -184,7 +198,7 @@ export const DungeonView: React.FC = () => {
         lock.position.set(0, 0.16, 0.19);
         chest.add(lock);
 
-        chest.position.set(tile.x + 0.5, 0, tile.y + 0.5);
+        chest.position.set(tile.x + 0.5, 0.18, tile.y + 0.5);
         group.add(chest);
       });
     });
@@ -251,6 +265,21 @@ export const DungeonView: React.FC = () => {
     );
     renderer.render(scene, camera);
   };
+
+  useEffect(() => {
+    const loader = new GLTFLoader();
+    loader.load(
+      chestModelUrl,
+      (gltf) => {
+        chestModelRef.current = gltf.scene;
+        setChestModelLoaded(true);
+      },
+      undefined,
+      (error) => {
+        console.error('Failed to load chest model:', error);
+      }
+    );
+  }, [chestModelUrl]);
 
   useEffect(() => {
     const container = sceneContainerRef.current;
@@ -368,33 +397,7 @@ export const DungeonView: React.FC = () => {
     sceneRef.current.add(stairs);
 
     updateCamera();
-  }, [currentMap, playerPosition]);
-
-  useEffect(() => {
-    if (!sceneRef.current) return;
-    if (wallGroupRef.current) {
-      sceneRef.current.remove(wallGroupRef.current);
-    }
-    if (chestGroupRef.current) {
-      sceneRef.current.remove(chestGroupRef.current);
-    }
-    if (stairsGroupRef.current) {
-      sceneRef.current.remove(stairsGroupRef.current);
-    }
-    const walls = buildWalls(currentMap);
-    wallGroupRef.current = walls;
-    sceneRef.current.add(walls);
-
-    const chests = buildChests(currentMap);
-    chestGroupRef.current = chests;
-    sceneRef.current.add(chests);
-
-    const stairs = buildStairs(currentMap);
-    stairsGroupRef.current = stairs;
-    sceneRef.current.add(stairs);
-
-    updateCamera();
-  }, [currentMap, playerPosition]);
+  }, [currentMap, playerPosition, chestModelLoaded]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
