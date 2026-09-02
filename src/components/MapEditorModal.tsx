@@ -262,42 +262,6 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
         </div>
 
         <div className="map-editor-layout">
-          <div className="map-grid-panel">
-            <div className="map-grid" style={{ gridTemplateColumns: `repeat(${selectedMap.width}, 18px)` }}>
-              {Array.from({ length: selectedMap.height * selectedMap.width }, (_, index) => {
-                const x = index % selectedMap.width;
-                const y = Math.floor(index / selectedMap.width);
-                const isSelected = selectedCell.x === x && selectedCell.y === y;
-                const tileEvent = buildTileEvent(selectedMap, x, y);
-                const tileWalls = createTileWalls(selectedMap, x, y);
-                const wallCount = wallSideOrder.filter((side) => tileWalls[side] !== 'none').length;
-
-                return (
-                  <button
-                    key={`${x}-${y}`}
-                    className={`map-tile ${isSelected ? 'selected' : ''} ${tileEvent ? 'has-event' : ''}`}
-                    title={`${x}, ${y} / 壁: ${wallCount}`}
-                    onClick={() => setSelectedCell({ x, y })}
-                    type="button"
-                  >
-                    <span className="wall-preview" aria-hidden="true">
-                      {wallSideOrder.map((side) => {
-                        const wallKind = tileWalls[side] ?? 'none';
-                        return (
-                          <span
-                            key={`${x}-${y}-${side}`}
-                            className={`wall-line wall-${side.toLowerCase()} wall-kind-${wallKind} ${wallKind !== 'none' ? 'visible' : ''}`}
-                          />
-                        );
-                      })}
-                    </span>
-                    <span>{tileEvent ? '●' : ''}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <div className="map-editor-sidepanel">
             <div className="panel-block">
               <h3>選択中のタイル</h3>
@@ -429,21 +393,57 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="panel-block json-panel">
-              <h3>JSON</h3>
-              <textarea
-                value={JSON.stringify(selectedMap, null, 2)}
-                onChange={(event) => {
-                  try {
-                    const parsed = JSON.parse(event.target.value) as MapJsonDefinition;
-                    updateSelectedMap(() => parsed);
-                  } catch {
-                    // JSON の途中編集中は無視する
-                  }
-                }}
-              />
+          <div className="map-grid-panel">
+            <div className="map-grid" style={{ gridTemplateColumns: `repeat(${selectedMap.width}, 18px)` }}>
+              {Array.from({ length: selectedMap.height * selectedMap.width }, (_, index) => {
+                const x = index % selectedMap.width;
+                const y = Math.floor(index / selectedMap.width);
+                const isSelected = selectedCell.x === x && selectedCell.y === y;
+                const tileEvent = buildTileEvent(selectedMap, x, y);
+                const tileWalls = createTileWalls(selectedMap, x, y);
+                const wallCount = wallSideOrder.filter((side) => tileWalls[side] !== 'none').length;
+
+                return (
+                  <button
+                    key={`${x}-${y}`}
+                    className={`map-tile ${isSelected ? 'selected' : ''} ${tileEvent ? 'has-event' : ''}`}
+                    title={`${x}, ${y} / 壁: ${wallCount}`}
+                    onClick={() => setSelectedCell({ x, y })}
+                    type="button"
+                  >
+                    <span className="wall-preview" aria-hidden="true">
+                      {wallSideOrder.map((side) => {
+                        const wallKind = tileWalls[side] ?? 'none';
+                        return (
+                          <span
+                            key={`${x}-${y}-${side}`}
+                            className={`wall-line wall-${side.toLowerCase()} wall-kind-${wallKind} ${wallKind !== 'none' ? 'visible' : ''}`}
+                          />
+                        );
+                      })}
+                    </span>
+                    <span>{tileEvent ? '●' : ''}</span>
+                  </button>
+                );
+              })}
             </div>
+          </div>
+
+          <div className="map-editor-json-panel panel-block json-panel">
+            <h3>JSON</h3>
+            <textarea
+              value={JSON.stringify(selectedMap, null, 2)}
+              onChange={(event) => {
+                try {
+                  const parsed = JSON.parse(event.target.value) as MapJsonDefinition;
+                  updateSelectedMap(() => parsed);
+                } catch {
+                  // JSON の途中編集中は無視する
+                }
+              }}
+            />
           </div>
         </div>
       </div>
