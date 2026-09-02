@@ -1,0 +1,32 @@
+{
+  "map_id": "dungeon_b3",
+  "name": "地下迷宮 B3F",
+  "width": 15,
+  "height": 15,
+  "start_position": { "x": 2, "y": 13, "facing": "N" },
+  "encounter_table": {
+    "rate": 0.15,
+    "monsters": [
+      { "id": "zombie", "weight": 20 },
+      { "id": "bugbear", "weight": 30 },
+      { "id": "ogre", "weight": 30 }
+    ]
+  },
+  "layout": {
+    "horizontal": [
+      { "y": 3, "x1": 1, "x2": 7, "skip": [4], "kind": "wall" },
+      { "y": 7, "x1": 7, "x2": 13, "skip": [10], "kind": "wall" },
+      { "y": 9, "x1": 2, "x2": 6, "skip": [4], "kind": "wall" }
+    ],
+    "vertical": [
+      { "x": 2, "y1": 3, "y2": 11, "skip": [6, 9], "kind": "wall" },
+      { "x": 7, "y1": 1, "y2": 12, "skip": [3, 7, 10], "kind": "wall" },
+      { "x": 11, "y1": 4, "y2": 12, "skip": [6], "kind": "wall" }
+    ]
+  },
+  "events": [
+    { "x": 2, "y": 13, "type": "stairs_up", "target_map": "dungeon_b2" },
+    { "x": 12, "y": 2, "type": "boss" },
+    { "x": 8, "y": 8, "type": "chest", "chest_id": "chest_b3_1" }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "map_id": "dungeon_b2",
+  "name": "地下迷宮 B2F",
+  "width": 15,
+  "height": 15,
+  "start_position": { "x": 12, "y": 1, "facing": "S" },
+  "encounter_table": {
+    "rate": 0.12,
+    "monsters": [
+      { "id": "goblin", "weight": 30 },
+      { "id": "hobgoblin", "weight": 20 },
+      { "id": "zombie", "weight": 20 },
+      { "id": "orc", "weight": 20 },
+      { "id": "bugbear", "weight": 10 }
+    ]
+  },
+  "layout": {
+    "horizontal": [
+      { "y": 4, "x1": 3, "x2": 11, "skip": [7], "kind": "wall" },
+      { "y": 8, "x1": 2, "x2": 10, "skip": [5, 9], "kind": "wall" },
+      { "y": 11, "x1": 2, "x2": 8, "skip": [4], "kind": "wall" }
+    ],
+    "vertical": [
+      { "x": 5, "y1": 1, "y2": 10, "skip": [3, 8], "kind": "wall" },
+      { "x": 9, "y1": 4, "y2": 13, "skip": [7, 11], "kind": "wall" },
+      { "x": 3, "y1": 6, "y2": 13, "skip": [9], "kind": "wall" }
+    ]
+  },
+  "events": [
+    { "x": 12, "y": 1, "type": "stairs_up", "target_map": "dungeon_b1" },
+    { "x": 2, "y": 13, "type": "stairs_down", "target_map": "dungeon_b3" },
+    { "x": 7, "y": 7, "type": "chest", "chest_id": "chest_b2_1" },
+    { "x": 10, "y": 5, "type": "trap" }
+  ]
+}

@@ -4,6 +4,7 @@ import { useGameStore } from '../store/useGameStore';
 import { ShopModal } from './ShopModal';
 import { TempleModal } from './TempleModal';
 import { GuildModal } from './GuildModal';
+import { MapEditorModal } from './MapEditorModal';
 import './TownView.css';
 
 export const TownView: React.FC = () => {
@@ -14,6 +15,7 @@ export const TownView: React.FC = () => {
   const [showTemple, setShowTemple] = useState(false);
   const [showGuild, setShowGuild] = useState(false);
   const [showInnConfirm, setShowInnConfirm] = useState(false);
+  const [showMapEditor, setShowMapEditor] = useState(false);
   const enterDungeon = useGameStore((state) => state.enterDungeon);
   const innCost = 10; // 宿泊代金
 
@@ -68,12 +70,21 @@ export const TownView: React.FC = () => {
             古の地下迷宮へ挑戦する
           </div>
         </button>
+
+        {/* 開発用マップエディタ */}
+        <button onClick={() => setShowMapEditor(true)} style={{ ...menuButtonStyle, backgroundColor: '#7c2d12', marginTop: '8px' }}>
+          <div style={{ fontSize: '16px' }}>🗺️ マップ編集</div>
+          <div style={{ fontSize: '11px', color: '#fed7aa', marginTop: '2px' }}>
+            開発用: フロアJSONを編集して出力
+          </div>
+        </button>
       </div>
 
       {/* モーダル表示 */}
       {showShop && <ShopModal onClose={() => setShowShop(false)} />}
       {showTemple && <TempleModal onClose={() => setShowTemple(false)} />}
       {showGuild && <GuildModal onClose={() => setShowGuild(false)} />}
+      {showMapEditor && <MapEditorModal onClose={() => setShowMapEditor(false)} />}
       {showInnConfirm && (
         <div style={innOverlayStyle}>
           <div style={innModalStyle}>

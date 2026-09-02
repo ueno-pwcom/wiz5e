@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, StatusEffect, WallType } from '../types/game';
-import mapsJson from '../data/maps.json';
+import dungeonB1 from '../data/maps/dungeon_b1.json';
+import dungeonB2 from '../data/maps/dungeon_b2.json';
+import dungeonB3 from '../data/maps/dungeon_b3.json';
 import { loadMapsFromJson, type MapJsonDefinition } from '../utils/mapLoader';
 import { itemList } from '../data/items';
 import { monsterDropTables } from '../data/dropTables';
@@ -374,7 +376,13 @@ const initialPartyWithEquipmentAc = initialParty.map(getCharacterWithCalculatedA
  * @brief 初期装備と装備中のアイテムに基づいてプレイヤーの初期インベントリを構築する。
  * @return アイテムIDと数量を含むインベントリエントリの配列。
  */
-const mapCatalog = loadMapsFromJson(mapsJson as unknown as { maps: MapJsonDefinition[] });
+const mapCatalog = loadMapsFromJson({
+  maps: [
+    dungeonB1 as MapJsonDefinition,
+    dungeonB2 as MapJsonDefinition,
+    dungeonB3 as MapJsonDefinition,
+  ]
+});
 const mapById = new Map(mapCatalog.map((map) => [map.map_id, map]));
 
 const getMapDataById = (mapId: string): DungeonMap | null => {
