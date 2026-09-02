@@ -45,7 +45,8 @@
 
 .close-button,
 .primary-button,
-.secondary-button {
+.secondary-button,
+.warning-button {
   border: none;
   border-radius: 8px;
   padding: 10px 14px;
@@ -66,6 +67,11 @@
 .secondary-button {
   background: #7c2d12;
   color: #fff7ed;
+}
+
+.warning-button {
+  background: #1d4ed8;
+  color: #eff6ff;
 }
 
 .map-editor-controls {

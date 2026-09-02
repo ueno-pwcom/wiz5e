@@ -99,10 +99,10 @@ const rebuildLayoutFromWallGrid = (map: MapJsonDefinition, wallGrid: Record<Wall
       if (tile.W !== 'none') {
         vertical.push({ x, y1: y, y2: y, kind: tile.W as 'wall' | 'door' | 'locked_door' | 'secret_door' });
       }
-      if (tile.E !== 'none') {
+      if (x < map.width - 1 && tile.E !== 'none') {
         vertical.push({ x: x + 1, y1: y, y2: y, kind: tile.E as 'wall' | 'door' | 'locked_door' | 'secret_door' });
       }
-      if (tile.S !== 'none') {
+      if (y < map.height - 1 && tile.S !== 'none') {
         horizontal.push({ y: y + 1, x1: x, x2: x, kind: tile.S as 'wall' | 'door' | 'locked_door' | 'secret_door' });
       }
     }
@@ -236,6 +236,162 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     setSelectedCell({ x: 0, y: 0 });
   };
 
+  const generateRandomMap = () => {
+    if (!selectedMap) return;
+
+    const width = selectedMap.width;
+    const height = selectedMap.height;
+    const isOpen = Array.from({ length: height }, () => Array.from({ length: width }, () => false));
+    const rooms: Array<{ x: number; y: number; width: number; height: number }> = [];
+
+    const roomTemplates = [
+      { width: 6, height: 4 },
+      { width: 5, height: 4 },
+      { width: 4, height: 4 },
+      { width: 4, height: 3 },
+      { width: 3, height: 3 },
+      { width: 2, height: 2 },
+    ];
+
+    const tryAddRoom = (candidate: { x: number; y: number; width: number; height: number }) => {
+      const maxX = width - candidate.width - 1;
+      const maxY = height - candidate.height - 1;
+      if (candidate.x < 1 || candidate.y < 1 || candidate.x > maxX || candidate.y > maxY) return false;
+
+      const overlaps = rooms.some(
+        (room) =>
+          candidate.x < room.x + room.width + 1 &&
+          candidate.x + candidate.width + 1 > room.x &&
+          candidate.y < room.y + room.height + 1 &&
+          candidate.y + candidate.height + 1 > room.y
+      );
+
+      return !overlaps;
+    };
+
+    const roomTarget = Math.min(9, Math.max(5, Math.round((width + height) / 5)));
+
+    for (let attempt = 0; attempt < 500 && rooms.length < roomTarget; attempt += 1) {
+      const template = roomTemplates[Math.floor(Math.random() * roomTemplates.length)];
+      const candidateX = 1 + Math.floor(Math.random() * Math.max(1, width - template.width - 1));
+      const candidateY = 1 + Math.floor(Math.random() * Math.max(1, height - template.height - 1));
+      const candidate = {
+        x: candidateX,
+        y: candidateY,
+        width: template.width,
+        height: template.height,
+      };
+
+      if (tryAddRoom(candidate)) {
+        rooms.push(candidate);
+      }
+    }
+
+    if (rooms.length === 0) {
+      rooms.push({
+        x: 1,
+        y: 1,
+        width: Math.max(2, width - 2),
+        height: Math.max(2, height - 2),
+      });
+    }
+
+    rooms.forEach(({ x, y, width: roomWidth, height: roomHeight }) => {
+      for (let row = y; row < y + roomHeight; row += 1) {
+        for (let col = x; col < x + roomWidth; col += 1) {
+          isOpen[row][col] = true;
+        }
+      }
+    });
+
+    const connectCenters = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+      let cursorX = from.x;
+      let cursorY = from.y;
+
+      while (cursorX !== to.x) {
+        cursorX += cursorX < to.x ? 1 : -1;
+        isOpen[cursorY][cursorX] = true;
+      }
+
+      while (cursorY !== to.y) {
+        cursorY += cursorY < to.y ? 1 : -1;
+        isOpen[cursorY][cursorX] = true;
+      }
+    };
+
+    for (let index = 1; index < rooms.length; index += 1) {
+      const previousRoom = rooms[index - 1];
+      const currentRoom = rooms[index];
+      const from = {
+        x: previousRoom.x + Math.floor(previousRoom.width / 2),
+        y: previousRoom.y + Math.floor(previousRoom.height / 2),
+      };
+      const to = {
+        x: currentRoom.x + Math.floor(currentRoom.width / 2),
+        y: currentRoom.y + Math.floor(currentRoom.height / 2),
+      };
+      connectCenters(from, to);
+    }
+
+    if (rooms.length > 2) {
+      const first = rooms[0];
+      const last = rooms[rooms.length - 1];
+      const from = {
+        x: first.x + Math.floor(first.width / 2),
+        y: first.y + Math.floor(first.height / 2),
+      };
+      const to = {
+        x: last.x + Math.floor(last.width / 2),
+        y: last.y + Math.floor(last.height / 2),
+      };
+      connectCenters(from, to);
+    }
+
+    const wallGrid: Record<WallSide, string>[][] = Array.from({ length: height }, () =>
+      Array.from({ length: width }, () => ({ N: 'none', E: 'none', S: 'none', W: 'none' }))
+    );
+
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const tile = wallGrid[y][x];
+        const isOuterEdge = x === 0 || y === 0 || x === width - 1 || y === height - 1;
+
+        if (isOuterEdge && !isOpen[y][x]) {
+          if (y === 0) tile.N = 'wall';
+          if (x === width - 1) tile.E = 'wall';
+          if (y === height - 1) tile.S = 'wall';
+          if (x === 0) tile.W = 'wall';
+        }
+
+        if (!isOpen[y][x]) {
+          if (y > 0 && isOpen[y - 1][x]) tile.N = 'wall';
+          if (y < height - 1 && isOpen[y + 1][x]) tile.S = 'wall';
+          if (x > 0 && isOpen[y][x - 1]) tile.W = 'wall';
+          if (x < width - 1 && isOpen[y][x + 1]) tile.E = 'wall';
+        }
+      }
+    }
+
+    const layout = rebuildLayoutFromWallGrid(selectedMap, wallGrid);
+    const startRoom = rooms[Math.floor(Math.random() * rooms.length)];
+    const randomStartX = startRoom.x + Math.floor(Math.random() * Math.max(1, startRoom.width));
+    const randomStartY = startRoom.y + Math.floor(Math.random() * Math.max(1, startRoom.height));
+    const nextStartX = Math.min(Math.max(randomStartX, 0), width - 1);
+    const nextStartY = Math.min(Math.max(randomStartY, 0), height - 1);
+
+    updateSelectedMap((map) => ({
+      ...map,
+      layout,
+      events: [],
+      start_position: {
+        x: nextStartX,
+        y: nextStartY,
+        facing: ['N', 'E', 'S', 'W'][Math.floor(Math.random() * 4)] as MapJsonDefinition['start_position']['facing'],
+      },
+    }));
+    setSelectedCell({ x: nextStartX, y: nextStartY });
+  };
+
   const exportCurrentMap = () => {
     if (!selectedMap) return;
 
@@ -278,6 +434,7 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </label>
 
           <div className="map-editor-action-group">
+            <button className="warning-button" onClick={generateRandomMap}>ランダム生成</button>
             <button className="secondary-button" onClick={clearCurrentMap}>空マップ化</button>
             <button className="primary-button" onClick={exportCurrentMap}>JSONを出力</button>
           </div>
