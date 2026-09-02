@@ -78,6 +78,7 @@ const getDungeonBgmAudio = (): HTMLAudioElement => {
   if (!dungeonBgmAudio) {
     dungeonBgmAudio = new Audio(DUNGEON_BGM_URL);
     dungeonBgmAudio.loop = true;
+    dungeonBgmAudio.volume = 0.7;
   }
   return dungeonBgmAudio;
 };
@@ -210,6 +211,24 @@ const playMissSound = () => {
   if (!soundEnabled) return;
   const missUrl = new URL('../assets/sounds/空振り.mp3', import.meta.url).href;
   const audio = new Audio(missUrl);
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
+};
+
+const playWallSound = () => {
+  if (!soundEnabled) return;
+  const wallUrl = new URL('../assets/sounds/壁.mp3', import.meta.url).href;
+  const audio = new Audio(wallUrl);
+  void audio.play().catch(() => {
+    // 自動再生制限などで失敗しても無視
+  });
+};
+
+const playDoorSound = () => {
+  if (!soundEnabled) return;
+  const doorUrl = new URL('../assets/sounds/ドア.mp3', import.meta.url).href;
+  const audio = new Audio(doorUrl);
   void audio.play().catch(() => {
     // 自動再生制限などで失敗しても無視
   });
@@ -1907,6 +1926,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const wallStatus: WallType = currentTile.walls[checkDirection];
 
     if (wallStatus === 'wall' || wallStatus === 'locked_door') {
+      playWallSound();
       addLog('壁にぶつかった！', 'system');
       return;
     }
@@ -1924,6 +1944,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     if (wallStatus === 'door') {
+      playDoorSound();
       addLog('扉を開けて進んだ。', 'info');
     } else {
       addLog(`${action === 'forward' ? '前進' : '後退'}した。`, 'info');
