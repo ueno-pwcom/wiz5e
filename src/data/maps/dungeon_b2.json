@@ -9,7 +9,7 @@
     "facing": "W"
   },
   "encounter_table": {
-    "rate": 0.12,
+    "rate": 0.1,
     "monsters": [
       {
         "id": "goblin",
