@@ -22,6 +22,29 @@ export const DungeonEventModal: React.FC = () => {
 
   const currentActor = party.find((m) => m.id === selectedActorId) || party[0];
 
+  if (activeEvent.type === 'message') {
+    return (
+      <div style={overlayStyle}>
+        <div style={modalStyle}>
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <div style={{ fontSize: '36px', marginBottom: '4px' }}>{activeEvent.icon}</div>
+            <h2 style={{ fontSize: '18px', color: '#f59e0b', margin: 0, fontWeight: 'bold' }}>
+              {activeEvent.title}
+            </h2>
+          </div>
+
+          <div style={{ backgroundColor: '#111827', border: '1px solid #374151', padding: '12px', borderRadius: '6px', fontSize: '14px', color: '#f9fafb', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+            {activeEvent.description}
+          </div>
+
+          <button onClick={closeEventModal} style={{ ...buttonStyle, marginTop: '16px', backgroundColor: '#374151' }}>
+            閉じる
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>

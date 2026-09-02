@@ -27,7 +27,7 @@ export interface EventOption {
 
 export interface DungeonEvent {
   id: string;
-  type: 'chest' | 'door' | 'trap';
+  type: 'chest' | 'door' | 'trap' | 'message';
   title: string;
   description: string;
   icon: string;

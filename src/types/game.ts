@@ -74,10 +74,11 @@ export type EventType =
   | 'stairs_up'
   | 'stairs_down'
   | 'chest'
-  | 'boss'
   | 'trap'
   | 'door'
   | 'encounter'
+  | 'message'
+  | 'boss' // deprecated alias kept for backwards compatibility
   | 'none';
 
 export interface TileEvent {
@@ -85,6 +86,7 @@ export interface TileEvent {
   target_map?: string;
   chest_id?: string;
   encounter_id?: string;
+  message?: string;
 }
 
 export interface MapTile {

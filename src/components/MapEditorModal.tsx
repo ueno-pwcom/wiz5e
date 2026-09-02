@@ -24,10 +24,27 @@ const wallKindLabels: Record<WallKind, string> = {
   secret_door: '秘密扉',
 };
 
-const eventOptions = ['none', 'stairs_up', 'stairs_down', 'chest', 'boss', 'trap', 'door'] as const;
+const eventOptions = ['none', 'stairs_up', 'stairs_down', 'chest', 'trap', 'door', 'encounter', 'message'] as const;
+
+const eventLabels: Record<string, string> = {
+  none: 'なし',
+  stairs_up: '階段(上)',
+  stairs_down: '階段(下)',
+  chest: '宝箱',
+  trap: '罠',
+  door: '扉',
+  encounter: '固定遭遇',
+  message: 'メッセージ',
+  boss: 'ボス',
+};
 
 const createTileWalls = (map: MapJsonDefinition, x: number, y: number) => {
-  const walls: Record<WallSide, string> = { N: 'none', E: 'none', S: 'none', W: 'none' };
+  const walls: Record<WallSide, string> = {
+    N: y === 0 ? 'wall' : 'none',
+    E: x === map.width - 1 ? 'wall' : 'none',
+    S: y === map.height - 1 ? 'wall' : 'none',
+    W: x === 0 ? 'wall' : 'none',
+  };
 
   for (const segment of map.layout?.horizontal ?? []) {
     const kind = segment.kind ?? 'wall';
@@ -96,7 +113,7 @@ const rebuildLayoutFromWallGrid = (map: MapJsonDefinition, wallGrid: Record<Wall
 
 const normalizeMapEvent = (event: MapJsonEvent | null | undefined) => {
   if (!event) return 'none';
-  return event.type;
+  return event.type === 'boss' ? 'encounter' : event.type;
 };
 
 const buildTileEvent = (map: MapJsonDefinition, x: number, y: number): MapJsonEvent | null => {
@@ -134,7 +151,15 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     const tile = wallGrid[selectedCell.y]?.[selectedCell.x];
     if (!tile) return;
 
+    const opposite: WallSide = side === 'N' ? 'S' : side === 'S' ? 'N' : side === 'E' ? 'W' : 'E';
+    const neighborX = selectedCell.x + (side === 'E' ? 1 : side === 'W' ? -1 : 0);
+    const neighborY = selectedCell.y + (side === 'S' ? 1 : side === 'N' ? -1 : 0);
+
     tile[side] = kind;
+    if (neighborY >= 0 && neighborY < selectedMap.height && neighborX >= 0 && neighborX < selectedMap.width) {
+      wallGrid[neighborY][neighborX][opposite] = kind;
+    }
+
     const nextMap: MapJsonDefinition = {
       ...selectedMap,
       layout: rebuildLayoutFromWallGrid(selectedMap, wallGrid),
@@ -143,7 +168,10 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     updateSelectedMap(() => nextMap);
   };
 
-  const updateEventForCell = (eventType: MapJsonEvent['type'] | 'none') => {
+  const updateEventForCell = (
+    eventType: MapJsonEvent['type'] | 'none',
+    extra?: { message?: string; encounterId?: string }
+  ) => {
     if (!selectedMap) return;
 
     const nextEvents = [...(selectedMap.events ?? [])].filter(
@@ -151,7 +179,20 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     );
 
     if (eventType !== 'none') {
-      nextEvents.push({ x: selectedCell.x, y: selectedCell.y, type: eventType });
+      const nextEvent: MapJsonEvent = {
+        x: selectedCell.x,
+        y: selectedCell.y,
+        type: eventType,
+      };
+
+      if (eventType === 'message' && extra?.message) {
+        nextEvent.message = extra.message;
+      }
+      if (eventType === 'encounter' && extra?.encounterId) {
+        nextEvent.encounter_id = extra.encounterId;
+      }
+
+      nextEvents.push(nextEvent);
     }
 
     updateSelectedMap((map) => ({
@@ -191,6 +232,8 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
 
   const currentEvent = buildTileEvent(selectedMap, selectedCell.x, selectedCell.y);
   const selectedTileWalls = createTileWalls(selectedMap, selectedCell.x, selectedCell.y);
+  const currentMessageText = currentEvent?.type === 'message' ? currentEvent.message ?? '' : '';
+  const currentEncounterId = currentEvent?.type === 'encounter' ? currentEvent.encounter_id ?? '' : '';
 
   return (
     <div className="map-editor-overlay" onClick={onClose}>
@@ -350,14 +393,41 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
               <h3>イベント配置</h3>
               <select
                 value={normalizeMapEvent(currentEvent)}
-                onChange={(event) => updateEventForCell(event.target.value as MapJsonEvent['type'] | 'none')}
+                onChange={(event) => updateEventForCell(event.target.value as MapJsonEvent['type'] | 'none', {
+                  message: currentMessageText,
+                  encounterId: currentEncounterId,
+                })}
               >
                 {eventOptions.map((option) => (
                   <option key={option} value={option}>
-                    {option === 'none' ? 'なし' : option}
+                    {option === 'none' ? 'なし' : eventLabels[option] ?? option}
                   </option>
                 ))}
               </select>
+
+              {currentEvent?.type === 'message' && (
+                <textarea
+                  value={currentMessageText}
+                  onChange={(event) => updateEventForCell('message', { message: event.target.value, encounterId: currentEncounterId })}
+                  placeholder="表示したいメッセージを入力"
+                  rows={3}
+                  style={{ marginTop: '8px', width: '100%' }}
+                />
+              )}
+
+              {currentEvent?.type === 'encounter' && (
+                <div style={{ marginTop: '8px' }}>
+                  <label>
+                    encounter_id
+                    <input
+                      type="text"
+                      value={currentEncounterId}
+                      onChange={(event) => updateEventForCell('encounter', { message: currentMessageText, encounterId: event.target.value })}
+                      placeholder="kobold"
+                    />
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="panel-block json-panel">

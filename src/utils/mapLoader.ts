@@ -32,6 +32,7 @@ export type MapJsonEvent = {
   target_map?: string;
   chest_id?: string;
   encounter_id?: string;
+  message?: string;
 };
 
 export interface MapJsonDefinition {
@@ -168,6 +169,7 @@ const applyEvent = (grid: DungeonMap['grid'], event: MapJsonEvent) => {
   if (event.target_map) payload.target_map = event.target_map;
   if (event.chest_id) payload.chest_id = event.chest_id;
   if (event.encounter_id) payload.encounter_id = event.encounter_id;
+  if (event.message) payload.message = event.message;
 
   tile.event = payload;
 };

@@ -321,7 +321,7 @@ interface GameState {
   useStairs: () => void;
 
   // 戦闘用アクション
-  startBattle: () => void;
+  startBattle: (fixedEncounterId?: string) => void;
   executePlayerAttack: (targetId: string) => void;
   executePlayerEvade: () => void;
   attemptRun: () => void;
@@ -340,6 +340,7 @@ interface GameState {
   healCharacter: (characterId: string, cost: number) => boolean;
   reviveCharacter: (characterId: string, cost: number) => boolean;
   triggerEvent: (eventId: string) => void;
+  showMessageEvent: (message: string) => void;
   setSelectedActor: (characterId: string) => void;
   resolveEventOption: (option: EventOption) => void;
   closeEventModal: () => void;
@@ -528,22 +529,30 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @brief 新しい戦闘を開始し、イニシアチブ順を決定する。
    */
   // 1. 戦闘開始＆イニシアチブ決定
-  startBattle: () => {
+  startBattle: (fixedEncounterId?: string) => {
     const { currentMap, party, addLog } = get();
     const table = currentMap.encounter_table;
     if (!table || table.monsters.length === 0) return;
 
+    const explicitMonster = fixedEncounterId && monstersData[fixedEncounterId]
+      ? fixedEncounterId
+      : fixedEncounterId && fixedEncounterId.startsWith('boss_') && monstersData[fixedEncounterId.replace(/^boss_/, '')]
+        ? fixedEncounterId.replace(/^boss_/, '')
+        : null;
+
     // 出現モンスター選択
     const totalWeight = table.monsters.reduce((acc, cur) => acc + cur.weight, 0);
     let randomVal = Math.random() * totalWeight;
-    let selectedMonsterId = table.monsters[0].id;
+    let selectedMonsterId = explicitMonster ?? table.monsters[0].id;
 
-    for (const monster of table.monsters) {
-      if (randomVal < monster.weight) {
-        selectedMonsterId = monster.id;
-        break;
+    if (!explicitMonster) {
+      for (const monster of table.monsters) {
+        if (randomVal < monster.weight) {
+          selectedMonsterId = monster.id;
+          break;
+        }
+        randomVal -= monster.weight;
       }
-      randomVal -= monster.weight;
     }
 
     const maxEnemies = currentMap.map_id === 'dungeon_b1'
@@ -1358,6 +1367,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   /**
+   * @brief メッセージイベントをモーダルで表示する。
+   * @param message 表示テキスト。
+   */
+  showMessageEvent: (message: string) => {
+    set({
+      activeEvent: {
+        id: `message-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        type: 'message',
+        title: 'メッセージ',
+        description: message,
+        icon: '💬',
+        options: []
+      },
+      eventResult: null,
+      selectedActorId: get().party[0]?.id || ''
+    });
+  },
+
+  /**
    * @brief イベント処理中のアクターを選択する。
    * @param characterId 選択するキャラクターのID。
    */
@@ -1838,7 +1866,7 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @param action 移動方向または回転アクション。
    */
   movePlayer: (action) => {
-    const { playerPosition, currentMap, addLog, startBattle, triggerEvent } = get();
+    const { playerPosition, currentMap, addLog, startBattle, triggerEvent, showMessageEvent } = get();
     const directions: Direction[] = ['N', 'E', 'S', 'W'];
     let { x, y, facing } = playerPosition;
 
@@ -1899,6 +1927,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
       if (nextTile.event.type === 'trap') {
         triggerEvent('poison_dart_trap');
+        return;
+      }
+      if (nextTile.event.type === 'message') {
+        showMessageEvent(nextTile.event.message || '何かが書かれている。');
+        return;
+      }
+      if (nextTile.event.type === 'encounter' || nextTile.event.type === 'boss') {
+        startBattle(nextTile.event.encounter_id);
         return;
       }
     }

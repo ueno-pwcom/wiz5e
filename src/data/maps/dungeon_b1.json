@@ -897,6 +897,18 @@
       "x": 7,
       "y": 14,
       "type": "stairs_up"
+    },
+    {
+      "x": 7,
+      "y": 10,
+      "type": "message",
+      "message": "物音が聞こえる。"
+    },
+    {
+      "x": 7,
+      "y": 8,
+      "type": "encounter",
+      "encounter_id": "bugbear"
     }
   ]
 }

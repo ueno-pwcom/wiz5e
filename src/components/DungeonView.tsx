@@ -14,6 +14,7 @@ export const DungeonView: React.FC = () => {
   const enterCamp = useGameStore((state) => state.enterCamp);
   const returnToTown = useGameStore((state) => state.returnToTown);
   const triggerEvent = useGameStore((state) => state.triggerEvent);
+  const showMessageEvent = useGameStore((state) => state.showMessageEvent);
   const addLog = useGameStore((state) => state.addLog);
 
   const currentTile = currentMap.grid[playerPosition.y]?.[playerPosition.x];
@@ -640,9 +641,7 @@ export const DungeonView: React.FC = () => {
                       ? getStairsMarker('stairs_up')
                       : tile.event?.type === 'stairs_down'
                         ? getStairsMarker('stairs_down')
-                        : tile.event
-                          ? '?'
-                          : null
+                        : null
                   ) : null}
                 </div>
               );
@@ -678,6 +677,12 @@ export const DungeonView: React.FC = () => {
                   break;
                 case 'trap':
                   triggerEvent('poison_dart_trap');
+                  break;
+                case 'message':
+                  showMessageEvent(currentTile.event.message || '何かを見つけた。');
+                  break;
+                case 'encounter':
+                  addLog(currentTile.event.encounter_id ? `敵の気配がする… (${currentTile.event.encounter_id})` : '敵の気配がする…', 'system');
                   break;
                 default:
                   addLog('この場所には何もなかった。', 'system');
