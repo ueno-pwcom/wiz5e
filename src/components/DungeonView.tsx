@@ -46,13 +46,12 @@ export const DungeonView: React.FC = () => {
     const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x7d8691, roughness: 0.95, metalness: 0.1 });
     const doorMaterial = new THREE.MeshStandardMaterial({ color: 0xc2782c, roughness: 0.85, metalness: 0.2 });
     const lockedDoorMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4c20, roughness: 0.85, metalness: 0.2 });
-    const secretWallMaterial = new THREE.MeshStandardMaterial({ color: 0x1b2230, roughness: 0.95, metalness: 0.05 });
 
     const getWallMaterial = (wall: string) => {
       switch (wall) {
         case 'door': return doorMaterial;
         case 'locked_door': return lockedDoorMaterial;
-        case 'secret_door': return secretWallMaterial;
+        case 'secret_door':
         default: return wallMaterial;
       }
     };
@@ -68,7 +67,7 @@ export const DungeonView: React.FC = () => {
       edges.rotation.copy(wall.rotation);
       group.add(edges);
 
-      if (wallType !== 'wall') {
+      if (wallType === 'door' || wallType === 'locked_door') {
         const doorWidth = tileSize * 0.6;
         const doorHeight = wallHeight * 0.85;
         const doorDepth = wallThickness + 0.02;
@@ -454,7 +453,7 @@ export const DungeonView: React.FC = () => {
   const getWallBorder = (wall: string) => {
     if (wall === 'door') return '2px solid #f59e0b';
     if (wall === 'locked_door') return '2px solid #f97316';
-    if (wall === 'wall') return '2px solid #9ca3af';
+    if (wall === 'wall' || wall === 'secret_door') return '2px solid #9ca3af';
     return '1px solid #374151';
   };
 
