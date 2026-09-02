@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Character, Combatant, DamageType, Direction, DungeonMap, LogMessage, MonsterData, PositionRole, StatusEffect, WallType } from '../types/game';
-import { map1Data, map2Data, map3Data } from '../data/map1';
+import mapsJson from '../data/maps.json';
+import { loadMapsFromJson, type MapJsonDefinition } from '../utils/mapLoader';
 import { itemList } from '../data/items';
 import { monsterDropTables } from '../data/dropTables';
 import { dungeonEvents } from '../data/dungeonEvents';
@@ -373,13 +374,11 @@ const initialPartyWithEquipmentAc = initialParty.map(getCharacterWithCalculatedA
  * @brief 初期装備と装備中のアイテムに基づいてプレイヤーの初期インベントリを構築する。
  * @return アイテムIDと数量を含むインベントリエントリの配列。
  */
+const mapCatalog = loadMapsFromJson(mapsJson as unknown as { maps: MapJsonDefinition[] });
+const mapById = new Map(mapCatalog.map((map) => [map.map_id, map]));
+
 const getMapDataById = (mapId: string): DungeonMap | null => {
-  switch (mapId) {
-    case 'dungeon_b1': return map1Data;
-    case 'dungeon_b2': return map2Data;
-    case 'dungeon_b3': return map3Data;
-    default: return null;
-  }
+  return mapById.get(mapId) ?? null;
 };
 
 const findStairsPosition = (map: DungeonMap, eventType: 'stairs_up' | 'stairs_down', targetMapId?: string) => {
@@ -446,8 +445,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   logs: [
     { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '街に到着した。', type: 'system' }
   ],
-  currentMap: map1Data,
-  playerPosition: map1Data.start_position,
+  currentMap: mapCatalog[0],
+  playerPosition: mapCatalog[0].start_position,
   combatants: [],
   currentTurnIndex: 0,
   battleRound: 1,

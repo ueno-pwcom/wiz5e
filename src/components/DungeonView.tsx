@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './DungeonView.css';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { useGameStore } from '../store/useGameStore';
 import type { Direction, DungeonMap } from '../types/game';
 
