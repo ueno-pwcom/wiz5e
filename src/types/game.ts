@@ -87,6 +87,10 @@ export interface TileEvent {
   chest_id?: string;
   encounter_id?: string;
   message?: string;
+  reward?: {
+    gold?: number;
+    items?: string[];
+  };
 }
 
 export interface MapTile {

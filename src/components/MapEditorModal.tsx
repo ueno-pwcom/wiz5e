@@ -170,7 +170,7 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
 
   const updateEventForCell = (
     eventType: MapJsonEvent['type'] | 'none',
-    extra?: { message?: string; encounterId?: string }
+    extra?: { message?: string; encounterId?: string; gold?: number; items?: string[] }
   ) => {
     if (!selectedMap) return;
 
@@ -190,6 +190,16 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
       }
       if (eventType === 'encounter' && extra?.encounterId) {
         nextEvent.encounter_id = extra.encounterId;
+      }
+      if (eventType === 'chest') {
+        const resolvedGold = Number.isFinite(extra?.gold ?? NaN) ? Number(extra?.gold ?? 0) : 0;
+        const resolvedItems = (extra?.items ?? []).map((item) => item.trim()).filter(Boolean);
+        if (resolvedGold > 0 || resolvedItems.length > 0) {
+          nextEvent.reward = {
+            gold: resolvedGold,
+            items: resolvedItems,
+          };
+        }
       }
 
       nextEvents.push(nextEvent);
@@ -404,10 +414,13 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const selectedTileWalls = createTileWalls(selectedMap, selectedCell.x, selectedCell.y);
   const currentMessageText = currentEvent?.type === 'message' ? currentEvent.message ?? '' : '';
   const currentEncounterId = currentEvent?.type === 'encounter' ? currentEvent.encounter_id ?? '' : '';
+  const currentChestReward = currentEvent?.type === 'chest' ? (currentEvent.reward ?? { gold: 0, items: [] }) : { gold: 0, items: [] };
+  const currentChestGold = currentChestReward.gold ?? 0;
+  const currentChestItemsText = (currentChestReward.items ?? []).join(', ');
 
   return (
-    <div className="map-editor-overlay" onClick={onClose}>
-      <div className="map-editor-modal" onClick={(event) => event.stopPropagation()}>
+    <div className="map-editor-overlay">
+      <div className="map-editor-modal">
         <div className="map-editor-header">
           <div>
             <h2>🗺️ マップエディタ</h2>
@@ -534,6 +547,8 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                 onChange={(event) => updateEventForCell(event.target.value as MapJsonEvent['type'] | 'none', {
                   message: currentMessageText,
                   encounterId: currentEncounterId,
+                  gold: currentChestGold,
+                  items: currentChestReward.items ?? [],
                 })}
               >
                 {eventOptions.map((option) => (
@@ -546,7 +561,7 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
               {currentEvent?.type === 'message' && (
                 <textarea
                   value={currentMessageText}
-                  onChange={(event) => updateEventForCell('message', { message: event.target.value, encounterId: currentEncounterId })}
+                  onChange={(event) => updateEventForCell('message', { message: event.target.value, encounterId: currentEncounterId, gold: currentChestGold, items: currentChestReward.items ?? [] })}
                   placeholder="表示したいメッセージを入力"
                   rows={3}
                   style={{ marginTop: '8px', width: '100%' }}
@@ -560,8 +575,41 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                     <input
                       type="text"
                       value={currentEncounterId}
-                      onChange={(event) => updateEventForCell('encounter', { message: currentMessageText, encounterId: event.target.value })}
+                      onChange={(event) => updateEventForCell('encounter', { message: currentMessageText, encounterId: event.target.value, gold: currentChestGold, items: currentChestReward.items ?? [] })}
                       placeholder="kobold"
+                    />
+                  </label>
+                </div>
+              )}
+
+              {currentEvent?.type === 'chest' && (
+                <div style={{ marginTop: '8px', display: 'grid', gap: '8px' }}>
+                  <label>
+                    獲得ゴールド
+                    <input
+                      type="number"
+                      min={0}
+                      value={currentChestGold}
+                      onChange={(event) => updateEventForCell('chest', {
+                        message: currentMessageText,
+                        encounterId: currentEncounterId,
+                        gold: Number(event.target.value) || 0,
+                        items: currentChestReward.items ?? [],
+                      })}
+                    />
+                  </label>
+                  <label>
+                    アイテムID（カンマ区切り）
+                    <input
+                      type="text"
+                      value={currentChestItemsText}
+                      onChange={(event) => updateEventForCell('chest', {
+                        message: currentMessageText,
+                        encounterId: currentEncounterId,
+                        gold: currentChestGold,
+                        items: event.target.value.split(',').map((item) => item.trim()).filter(Boolean),
+                      })}
+                      placeholder="potion_of_healing, dagger"
                     />
                   </label>
                 </div>

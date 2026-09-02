@@ -22,7 +22,13 @@ const input = {
       },
       events: [
         { x: 0, y: 4, type: 'stairs_up' },
-        { x: 2, y: 2, type: 'chest', chest_id: 'test_chest' }
+        {
+          x: 2,
+          y: 2,
+          type: 'chest',
+          chest_id: 'test_chest',
+          reward: { gold: 42, items: ['potion_of_healing', 'dagger'] }
+        }
       ]
     }
   ]
@@ -46,4 +52,7 @@ if (maps[0].grid[4][0].event?.type !== 'stairs_up') {
 }
 if (maps[0].grid[2][2].event?.chest_id !== 'test_chest') {
   throw new Error('chest event was not loaded');
+}
+if (maps[0].grid[2][2].event?.reward?.gold !== 42 || maps[0].grid[2][2].event?.reward?.items?.join(',') !== 'potion_of_healing,dagger') {
+  throw new Error('chest reward payload was not loaded');
 }

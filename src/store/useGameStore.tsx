@@ -1439,18 +1439,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       if (passed && option.reward) {
         let rewardLogText = '';
+      const chestRewardDefinition = activeEvent?.type === 'chest'
+        ? currentMap.grid[playerPosition.y]?.[playerPosition.x]?.event?.reward ?? option.reward
+        : option.reward;
 
         // 1. ゴールドの加算処理
-        if (option.reward.gold) {
-          updatedGold += option.reward.gold;
-          rewardLogText += `💰 ${option.reward.gold} G `;
-          chestRewardMessages.push(`${option.reward.gold} G`);
+        if (chestRewardDefinition?.gold) {
+          updatedGold += chestRewardDefinition.gold;
+          rewardLogText += `💰 ${chestRewardDefinition.gold} G `;
+          chestRewardMessages.push(`${chestRewardDefinition.gold} G`);
         }
 
         // 2. アイテムのインベントリ追加処理
 
-        if (option.reward.items && option.reward.items.length > 0) {
-          option.reward.items.forEach((itemId) => {
+        if (chestRewardDefinition?.items && chestRewardDefinition.items.length > 0) {
+          chestRewardDefinition.items.forEach((itemId) => {
             const existingIndex = updatedInventory.findIndex((i) => i.itemId === itemId);
 
             if (existingIndex >= 0) {
@@ -1466,7 +1469,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
           });
 
-          const itemNames = option.reward.items
+          const itemNames = chestRewardDefinition.items
             .map((itemId) => itemList[itemId]?.name ?? itemId)
             .join('、');
           rewardLogText += `📦 ${itemNames} `;
@@ -1481,9 +1484,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }
 
+      let totalDamageTaken = 0;
+
       if (!passed && option.penalty?.damageDice) {
         const dmg = rollDiceString(option.penalty.damageDice);
-        actor.hp.current = Math.max(0, actor.hp.current - dmg);
+        totalDamageTaken += dmg;
         resultMsg += ` (${actor.name} は ${dmg} ダメージを受けた！)`;
       }
 
@@ -1491,9 +1496,20 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (option.id === 'pick_lock' && activeEvent?.options.some((opt) => opt.id === 'check_trap') && !eventContext?.trapCleared) {
         const trapDice = activeEvent.options.find((opt) => opt.id === 'check_trap')?.penalty?.damageDice ?? '1d6';
         const trapDmg = rollDiceString(trapDice);
-        actor.hp.current = Math.max(0, actor.hp.current - trapDmg);
+        totalDamageTaken += trapDmg;
         resultMsg += ` (${actor.name} は罠のトリガーによりさらに ${trapDmg} ダメージを受けた！)`;
       }
+
+      const updatedParty = party.map((member) => {
+        if (member.id !== actor.id) return member;
+
+        const nextHp = Math.max(0, member.hp.current - totalDamageTaken);
+        return {
+          ...member,
+          hp: { ...member.hp, current: nextHp },
+          is_alive: nextHp > 0,
+        };
+      });
 
       const nextState: Partial<GameState> = {
         eventResult: {
@@ -1504,7 +1520,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           dc: option.check.dc,
           message: resultMsg
         },
-        party: [...party],
+        party: updatedParty,
         inventory: updatedInventory,
         gold: updatedGold,
         eventContext: eventContext
