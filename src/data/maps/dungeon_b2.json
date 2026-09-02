@@ -117,7 +117,8 @@
     {
       "x": 8,
       "y": 14,
-      "type": "stairs_up"
+      "type": "stairs_up",
+      "target_map": "dungeon_b1"
     }
   ]
 }
