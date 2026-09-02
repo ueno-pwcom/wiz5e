@@ -9,7 +9,7 @@
     "facing": "N"
   },
   "encounter_table": {
-    "rate": 0.1,
+    "rate": 0,
     "monsters": [
       {
         "id": "kobold",
@@ -1974,11 +1974,6 @@
       "type": "stairs_up"
     },
     {
-      "x": 8,
-      "y": 14,
-      "type": "stairs_down"
-    },
-    {
       "x": 12,
       "y": 3,
       "type": "chest"
@@ -2014,6 +2009,12 @@
       "x": 4,
       "y": 3,
       "type": "chest"
+    },
+    {
+      "x": 8,
+      "y": 14,
+      "type": "stairs_down",
+      "target_map": "dungeon_b2"
     }
   ]
 }

@@ -1939,7 +1939,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }
 
-    if (Math.random() < currentMap.encounter_table.rate) {
+    const encounterRate = Number(currentMap.encounter_table?.rate ?? 0);
+    if (encounterRate > 0 && Math.random() < encounterRate) {
       startBattle();
     }
   },

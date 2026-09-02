@@ -198,11 +198,6 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     updateSelectedMap((map) => ({
       ...map,
       events: nextEvents,
-      start_position: {
-        ...map.start_position,
-        x: selectedCell.x,
-        y: selectedCell.y,
-      },
     }));
   };
 
