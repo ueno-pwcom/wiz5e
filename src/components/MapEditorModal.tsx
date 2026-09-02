@@ -217,6 +217,25 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     }));
   };
 
+  const clearCurrentMap = () => {
+    if (!selectedMap) return;
+
+    updateSelectedMap((map) => ({
+      ...map,
+      layout: {
+        horizontal: [],
+        vertical: [],
+      },
+      events: [],
+      start_position: {
+        x: 0,
+        y: 0,
+        facing: 'N',
+      },
+    }));
+    setSelectedCell({ x: 0, y: 0 });
+  };
+
   const exportCurrentMap = () => {
     if (!selectedMap) return;
 
@@ -258,7 +277,10 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
             </select>
           </label>
 
-          <button className="primary-button" onClick={exportCurrentMap}>JSONを出力</button>
+          <div className="map-editor-action-group">
+            <button className="secondary-button" onClick={clearCurrentMap}>空マップ化</button>
+            <button className="primary-button" onClick={exportCurrentMap}>JSONを出力</button>
+          </div>
         </div>
 
         <div className="map-editor-layout">
@@ -396,38 +418,53 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
 
           <div className="map-grid-panel">
-            <div className="map-grid" style={{ gridTemplateColumns: `repeat(${selectedMap.width}, 18px)` }}>
-              {Array.from({ length: selectedMap.height * selectedMap.width }, (_, index) => {
-                const x = index % selectedMap.width;
-                const y = Math.floor(index / selectedMap.width);
-                const isSelected = selectedCell.x === x && selectedCell.y === y;
-                const tileEvent = buildTileEvent(selectedMap, x, y);
-                const tileWalls = createTileWalls(selectedMap, x, y);
-                const wallCount = wallSideOrder.filter((side) => tileWalls[side] !== 'none').length;
+            <div className="map-grid-wrapper">
+              <div className="map-grid-header-row">
+                <span className="map-grid-empty-corner" />
+                {Array.from({ length: selectedMap.width }, (_, x) => (
+                  <span key={`header-x-${x}`} className="map-grid-axis-label map-grid-axis-x">{x}</span>
+                ))}
+              </div>
+              <div className="map-grid-body">
+                <div className="map-grid-axis-column">
+                  {Array.from({ length: selectedMap.height }, (_, y) => (
+                    <span key={`header-y-${y}`} className="map-grid-axis-label map-grid-axis-y">{y}</span>
+                  ))}
+                </div>
+                <div className="map-grid" style={{ gridTemplateColumns: `repeat(${selectedMap.width}, 18px)` }}>
+                  {Array.from({ length: selectedMap.height * selectedMap.width }, (_, index) => {
+                    const x = index % selectedMap.width;
+                    const y = Math.floor(index / selectedMap.width);
+                    const isSelected = selectedCell.x === x && selectedCell.y === y;
+                    const tileEvent = buildTileEvent(selectedMap, x, y);
+                    const tileWalls = createTileWalls(selectedMap, x, y);
+                    const wallCount = wallSideOrder.filter((side) => tileWalls[side] !== 'none').length;
 
-                return (
-                  <button
-                    key={`${x}-${y}`}
-                    className={`map-tile ${isSelected ? 'selected' : ''} ${tileEvent ? 'has-event' : ''}`}
-                    title={`${x}, ${y} / 壁: ${wallCount}`}
-                    onClick={() => setSelectedCell({ x, y })}
-                    type="button"
-                  >
-                    <span className="wall-preview" aria-hidden="true">
-                      {wallSideOrder.map((side) => {
-                        const wallKind = tileWalls[side] ?? 'none';
-                        return (
-                          <span
-                            key={`${x}-${y}-${side}`}
-                            className={`wall-line wall-${side.toLowerCase()} wall-kind-${wallKind} ${wallKind !== 'none' ? 'visible' : ''}`}
-                          />
-                        );
-                      })}
-                    </span>
-                    <span>{tileEvent ? '●' : ''}</span>
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={`${x}-${y}`}
+                        className={`map-tile ${isSelected ? 'selected' : ''} ${tileEvent ? 'has-event' : ''}`}
+                        title={`${x}, ${y} / 壁: ${wallCount}`}
+                        onClick={() => setSelectedCell({ x, y })}
+                        type="button"
+                      >
+                        <span className="wall-preview" aria-hidden="true">
+                          {wallSideOrder.map((side) => {
+                            const wallKind = tileWalls[side] ?? 'none';
+                            return (
+                              <span
+                                key={`${x}-${y}-${side}`}
+                                className={`wall-line wall-${side.toLowerCase()} wall-kind-${wallKind} ${wallKind !== 'none' ? 'visible' : ''}`}
+                              />
+                            );
+                          })}
+                        </span>
+                        <span>{tileEvent ? '●' : ''}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 

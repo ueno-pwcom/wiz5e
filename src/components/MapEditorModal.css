@@ -11,6 +11,7 @@
 
 .map-editor-modal {
   width: min(1160px, 96vw);
+  height: min(88vh, calc(100vh - 40px));
   max-height: 88vh;
   overflow: hidden;
   background: #111827;
@@ -18,6 +19,8 @@
   border-radius: 18px;
   color: #e2e8f0;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.8);
+  display: flex;
+  flex-direction: column;
 }
 
 .map-editor-header {
@@ -26,6 +29,7 @@
   align-items: center;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  flex-shrink: 0;
 }
 
 .map-editor-header h2 {
@@ -40,7 +44,8 @@
 }
 
 .close-button,
-.primary-button {
+.primary-button,
+.secondary-button {
   border: none;
   border-radius: 8px;
   padding: 10px 14px;
@@ -58,6 +63,11 @@
   color: #111827;
 }
 
+.secondary-button {
+  background: #7c2d12;
+  color: #fff7ed;
+}
+
 .map-editor-controls {
   display: flex;
   align-items: center;
@@ -65,6 +75,13 @@
   gap: 8px;
   padding: 8px 14px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  flex-shrink: 0;
+}
+
+.map-editor-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .map-editor-controls label {
@@ -91,9 +108,11 @@
   grid-template-columns: minmax(220px, 270px) minmax(280px, 1fr) minmax(220px, 340px);
   gap: 8px;
   padding: 8px 10px 10px;
-  height: calc(88vh - 104px);
+  height: calc(100% - 100px);
+  min-height: 0;
   box-sizing: border-box;
   overflow: hidden;
+  flex: 1 1 auto;
 }
 
 .map-grid-panel {
@@ -102,6 +121,13 @@
   border-radius: 12px;
   padding: 8px;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
 }
 
 .map-editor-sidepanel {
@@ -109,6 +135,7 @@
   flex-direction: column;
   gap: 5px;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
   padding-right: 0;
 }
@@ -117,12 +144,63 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.map-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-grid-header-row,
+.map-grid-body {
+  display: flex;
+  align-items: center;
+}
+
+.map-grid-header-row {
+  gap: 2px;
+}
+
+.map-grid-body {
+  gap: 4px;
+}
+
+.map-grid-axis-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-grid-axis-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 7px;
+  line-height: 1;
+  width: 18px;
+  height: 18px;
+  user-select: none;
+}
+
+.map-grid-empty-corner {
+  width: 12px;
+  height: 18px;
 }
 
 .map-grid {
   display: grid;
   gap: 2px;
-  justify-content: start;
+  justify-content: center;
+  margin: 0 auto;
 }
 
 .map-tile {
@@ -326,13 +404,14 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
 }
 
 .json-panel textarea {
   width: 100%;
-  flex: 1;
-  min-height: 80px;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100% - 24px);
   resize: none;
   box-sizing: border-box;
 }
