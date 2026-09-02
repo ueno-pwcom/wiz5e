@@ -160,11 +160,12 @@ export const map1Data: DungeonMap = {
     facing: 'N'
   },
   encounter_table: {
-    rate: 0.0,
+    rate: 0.1,
     monsters: [
-      { id: 'zombie', weight: 10 },
       { id: 'kobold', weight: 50 },
-      { id: 'skeleton', weight: 40 }
+      { id: 'goblin', weight: 20 },
+      { id: 'skeleton', weight: 20 },
+      { id: 'zombie', weight: 10 }
     ]
   },
   grid: buildB1Grid()
@@ -183,9 +184,11 @@ export const map2Data: DungeonMap = {
   encounter_table: {
     rate: 0.12,
     monsters: [
-      { id: 'hobgoblin', weight: 30 },
-      { id: 'goblin', weight: 40 },
-      { id: 'zombie', weight: 30 }
+      { id: 'goblin', weight: 30 },
+      { id: 'hobgoblin', weight: 20 },
+      { id: 'zombie', weight: 20 },
+      { id: 'orc', weight: 20 },
+      { id: 'bugbear', weight: 10 }
     ]
   },
   grid: buildB2Grid()
