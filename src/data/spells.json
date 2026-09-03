@@ -138,14 +138,137 @@
     "targets_all_enemies": false,
     "requires_concentration": false
   },
-  "shield": {
-    "id": "shield",
-    "name": "シールド",
-    "level": 1,
-    "school": "abjuration",
+  "shatter": {
+    "id": "shatter",
+    "name": "シャター",
+    "level": 2,
+    "school": "evocation",
+    "classes": [
+      "bard",
+      "sorcerer",
+      "warlock",
+      "wizard"
+    ],
+    "damage_dice": "3d8",
+    "heal_dice": null,
+    "damage_type": "thunder",
+    "save_type": "con",
+    "save_effect": "half",
+    "targets_all_enemies": true,
+    "requires_concentration": false
+  },
+  "scorching-ray": {
+    "id": "scorching-ray",
+    "name": "スコーチング・レイ",
+    "level": 2,
+    "school": "evocation",
     "classes": [
       "sorcerer",
       "wizard"
+    ],
+    "damage_dice": "2d6",
+    "heal_dice": null,
+    "damage_type": "火",
+    "save_type": null,
+    "save_effect": null,
+    "targets_all_enemies": false,
+    "requires_concentration": false
+  },
+  "aid": {
+    "id": "aid",
+    "name": "エイド",
+    "level": 2,
+    "school": "abjuration",
+    "classes": [
+      "cleric",
+      "paladin"
+    ],
+    "damage_dice": null,
+    "heal_dice": null,
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "targets_all_enemies": false,
+    "requires_concentration": false
+  },
+  "lesser-restoration": {
+    "id": "lesser-restoration",
+    "name": "レッサー・レストレーション",
+    "level": 2,
+    "school": "abjuration",
+    "classes": [
+      "bard",
+      "cleric",
+      "druid",
+      "paladin",
+      "ranger"
+    ],
+    "damage_dice": null,
+    "heal_dice": null,
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "targets_all_enemies": false,
+    "requires_concentration": false
+  },
+  "fireball": {
+    "id": "fireball",
+    "name": "ファイアボール",
+    "level": 3,
+    "school": "evocation",
+    "classes": [
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": "8d6",
+    "heal_dice": null,
+    "damage_type": "火",
+    "save_type": "dex",
+    "save_effect": "half",
+    "targets_all_enemies": true,
+    "requires_concentration": false
+  },
+  "lightning-bolt": {
+    "id": "lightning-bolt",
+    "name": "ライトニング・ボルト",
+    "level": 3,
+    "school": "evocation",
+    "classes": [
+      "sorcerer",
+      "wizard"
+    ],
+    "damage_dice": "8d6",
+    "heal_dice": null,
+    "damage_type": "電撃",
+    "save_type": "dex",
+    "save_effect": "half",
+    "targets_all_enemies": true,
+    "requires_concentration": false
+  },
+  "mass-healing-word": {
+    "id": "mass-healing-word",
+    "name": "マス・ヒーリング・ワード",
+    "level": 3,
+    "school": "evocation",
+    "classes": [
+      "cleric"
+    ],
+    "damage_dice": null,
+    "heal_dice": null,
+    "damage_type": null,
+    "save_type": null,
+    "save_effect": null,
+    "targets_all_enemies": false,
+    "requires_concentration": false
+  },
+  "revivify": {
+    "id": "revivify",
+    "name": "リヴィファイ",
+    "level": 3,
+    "school": "conjuration",
+    "classes": [
+      "cleric",
+      "paladin"
     ],
     "damage_dice": null,
     "heal_dice": null,

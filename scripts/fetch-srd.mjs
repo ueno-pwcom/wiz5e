@@ -23,6 +23,14 @@ const translationMap = {
   "Shield": "シールド",
   "Sleep": "スリープ",
   "Guiding Bolt": "ガイディング・ボルト",
+  "Shatter": "シャター",
+  "Scorching Ray": "スコーチング・レイ",
+  "Aid": "エイド",
+  "Lesser Restoration": "レッサー・レストレーション",
+  "Fireball": "ファイアボール",
+  "Lightning Bolt": "ライトニング・ボルト",
+  "Mass Healing Word": "マス・ヒーリング・ワード",
+  "Revivify": "リヴィファイ",
 
   // モンスター名
   "Goblin": "ゴブリン",
@@ -62,7 +70,9 @@ const translationMap = {
   "fire": "火",
   "force": "力場",
   "poison": "毒",
-  "radiant": "光輝"
+  "radiant": "光輝",
+  "cold": "冷気",
+  "lightning": "電撃",
 };
 
 // ヘルパー関数: テキスト翻訳
@@ -150,7 +160,24 @@ async function fetchClasses() {
 // 3. 呪文データの取得 & 整形（簡易化仕様）
 async function fetchSpells() {
   console.log('Fetching Spells...');
-  const targetSpells = ['fire-bolt', 'sacred-flame', 'burning-hands', 'magic-missile', 'sleep', 'cure-wounds', 'bless', 'guiding-bolt', 'shield'];
+  const targetSpells = [
+    'fire-bolt',
+    'sacred-flame',
+    'burning-hands',
+    'magic-missile',
+    'sleep',
+    'cure-wounds',
+    'bless',
+    'guiding-bolt',
+    'shatter',
+    'scorching-ray',
+    'aid',
+    'lesser-restoration',
+    'fireball',
+    'lightning-bolt',
+    'mass-healing-word',
+    'revivify'
+  ];
   const spellsData = {};
 
   const existingSpellsData = await readExistingData('spells.json');
@@ -159,7 +186,9 @@ async function fetchSpells() {
     const res = await fetch(`${BASE_URL}/spells/${index}`);
     const detail = await res.json();
 
-    const damageDice = detail.damage?.damage_at_slot_level?.['1']
+    const spellSlotKey = String(detail.level > 0 ? detail.level : 1);
+    const damageDice = detail.damage?.damage_at_slot_level?.[spellSlotKey]
+      || detail.damage?.damage_at_slot_level?.['1']
       || (detail.level === 0 ? Object.values(detail.damage?.damage_at_character_level || {})[0] : null)
       || null;
 
@@ -174,7 +203,7 @@ async function fetchSpells() {
       damage_type: detail.damage?.damage_type?.name ? t(detail.damage.damage_type.name.toLowerCase()) : null,
       save_type: detail.dc?.dc_type?.name?.toLowerCase() || null,
       save_effect: detail.dc?.dc_success || null,
-      targets_all_enemies: detail.index === 'burning-hands',
+      targets_all_enemies: ['burning-hands', 'shatter', 'fireball', 'lightning-bolt'].includes(detail.index),
       requires_concentration: detail.concentration
     };
 
