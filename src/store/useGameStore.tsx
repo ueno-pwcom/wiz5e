@@ -324,6 +324,7 @@ interface GameState {
   battleRound: number;
   skipPlayerTurnsUntilIndex: number | null;
   battleReward: BattleReward | null;
+  activeFixedEncounterId: string | null;
   showResultModal: boolean;
   inventory: { itemId: string; quantity: number }[];
   battleShake: boolean;
@@ -480,6 +481,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   battleRound: 1,
   skipPlayerTurnsUntilIndex: null,
   battleReward: null,
+  activeFixedEncounterId: null,
   showResultModal: false,
   inventory: buildInitialInventory(),
   battleShake: false,
@@ -558,6 +560,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       : fixedEncounterId && fixedEncounterId.startsWith('boss_') && monstersData[fixedEncounterId.replace(/^boss_/, '')]
         ? fixedEncounterId.replace(/^boss_/, '')
         : null;
+
+    if (fixedEncounterId && explicitMonster) {
+      set({ activeFixedEncounterId: fixedEncounterId });
+    } else if (!fixedEncounterId) {
+      set({ activeFixedEncounterId: null });
+    }
 
     // 出現モンスター選択
     const totalWeight = table.monsters.reduce((acc, cur) => acc + cur.weight, 0);
@@ -1385,13 +1393,30 @@ export const useGameStore = create<GameState>((set, get) => ({
       const totalGold = totalEnemies.length * 15;
       const dropItems = determineMonsterDrops(totalEnemies);
 
+      const fixedEncounterId = get().activeFixedEncounterId;
+      const clearedCurrentMap = fixedEncounterId
+        ? {
+            ...get().currentMap,
+            grid: get().currentMap.grid.map((row) =>
+              row.map((tile) => {
+                if ((tile.event?.type === 'encounter' || tile.event?.type === 'boss') && tile.event.encounter_id === fixedEncounterId) {
+                  return { ...tile, event: null };
+                }
+                return tile;
+              })
+            )
+          }
+        : get().currentMap;
+
       addLog('戦闘に勝利した！', 'info');
       set({
         battleReward: {
           xp: totalXp,
           gold: totalGold,
           items: dropItems
-        }
+        },
+        currentMap: clearedCurrentMap,
+        activeFixedEncounterId: null,
       });
       setTimeout(() => {
         set({ showResultModal: true });
@@ -2209,6 +2234,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       currentTurnIndex: 0,
       skipPlayerTurnsUntilIndex: null,
       battleReward: null,
+      activeFixedEncounterId: null,
       showResultModal: false,
     });
     addLog('🏰 街から地下迷宮のスタート地点へ入った。', 'info');
@@ -2226,6 +2252,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       combatants: [],
       currentTurnIndex: 0,
       battleReward: null,
+      activeFixedEncounterId: null,
       showResultModal: false,
     });
   },
