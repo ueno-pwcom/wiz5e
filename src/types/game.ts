@@ -24,7 +24,7 @@ export type DamageType =
   | '光輝'
   | string;
 
-export type StatusEffect = 'poisoned' | 'paralyzed' | 'unconscious' | 'dead' | 'bless';
+export type StatusEffect = 'poisoned' | 'paralyzed' | 'unconscious' | 'dead' | 'bless' | 'concentrating';
 
 export type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
 

@@ -724,6 +724,29 @@ export const useGameStore = create<GameState>((set, get) => ({
       const { adjustedDamage, modifierTag } = applyDamageTypeModifiers(rawDamage, damageType, target);
       target.hp.current = Math.max(0, target.hp.current - adjustedDamage);
 
+      if ((target.ref.status_effects ?? []).includes('concentrating')) {
+        const conSaveMod = getAbilityModifier((target.ref as Character | MonsterData).stats.con);
+        const saveDc = Math.max(10, Math.floor(adjustedDamage / 2));
+        const concentrationSave = rollD20(conSaveMod);
+
+        addLog(
+          `${target.name} は精神集中を守るために耐久力セーヴ ${concentrationSave.natural} + ${conSaveMod} = ${concentrationSave.total} vs DC ${saveDc}。`,
+          'system'
+        );
+
+        if (concentrationSave.total < saveDc) {
+          const nextEffects = (target.ref.status_effects ?? []).filter((effect) => effect !== 'concentrating') as StatusEffect[];
+          const nextTimers = { ...(target.ref.status_effect_timers ?? {}) };
+          delete nextTimers.concentrating;
+          target.ref = {
+            ...target.ref,
+            status_effects: nextEffects,
+            status_effect_timers: nextTimers,
+          };
+          addLog(`${target.name} の精神集中が途切れた。`, 'system');
+        }
+      }
+
       const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
       const diceExpression = isCriticalHit ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
       addLog(
@@ -909,11 +932,21 @@ export const useGameStore = create<GameState>((set, get) => ({
     const updatedCombatants = combatants.map((c) => {
       // 自身（呪文使用者）のスロット更新
       if (c.id === attacker.id) {
+        const currentEffects = (playerChar.status_effects ?? []) as StatusEffect[];
+        const concentrationEffects = spell.requires_concentration
+          ? [...new Set([...currentEffects, 'concentrating'])] as StatusEffect[]
+          : currentEffects;
+        const concentrationTimers = spell.requires_concentration
+          ? { ...(playerChar.status_effect_timers ?? {}), concentrating: 10 }
+          : (playerChar.status_effect_timers ?? {});
+
         c = {
           ...c,
           ref: {
             ...playerChar,
             spell_slots: updatedSpellSlots,
+            status_effects: concentrationEffects,
+            status_effect_timers: concentrationTimers,
           },
         };
       }
@@ -1195,6 +1228,29 @@ export const useGameStore = create<GameState>((set, get) => ({
       const damage = rollDiceString(action.damage_dice, attackRoll.isCritical);
       target.hp.current = Math.max(0, target.hp.current - damage);
 
+      if ((target.ref.status_effects ?? []).includes('concentrating')) {
+        const conSaveMod = getAbilityModifier((target.ref as Character | MonsterData).stats.con);
+        const saveDc = Math.max(10, Math.floor(damage / 2));
+        const concentrationSave = rollD20(conSaveMod);
+
+        addLog(
+          `${target.name} は精神集中を守るために耐久力セーヴ ${concentrationSave.natural} + ${conSaveMod} = ${concentrationSave.total} vs DC ${saveDc}。`,
+          'system'
+        );
+
+        if (concentrationSave.total < saveDc) {
+          const nextEffects = (target.ref.status_effects ?? []).filter((effect) => effect !== 'concentrating') as StatusEffect[];
+          const nextTimers = { ...(target.ref.status_effect_timers ?? {}) };
+          delete nextTimers.concentrating;
+          target.ref = {
+            ...target.ref,
+            status_effects: nextEffects,
+            status_effect_timers: nextTimers,
+          };
+          addLog(`${target.name} の精神集中が途切れた。`, 'system');
+        }
+      }
+
       const partyMember = get().party.find(p => p.id === target.id);
       if (partyMember) {
         partyMember.hp.current = target.hp.current;
@@ -1227,17 +1283,21 @@ export const useGameStore = create<GameState>((set, get) => ({
       const ref = combatant.ref as Character | MonsterData;
       const timers = ref.status_effect_timers ?? {};
       const blessTimer = timers.bless ?? 0;
-      if (blessTimer <= 0) {
+      const concentrationTimer = timers.concentrating ?? 0;
+
+      if (blessTimer <= 0 && concentrationTimer <= 0) {
         return combatant;
       }
 
-      const nextTimer = blessTimer - 1;
-      const nextEffects = nextTimer <= 0
-        ? (ref.status_effects ?? []).filter((effect) => effect !== 'bless') as StatusEffect[]
+      const nextBlessTimer = blessTimer > 0 ? blessTimer - 1 : 0;
+      const nextConcentrationTimer = concentrationTimer > 0 ? concentrationTimer - 1 : 0;
+      const shouldLoseConcentration = nextConcentrationTimer <= 0;
+      const nextEffects = shouldLoseConcentration
+        ? (ref.status_effects ?? []).filter((effect) => effect !== 'concentrating') as StatusEffect[]
         : (ref.status_effects ?? []) as StatusEffect[];
 
-      if (nextTimer <= 0) {
-        addLog(`${combatant.name} の祝福は切れた。`, 'system');
+      if (shouldLoseConcentration) {
+        addLog(`${combatant.name} の精神集中が切れた。`, 'system');
       }
 
       return {
@@ -1247,7 +1307,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           status_effects: nextEffects,
           status_effect_timers: {
             ...timers,
-            bless: nextTimer,
+            bless: nextBlessTimer,
+            concentrating: shouldLoseConcentration ? 0 : nextConcentrationTimer,
           },
         },
       };
