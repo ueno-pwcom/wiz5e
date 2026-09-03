@@ -1,5 +1,50 @@
 // src/data/dungeonEvents.ts
-import type { AbilityType } from '../types/game';
+import type { AbilityType, TrapKind } from '../types/game';
+
+export const trapKindCatalog: Record<
+  TrapKind,
+  { label: string; description: string; damageDice?: string }
+> = {
+  poison_dart: {
+    label: '毒矢の落とし穴',
+    description: '壁の隙間から毒矢が射出される細工だ。',
+    damageDice: '2d4'
+  },
+  swinging_blade: {
+    label: '振り下ろしブレード',
+    description: '天井から刃が一瞬だけ振り下ろされる。',
+    damageDice: '2d6'
+  },
+  spike_trap: {
+    label: '棘の床',
+    description: '床の石が吐き出す棘が足元を襲う。',
+    damageDice: '1d8'
+  },
+  fire_burst: {
+    label: '火炎噴出',
+    description: '石の裂け目から炎が吹き出す。',
+    damageDice: '3d4'
+  },
+  falling_rocks: {
+    label: '落石',
+    description: '天井の亀裂が崩れ、石が落ちる。',
+    damageDice: '2d6'
+  },
+  sleep_gas: {
+    label: '睡眠ガス',
+    description: '暗い隅に仕掛けられたガスが広がる。',
+    damageDice: '1d6'
+  }
+};
+
+export const trapKindOrder: TrapKind[] = [
+  'poison_dart',
+  'swinging_blade',
+  'spike_trap',
+  'fire_burst',
+  'falling_rocks',
+  'sleep_gas'
+];
 
 export interface EventOption {
   id: string;

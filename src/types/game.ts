@@ -81,11 +81,20 @@ export type EventType =
   | 'boss' // deprecated alias kept for backwards compatibility
   | 'none';
 
+export type TrapKind =
+  | 'poison_dart'
+  | 'swinging_blade'
+  | 'spike_trap'
+  | 'fire_burst'
+  | 'falling_rocks'
+  | 'sleep_gas';
+
 export interface TileEvent {
   type: EventType;
   target_map?: string;
   chest_id?: string;
   encounter_id?: string;
+  trap_kind?: TrapKind;
   message?: string;
   reward?: {
     gold?: number;

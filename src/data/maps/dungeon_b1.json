@@ -1998,11 +1998,6 @@
       "type": "stairs_up"
     },
     {
-      "x": 13,
-      "y": 13,
-      "type": "trap"
-    },
-    {
       "x": 0,
       "y": 0,
       "type": "message",
@@ -2068,6 +2063,12 @@
           "potion_of_greater_healing"
         ]
       }
+    },
+    {
+      "x": 13,
+      "y": 13,
+      "type": "trap",
+      "trap_kind": "spike_trap"
     }
   ]
 }

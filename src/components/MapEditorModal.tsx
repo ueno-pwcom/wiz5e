@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import type { MapJsonDefinition, MapJsonEvent } from '../utils/mapLoader';
+import { trapKindCatalog, trapKindOrder } from '../data/dungeonEvents';
 import dungeonB1 from '../data/maps/dungeon_b1.json';
 import dungeonB2 from '../data/maps/dungeon_b2.json';
 import dungeonB3 from '../data/maps/dungeon_b3.json';
@@ -170,7 +171,7 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
 
   const updateEventForCell = (
     eventType: MapJsonEvent['type'] | 'none',
-    extra?: { message?: string; encounterId?: string; gold?: number; items?: string[] }
+    extra?: { message?: string; encounterId?: string; gold?: number; items?: string[]; trapKind?: MapJsonEvent['trap_kind'] }
   ) => {
     if (!selectedMap) return;
 
@@ -190,6 +191,10 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
       }
       if (eventType === 'encounter' && extra?.encounterId) {
         nextEvent.encounter_id = extra.encounterId;
+      }
+      if (eventType === 'trap') {
+        const resolvedTrapKind = extra?.trapKind ?? trapKindOrder[0];
+        nextEvent.trap_kind = resolvedTrapKind;
       }
       if (eventType === 'chest') {
         const resolvedGold = Number.isFinite(extra?.gold ?? NaN) ? Number(extra?.gold ?? 0) : 0;
@@ -414,6 +419,7 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const selectedTileWalls = createTileWalls(selectedMap, selectedCell.x, selectedCell.y);
   const currentMessageText = currentEvent?.type === 'message' ? currentEvent.message ?? '' : '';
   const currentEncounterId = currentEvent?.type === 'encounter' ? currentEvent.encounter_id ?? '' : '';
+  const currentTrapKind = currentEvent?.type === 'trap' ? (currentEvent.trap_kind ?? trapKindOrder[0]) : trapKindOrder[0];
   const currentChestReward = currentEvent?.type === 'chest' ? (currentEvent.reward ?? { gold: 0, items: [] }) : { gold: 0, items: [] };
   const currentChestGold = currentChestReward.gold ?? 0;
   const currentChestItemsText = (currentChestReward.items ?? []).join(', ');
@@ -563,6 +569,7 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                   encounterId: currentEncounterId,
                   gold: currentChestGold,
                   items: currentChestReward.items ?? [],
+                  trapKind: currentTrapKind,
                 })}
               >
                 {eventOptions.map((option) => (
@@ -571,6 +578,26 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
                   </option>
                 ))}
               </select>
+
+              {currentEvent?.type === 'trap' && (
+                <label className="inline-select-label">
+                  <span>罠の種類</span>
+                  <select
+                    value={currentTrapKind}
+                    onChange={(event) => updateEventForCell('trap', {
+                      message: currentMessageText,
+                      encounterId: currentEncounterId,
+                      gold: currentChestGold,
+                      items: currentChestReward.items ?? [],
+                      trapKind: event.target.value as MapJsonEvent['trap_kind'],
+                    })}
+                  >
+                    {trapKindOrder.map((kind) => (
+                      <option key={kind} value={kind}>{trapKindCatalog[kind].label}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
 
               {currentEvent?.type === 'message' && (
                 <textarea
