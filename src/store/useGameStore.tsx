@@ -344,7 +344,7 @@ interface GameState {
   executePlayerAttack: (targetId: string) => void;
   executePlayerEvade: () => void;
   attemptRun: () => void;
-  executePlayerSpell: (spellId: string, targetId: string) => void;
+  executePlayerSpell: (spellId: string, targetId: string | string[]) => void;
   processEnemyTurn: () => void;
   nextTurn: () => void;
   checkBattleStatus: () => boolean;
@@ -665,6 +665,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     attacker.is_evading = false;
 
     const playerChar = attacker.ref as Character;
+    const attackerStatusEffects = (attacker.ref as Character).status_effects ?? [];
+    const attackBlessBonus = attackerStatusEffects.includes('bless') ? rollDiceString('1d4') : 0;
     const weapon = playerChar.equipped_weapon_id ? itemList[playerChar.equipped_weapon_id] : null;
     const strMod = getAbilityModifier(playerChar.stats.str);
     const dexMod = getAbilityModifier(playerChar.stats.dex);
@@ -682,13 +684,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     const targetStatusEffects = target.ref.status_effects ?? [];
     const targetIsUnconscious = targetStatusEffects.includes('unconscious');
     const attackRoll = targetIsUnconscious
-      ? rollD20WithAdvantage(attackBonus)
+      ? rollD20WithAdvantage(attackBonus + attackBlessBonus)
       : isRanged && playerChar.position === 'front'
-        ? rollD20WithDisadvantage(attackBonus)
-        : rollD20(attackBonus);
+        ? rollD20WithDisadvantage(attackBonus + attackBlessBonus)
+        : rollD20(attackBonus + attackBlessBonus);
+    const attackBonusText = attackBlessBonus > 0 ? `${attackBonus} + ${attackBlessBonus}` : `${attackBonus}`;
 
     addLog(
-      `${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonus} = ${attackRoll.total})`,
+      `${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonusText} = ${attackRoll.total})`,
       'player_action'
     );
 
@@ -816,7 +819,7 @@ export const useGameStore = create<GameState>((set, get) => ({
    * @param spellId 使用する呪文のID。
    * @param targetId 呪文の対象となるコンバタントID。
    */
-  executePlayerSpell: (spellId: string, targetId: string) => {
+  executePlayerSpell: (spellId: string, targetId: string | string[]) => {
     const { combatants, currentTurnIndex, party, addLog, nextTurn, checkBattleStatus } = get();
     const attacker = combatants[currentTurnIndex];
     if (!attacker || !attacker.is_player) return;
@@ -825,6 +828,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const playerChar = attacker.ref as Character;
     const spell = spellsData[spellId];
+    const requestedTargetIds = Array.isArray(targetId) ? targetId : [targetId].filter(Boolean);
 
     if (!spell) {
       addLog('指定された呪文が存在しません。', 'system');
@@ -863,13 +867,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const spellMessagePrefix = `${attacker.name} は ${spell.name} を唱えた！ `;
     const sharedDamage = isMultiTargetSpell && spell.damage_dice ? rollDiceString(spell.damage_dice) : null;
     const aliveEnemyIds = combatants.filter((c) => !c.is_player && c.hp.current > 0).map((c) => c.id);
+    const allyIds = combatants.filter((c) => c.is_player && c.hp.current > 0).map((c) => c.id);
     const affectedTargetIds = isSleepSpell
       ? aliveEnemyIds
       : spell.targets_all_enemies
         ? aliveEnemyIds
         : spell.targets_random
           ? aliveEnemyIds.sort(() => Math.random() - 0.5).slice(0, spell.targets_random)
-          : [targetId];
+          : spell.id === 'bless'
+            ? (requestedTargetIds.length > 0 ? requestedTargetIds : allyIds.filter((id) => id !== attacker.id).slice(0, 3)).slice(0, 3)
+            : requestedTargetIds.length > 0 ? requestedTargetIds : [targetId].filter(Boolean);
     const sleepBudget = isSleepSpell && spell.damage_dice ? rollDiceString(spell.damage_dice) : 0;
     const sleepTargetIds = isSleepSpell
       ? (() => {
@@ -951,6 +958,31 @@ export const useGameStore = create<GameState>((set, get) => ({
           return {
             ...c,
             hp: { ...c.hp, current: newHp },
+          };
+        }
+
+        // ブレス呪文の場合（味方 3 人まで、10 ラウンド継続）
+        if (spell.id === 'bless' && c.is_player) {
+          const ref = c.ref as Character;
+          const existingEffects = (ref.status_effects ?? []) as StatusEffect[];
+          const nextStatusEffects = [...new Set([...existingEffects, 'bless'])] as StatusEffect[];
+          const nextTimers = {
+            ...(ref.status_effect_timers ?? {}),
+            bless: 10,
+          };
+
+          spellLogEntries.push({
+            message: `${c.name} に祝福がかかった！ 10ラウンド持続`,
+            type: 'heal'
+          });
+
+          return {
+            ...c,
+            ref: {
+              ...ref,
+              status_effects: nextStatusEffects,
+              status_effect_timers: nextTimers,
+            },
           };
         }
 
@@ -1087,10 +1119,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     const updatedParty = party.map((p) => {
       const matched = updatedCombatants.find((c) => c.id === p.id);
       if (matched) {
+        const matchedRef = matched.ref as Character;
         return {
           ...p,
           hp: { ...p.hp, current: matched.hp.current },
-          spell_slots: (matched.ref as Character).spell_slots,
+          spell_slots: matchedRef.spell_slots,
+          status_effects: (matchedRef.status_effects ?? []) as StatusEffect[],
+          status_effect_timers: matchedRef.status_effect_timers ?? {},
         };
       }
       return p;
@@ -1187,6 +1222,49 @@ export const useGameStore = create<GameState>((set, get) => ({
   // ターン進行
   nextTurn: () => {
     const { combatants, currentTurnIndex, skipPlayerTurnsUntilIndex, addLog } = get();
+
+    const updatedCombatants = combatants.map((combatant) => {
+      const ref = combatant.ref as Character | MonsterData;
+      const timers = ref.status_effect_timers ?? {};
+      const blessTimer = timers.bless ?? 0;
+      if (blessTimer <= 0) {
+        return combatant;
+      }
+
+      const nextTimer = blessTimer - 1;
+      const nextEffects = nextTimer <= 0
+        ? (ref.status_effects ?? []).filter((effect) => effect !== 'bless') as StatusEffect[]
+        : (ref.status_effects ?? []) as StatusEffect[];
+
+      if (nextTimer <= 0) {
+        addLog(`${combatant.name} の祝福は切れた。`, 'system');
+      }
+
+      return {
+        ...combatant,
+        ref: {
+          ...ref,
+          status_effects: nextEffects,
+          status_effect_timers: {
+            ...timers,
+            bless: nextTimer,
+          },
+        },
+      };
+    });
+
+    const updatedParty = get().party.map((member) => {
+      const matched = updatedCombatants.find((combatant) => combatant.id === member.id);
+      if (!matched) return member;
+      const ref = matched.ref as Character;
+      return {
+        ...member,
+        status_effects: ref.status_effects ?? [],
+        status_effect_timers: ref.status_effect_timers ?? {},
+      };
+    });
+
+    set({ combatants: updatedCombatants, party: updatedParty });
 
     const count = combatants.length;
     let nextIndex = (currentTurnIndex + 1) % count;

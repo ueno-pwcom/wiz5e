@@ -5,6 +5,7 @@ const STATUS_EFFECT_TRANSLATIONS: Record<StatusEffect, string> = {
   paralyzed: '麻痺',
   unconscious: '気絶',
   dead: '死亡',
+  bless: '祝福',
 };
 
 export const translateStatusEffects = (statusEffects: StatusEffect[]): string => {

@@ -24,7 +24,7 @@ export type DamageType =
   | '光輝'
   | string;
 
-export type StatusEffect = 'poisoned' | 'paralyzed' | 'unconscious' | 'dead';
+export type StatusEffect = 'poisoned' | 'paralyzed' | 'unconscious' | 'dead' | 'bless';
 
 export type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
 
@@ -184,6 +184,7 @@ export interface MonsterData {
   condition_immunities?: string[];
   actions: MonsterAction[];
   status_effects: StatusEffect[];
+  status_effect_timers?: Partial<Record<StatusEffect, number>>;
 }
 
 // ==========================================
@@ -210,6 +211,7 @@ export interface Character {
   position: PositionRole;
   is_alive: boolean;
   status_effects: StatusEffect[];
+  status_effect_timers?: Partial<Record<StatusEffect, number>>;
   equipped_weapon_id: string | null;
   equipped_armor_id?: string | null;
   equipped_shield_id?: string | null;

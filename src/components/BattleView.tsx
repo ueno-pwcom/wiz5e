@@ -22,6 +22,7 @@ export const BattleView: React.FC = () => {
   const [selectedAction, setSelectedAction] = useState<'none' | 'attack' | 'spell' | 'item'>('none');
   const [selectedSpell, setSelectedSpell] = useState<SpellData | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedBlessTargets, setSelectedBlessTargets] = useState<string[]>([]);
 
   const currentCombatant = combatants[currentTurnIndex];
   const attemptRun = useGameStore((state) => state.attemptRun);
@@ -63,6 +64,14 @@ export const BattleView: React.FC = () => {
       executePlayerAttack(targetId);
       setSelectedAction('none');
     } else if (selectedAction === 'spell' && selectedSpell) {
+      if (selectedSpell.id === 'bless') {
+        setSelectedBlessTargets((current) => {
+          const isSelected = current.includes(targetId);
+          return isSelected ? current.filter((id) => id !== targetId) : [...current, targetId].slice(0, 3);
+        });
+        return;
+      }
+
       executePlayerSpell(selectedSpell.id, targetId);
       setSelectedAction('none');
       setSelectedSpell(null);
@@ -125,23 +134,42 @@ export const BattleView: React.FC = () => {
             })}
           </div>
 
-          {/* 味方（回復呪文／道具のターゲット選択用） */}
-          {(selectedAction === 'spell' && selectedSpell?.heal_dice) || (selectedAction === 'item' && selectedItem?.heal_dice) ? (
+          {/* 味方（回復呪文／祝福／道具のターゲット選択用） */}
+          {(selectedAction === 'spell' && (selectedSpell?.heal_dice || selectedSpell?.id === 'bless')) || (selectedAction === 'item' && selectedItem?.heal_dice) ? (
             <div className="battle-view-heal-panel">
               <div className="battle-view-heal-text">
-                回復対象の味方を選択してください:
+                {selectedSpell?.id === 'bless' ? '祝福する味方を3人まで選択してください:' : '回復対象の味方を選択してください:'}
               </div>
               <div className="battle-view-heal-buttons">
-                {allies.map((ally) => (
-                  <button
-                    key={ally.id}
-                    onClick={() => handleSelectTarget(ally.id)}
-                    className="battle-view-heal-button"
-                  >
-                    {ally.name} (HP: {ally.hp.current}/{ally.hp.max})
-                  </button>
-                ))}
+                {allies.map((ally) => {
+                  const isSelected = selectedSpell?.id === 'bless' && selectedBlessTargets.includes(ally.id);
+                  return (
+                    <button
+                      key={ally.id}
+                      onClick={() => handleSelectTarget(ally.id)}
+                      className={`battle-view-heal-button ${isSelected ? 'selected' : ''}`}
+                    >
+                      {ally.name} (HP: {ally.hp.current}/{ally.hp.max})
+                    </button>
+                  );
+                })}
               </div>
+              {selectedSpell?.id === 'bless' && (
+                <div className="battle-view-heal-buttons" style={{ marginTop: '8px' }}>
+                  <button
+                    className="battle-view-heal-button"
+                    onClick={() => {
+                      if (selectedBlessTargets.length === 0) return;
+                      executePlayerSpell('bless', selectedBlessTargets);
+                      setSelectedAction('none');
+                      setSelectedSpell(null);
+                      setSelectedBlessTargets([]);
+                    }}
+                  >
+                    ブレスを発動 ({selectedBlessTargets.length}/3)
+                  </button>
+                </div>
+              )}
             </div>
           ) : null}
 
@@ -234,6 +262,9 @@ export const BattleView: React.FC = () => {
                       executePlayerSpell(spell.id, '');
                       setSelectedAction('none');
                       setSelectedSpell(null);
+                    } else if (spell.id === 'bless') {
+                      setSelectedBlessTargets([]);
+                      setSelectedSpell(spell);
                     } else {
                       setSelectedSpell(spell);
                     }

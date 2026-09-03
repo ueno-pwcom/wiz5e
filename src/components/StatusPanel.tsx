@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Character } from '../types/game';
 import { useGameStore } from '../store/useGameStore';
+import { translateStatusEffects } from '../utils/statusEffects';
 import './StatusPanel.css';
 
 interface Props {
@@ -29,6 +30,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold, onSelectCharacter })
     const isCurrentTurn = showFocus && char.id === currentTurnId;
     const hpHalfDown = char.hp.current > 0 && char.hp.current <= Math.floor(char.hp.max / 2);
     const isDown = char.hp.current <= 0;
+    const statusText = !char.is_alive ? '[死亡]' : translateStatusEffects(char.status_effects ?? []);
     const rowClickable = scene === 'camp' || (Boolean(onSelectCharacter) && scene !== 'battle');
     const rowClass = [
       'status-panel-row',
@@ -60,7 +62,7 @@ export const StatusPanel: React.FC<Props> = ({ party, gold, onSelectCharacter })
         </div>
         <div className="status-panel-cell">{char.hp.current}/{char.hp.max}</div>
         <div className="status-panel-cell">{char.ac}</div>
-        <div className="status-panel-cell status-panel-cell-status">{char.is_alive ? '[正常]' : '[死亡]'}</div>
+        <div className="status-panel-cell status-panel-cell-status">{statusText}</div>
       </div>
     );
   };

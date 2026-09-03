@@ -223,11 +223,24 @@
 .battle-view-heal-button {
   background-color: #2563eb;
   color: #fff;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 12px;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.battle-view-heal-button.selected {
+  background-color: #16a34a;
+  border-color: #bbf7d0;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.28);
+}
+
+.battle-view-heal-button:hover:not(:disabled),
+.battle-view-heal-button:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
 }
 
 .battle-view-heal-button:disabled {
