@@ -938,7 +938,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         // 回復呪文の場合
         if (spell.heal_dice && c.is_player) {
-          const healAmount = rollDiceString(spell.heal_dice);
+          const spellcastingAbility = classesData[playerChar.class_id]?.spellcasting_ability ?? 'wis';
+          const spellModifier = getAbilityModifier(playerChar.stats[spellcastingAbility]);
+          const healAmount = rollDiceString(spell.heal_dice, false, spellModifier);
           const newHp = Math.min(c.hp.max, c.hp.current + healAmount);
 
           spellLogEntries.push({

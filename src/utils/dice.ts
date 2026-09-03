@@ -40,16 +40,20 @@ export const getAbilityModifier = (score: number): number => {
   return Math.floor((score - 10) / 2);
 };
 
-// ダイス文字列 (例: "1d6+2", "2d8") を解釈してダメージを計算
-export const rollDiceString = (diceStr: string, isCritical: boolean = false): number => {
-  const normalizedDiceStr = diceStr.replace(/\s+/g, '');
-  // 例: "1d6+2" -> ["1", "6", "2"]
-  const match = normalizedDiceStr.match(/^(\d+)d(\d+)(?:([+-])(\d+))?$/);
+// ダイス文字列 (例: "1d6+2", "2d8", "1d8+MOD") を解釈してダメージを計算
+export const rollDiceString = (diceStr: string, isCritical: boolean = false, modifier: number = 0): number => {
+  const normalizedDiceStr = diceStr.replace(/\s+/g, '').toLowerCase();
+  // 例: "1d6+2" -> ["1", "6", "+", "2"]
+  // 例: "1d8+mod" -> ["1", "8", "+", "mod"]
+  const match = normalizedDiceStr.match(/^(\d+)d(\d+)(?:([+-])((?:\d+)|mod))?$/);
   if (!match) return 0;
 
   const count = parseInt(match[1], 10);
   const sides = parseInt(match[2], 10);
-  const bonus = match[3] && match[4] ? parseInt(match[3] + match[4], 10) : 0;
+  const sign = match[3] ?? '+';
+  const bonusToken = match[4] ?? '0';
+  const bonusValue = bonusToken === 'mod' ? modifier : parseInt(bonusToken, 10);
+  const bonus = sign === '-' ? -bonusValue : bonusValue;
 
   // クリティカルヒット時はダイスの個数を2倍にする (D&D 5eルール)
   const totalDiceCount = isCritical ? count * 2 : count;
