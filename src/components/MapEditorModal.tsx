@@ -475,11 +475,17 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
             <div className="panel-block">
               <h3>開始位置</h3>
               <div className="field-row">
-                <label>x<input type="number" value={selectedMap.start_position.x} onChange={(event) => updateStartPosition(Number(event.target.value), selectedMap.start_position.y, selectedMap.start_position.facing)} /></label>
-                <label>y<input type="number" value={selectedMap.start_position.y} onChange={(event) => updateStartPosition(selectedMap.start_position.x, Number(event.target.value), selectedMap.start_position.facing)} /></label>
+                <label className="inline-field-label">
+                  <span>X</span>
+                  <input type="number" value={selectedMap.start_position.x} onChange={(event) => updateStartPosition(Number(event.target.value), selectedMap.start_position.y, selectedMap.start_position.facing)} />
+                </label>
+                <label className="inline-field-label">
+                  <span>Y</span>
+                  <input type="number" value={selectedMap.start_position.y} onChange={(event) => updateStartPosition(selectedMap.start_position.x, Number(event.target.value), selectedMap.start_position.facing)} />
+                </label>
               </div>
-              <label>
-                facing
+              <label className="inline-select-label">
+                <span>向き</span>
                 <select value={selectedMap.start_position.facing} onChange={(event) => updateStartPosition(selectedMap.start_position.x, selectedMap.start_position.y, event.target.value as MapJsonDefinition['start_position']['facing'])}>
                   <option value="N">N</option>
                   <option value="E">E</option>
@@ -493,49 +499,57 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
               <h3>壁種別</h3>
               <div className="wall-direction-editor">
                 <div className="wall-side-slot north">
-                  <span>N</span>
-                  <select
-                    value={selectedTileWalls.N ?? 'none'}
-                    onChange={(event) => updateTileWall('N', event.target.value as WallKind)}
-                  >
-                    {wallKindOptions.map((kind) => (
-                      <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
-                    ))}
-                  </select>
+                  <label className="wall-slot-label">
+                    <span>N</span>
+                    <select
+                      value={selectedTileWalls.N ?? 'none'}
+                      onChange={(event) => updateTileWall('N', event.target.value as WallKind)}
+                    >
+                      {wallKindOptions.map((kind) => (
+                        <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 <div className="wall-side-slot west">
-                  <span>W</span>
-                  <select
-                    value={selectedTileWalls.W ?? 'none'}
-                    onChange={(event) => updateTileWall('W', event.target.value as WallKind)}
-                  >
-                    {wallKindOptions.map((kind) => (
-                      <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
-                    ))}
-                  </select>
+                  <label className="wall-slot-label">
+                    <span>W</span>
+                    <select
+                      value={selectedTileWalls.W ?? 'none'}
+                      onChange={(event) => updateTileWall('W', event.target.value as WallKind)}
+                    >
+                      {wallKindOptions.map((kind) => (
+                        <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 <div className="wall-center-marker">◎</div>
                 <div className="wall-side-slot east">
-                  <span>E</span>
-                  <select
-                    value={selectedTileWalls.E ?? 'none'}
-                    onChange={(event) => updateTileWall('E', event.target.value as WallKind)}
-                  >
-                    {wallKindOptions.map((kind) => (
-                      <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
-                    ))}
-                  </select>
+                  <label className="wall-slot-label">
+                    <span>E</span>
+                    <select
+                      value={selectedTileWalls.E ?? 'none'}
+                      onChange={(event) => updateTileWall('E', event.target.value as WallKind)}
+                    >
+                      {wallKindOptions.map((kind) => (
+                        <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
                 <div className="wall-side-slot south">
-                  <span>S</span>
-                  <select
-                    value={selectedTileWalls.S ?? 'none'}
-                    onChange={(event) => updateTileWall('S', event.target.value as WallKind)}
-                  >
-                    {wallKindOptions.map((kind) => (
-                      <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
-                    ))}
-                  </select>
+                  <label className="wall-slot-label">
+                    <span>S</span>
+                    <select
+                      value={selectedTileWalls.S ?? 'none'}
+                      onChange={(event) => updateTileWall('S', event.target.value as WallKind)}
+                    >
+                      {wallKindOptions.map((kind) => (
+                        <option key={kind} value={kind}>{wallKindLabels[kind]}</option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               </div>
             </div>

@@ -303,6 +303,7 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
+  white-space: normal;
 }
 
 .panel-block h3 {
@@ -331,11 +332,42 @@
   min-width: 0;
 }
 
-.field-row label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+label.inline-field-label,
+label.inline-select-label,
+label.wall-slot-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+label.inline-field-label {
+  width: 100%;
+}
+
+label.inline-select-label {
+  margin-top: 8px;
+}
+
+label.inline-field-label > span,
+label.inline-select-label > span,
+label.wall-slot-label > span {
+  min-width: 18px;
+  font-weight: 700;
+  color: #e2e8f0;
+  flex-shrink: 0;
+}
+
+label.inline-field-label > input,
+label.inline-select-label > select,
+label.wall-slot-label > select {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin-top: 0 !important;
 }
 
 .field-row input,
@@ -360,11 +392,15 @@
 
 .wall-side-slot {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  min-width: 0;
   color: #e2e8f0;
   font-size: 11px;
   font-weight: 700;
+}
+
+.wall-side-slot .wall-slot-label {
+  width: 100%;
 }
 
 .wall-side-slot span {
@@ -373,6 +409,7 @@
 
 .wall-side-slot select {
   width: 100%;
+  min-width: 96px;
   padding: 6px 8px;
   font-size: 11px;
 }
@@ -432,12 +469,34 @@
   margin-top: 4px;
 }
 
+.map-editor-sidepanel .inline-field-label,
+.map-editor-sidepanel .inline-select-label,
+.map-editor-sidepanel .wall-slot-label {
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+}
+
+.map-editor-sidepanel .inline-field-label input,
+.map-editor-sidepanel .inline-select-label select,
+.map-editor-sidepanel .wall-slot-label select {
+  margin-top: 0;
+}
+
 .map-editor-sidepanel label {
   font-size: 11px;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   width: 100%;
   max-width: 100%;
   margin-top: 2px;
+  box-sizing: border-box;
+}
+
+.map-editor-sidepanel .panel-block > * {
+  max-width: 100%;
 }
 
 .map-editor-sidepanel {

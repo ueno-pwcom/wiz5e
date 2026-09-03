@@ -1998,21 +1998,6 @@
       "type": "stairs_up"
     },
     {
-      "x": 12,
-      "y": 3,
-      "type": "chest"
-    },
-    {
-      "x": 6,
-      "y": 0,
-      "type": "chest"
-    },
-    {
-      "x": 6,
-      "y": 1,
-      "type": "chest"
-    },
-    {
       "x": 13,
       "y": 13,
       "type": "trap"
@@ -2035,21 +2020,54 @@
       "target_map": "dungeon_b2"
     },
     {
+      "x": 3,
+      "y": 11,
+      "type": "encounter",
+      "encounter_id": "bugbear"
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "type": "chest",
+      "reward": {
+        "gold": 300,
+        "items": [
+          "greatsword"
+        ]
+      }
+    },
+    {
+      "x": 12,
+      "y": 3,
+      "type": "chest",
+      "reward": {
+        "gold": 100,
+        "items": [
+          "potion_of_greater_healing"
+        ]
+      }
+    },
+    {
       "x": 4,
       "y": 11,
       "type": "chest",
       "reward": {
         "gold": 300,
         "items": [
-          "longsword"
+          "potion_of_greater_healing"
         ]
       }
     },
     {
-      "x": 3,
-      "y": 11,
-      "type": "encounter",
-      "encounter_id": "bugbear"
+      "x": 6,
+      "y": 1,
+      "type": "chest",
+      "reward": {
+        "gold": 0,
+        "items": [
+          "potion_of_greater_healing"
+        ]
+      }
     }
   ]
 }
