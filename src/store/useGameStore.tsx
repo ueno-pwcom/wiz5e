@@ -311,6 +311,7 @@ export interface EventResult {
 
 interface GameState {
   scene: GameScene;
+  hasStarted: boolean;
   gold: number;
   party: Character[];
   characterRoster: Character[];
@@ -336,6 +337,9 @@ interface GameState {
   resumeEvent: () => void;
 
   setScene: (scene: GameScene) => void;
+  saveGame: () => void;
+  loadGame: () => void;
+  resetToDefaultState: () => void;
   addLog: (text: string, type?: LogMessage['type']) => void;
   movePlayer: (action: 'forward' | 'backward' | 'turnLeft' | 'turnRight') => void;
   useStairs: () => void;
@@ -466,13 +470,14 @@ const buildInitialInventory = () => {
   }, baseInventory.map((item) => ({ ...item })));
 };
 
-export const useGameStore = create<GameState>((set, get) => ({
-  scene: 'town',
+const createInitialGameState = () => ({
+  scene: 'town' as GameScene,
+  hasStarted: false,
   gold: 100,
   party: initialPartyWithEquipmentAc,
   characterRoster: [...initialPartyWithEquipmentAc],
   logs: [
-    { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '街に到着した。', type: 'system' }
+    { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '街に到着した。', type: 'system' as const }
   ],
   currentMap: mapCatalog[0],
   playerPosition: mapCatalog[0].start_position,
@@ -491,6 +496,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   eventContext: null,
   selectedActorId: '',
   soundEnabled: true,
+});
+
+export const useGameStore = create<GameState>((set, get) => ({
+  ...createInitialGameState(),
 
   /**
    * @brief 現在のゲームシーンを変更する。
@@ -531,6 +540,66 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else if (scene === 'battle') {
       playBattleBgm();
     }
+  },
+
+  saveGame: () => {
+    if (typeof window === 'undefined') return;
+
+    const state = get();
+    const saveData = {
+      scene: state.scene,
+      gold: state.gold,
+      party: state.party,
+      characterRoster: state.characterRoster,
+      logs: state.logs,
+      currentMap: state.currentMap,
+      playerPosition: state.playerPosition,
+      inventory: state.inventory,
+      selectedCharacterId: state.selectedCharacterId,
+      soundEnabled: state.soundEnabled,
+    };
+
+    window.localStorage.setItem('wiz5e-save', JSON.stringify(saveData));
+  },
+
+  loadGame: () => {
+    if (typeof window === 'undefined') return;
+
+    const saveText = window.localStorage.getItem('wiz5e-save');
+    if (!saveText) return;
+
+    try {
+      const saveData = JSON.parse(saveText);
+      if (!saveData) return;
+
+      set({
+        scene: saveData.scene ?? 'town',
+        hasStarted: true,
+        gold: typeof saveData.gold === 'number' ? saveData.gold : 100,
+        party: Array.isArray(saveData.party) ? saveData.party : initialPartyWithEquipmentAc,
+        characterRoster: Array.isArray(saveData.characterRoster) ? saveData.characterRoster : [...initialPartyWithEquipmentAc],
+        logs: Array.isArray(saveData.logs) ? saveData.logs : createInitialGameState().logs,
+        currentMap: saveData.currentMap ?? mapCatalog[0],
+        playerPosition: saveData.playerPosition ?? mapCatalog[0].start_position,
+        inventory: Array.isArray(saveData.inventory) ? saveData.inventory : buildInitialInventory(),
+        selectedCharacterId: saveData.selectedCharacterId ?? null,
+        soundEnabled: typeof saveData.soundEnabled === 'boolean' ? saveData.soundEnabled : true,
+        combatants: [],
+        currentTurnIndex: 0,
+        battleReward: null,
+        activeFixedEncounterId: null,
+        showResultModal: false,
+      });
+    } catch {
+      // セーブデータが壊れている場合は無視して開始を継続する
+    }
+  },
+
+  resetToDefaultState: () => {
+    set({
+      ...createInitialGameState(),
+      hasStarted: true,
+    });
   },
 
   /**
