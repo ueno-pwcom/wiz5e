@@ -410,8 +410,29 @@ const mapCatalog = loadMapsFromJson({
 });
 const mapById = new Map(mapCatalog.map((map) => [map.map_id, map]));
 
+const cloneDungeonMap = (map: DungeonMap): DungeonMap => ({
+  ...map,
+  start_position: { ...map.start_position },
+  grid: map.grid.map((row) => row.map((tile) => ({
+    ...tile,
+    walls: { ...tile.walls },
+    event: tile.event
+      ? {
+          ...tile.event,
+          reward: tile.event.reward
+            ? {
+                ...tile.event.reward,
+                items: tile.event.reward.items ? [...tile.event.reward.items] : undefined,
+              }
+            : undefined,
+        }
+      : null,
+  })))
+});
+
 const getMapDataById = (mapId: string): DungeonMap | null => {
-  return mapById.get(mapId) ?? null;
+  const baseMap = mapById.get(mapId);
+  return baseMap ? cloneDungeonMap(baseMap) : null;
 };
 
 const findStairsPosition = (map: DungeonMap, eventType: 'stairs_up' | 'stairs_down', targetMapId?: string) => {
@@ -479,8 +500,8 @@ const createInitialGameState = () => ({
   logs: [
     { id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, text: '街に到着した。', type: 'system' as const }
   ],
-  currentMap: mapCatalog[0],
-  playerPosition: mapCatalog[0].start_position,
+  currentMap: cloneDungeonMap(mapCatalog[0]),
+  playerPosition: cloneDungeonMap(mapCatalog[0]).start_position,
   combatants: [],
   currentTurnIndex: 0,
   battleRound: 1,
@@ -579,8 +600,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         party: Array.isArray(saveData.party) ? saveData.party : initialPartyWithEquipmentAc,
         characterRoster: Array.isArray(saveData.characterRoster) ? saveData.characterRoster : [...initialPartyWithEquipmentAc],
         logs: Array.isArray(saveData.logs) ? saveData.logs : createInitialGameState().logs,
-        currentMap: saveData.currentMap ?? mapCatalog[0],
-        playerPosition: saveData.playerPosition ?? mapCatalog[0].start_position,
+        currentMap: saveData.currentMap ? cloneDungeonMap(saveData.currentMap) : cloneDungeonMap(mapCatalog[0]),
+        playerPosition: saveData.playerPosition ?? cloneDungeonMap(mapCatalog[0]).start_position,
         inventory: Array.isArray(saveData.inventory) ? saveData.inventory : buildInitialInventory(),
         selectedCharacterId: saveData.selectedCharacterId ?? null,
         soundEnabled: typeof saveData.soundEnabled === 'boolean' ? saveData.soundEnabled : true,
@@ -2300,9 +2321,12 @@ export const useGameStore = create<GameState>((set, get) => ({
    */
   enterDungeon: () => {
     const { currentMap, addLog } = get();
+    const nextMap = getMapDataById(currentMap.map_id) ?? cloneDungeonMap(mapCatalog[0]);
+
     set({
       scene: 'dungeon',
-      playerPosition: currentMap.start_position,
+      currentMap: nextMap,
+      playerPosition: nextMap.start_position,
       combatants: [],
       currentTurnIndex: 0,
       skipPlayerTurnsUntilIndex: null,
