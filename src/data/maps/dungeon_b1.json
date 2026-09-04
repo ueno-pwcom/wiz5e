@@ -2004,11 +2004,6 @@
       "message": "東側の壁にわずかな隙間がある、"
     },
     {
-      "x": 4,
-      "y": 3,
-      "type": "chest"
-    },
-    {
       "x": 8,
       "y": 14,
       "type": "stairs_down",
@@ -2021,33 +2016,11 @@
       "encounter_id": "bugbear"
     },
     {
-      "x": 6,
-      "y": 0,
-      "type": "chest",
-      "reward": {
-        "gold": 300,
-        "items": [
-          "greatsword"
-        ]
-      }
-    },
-    {
       "x": 12,
       "y": 3,
       "type": "chest",
       "reward": {
         "gold": 100,
-        "items": [
-          "potion_of_greater_healing"
-        ]
-      }
-    },
-    {
-      "x": 4,
-      "y": 11,
-      "type": "chest",
-      "reward": {
-        "gold": 300,
         "items": [
           "potion_of_greater_healing"
         ]
@@ -2069,6 +2042,48 @@
       "y": 13,
       "type": "trap",
       "trap_kind": "spike_trap"
+    },
+    {
+      "x": 4,
+      "y": 3,
+      "type": "chest",
+      "reward": {
+        "gold": 50,
+        "items": []
+      }
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "type": "chest",
+      "reward": {
+        "gold": 100,
+        "items": [
+          "greatsword"
+        ]
+      }
+    },
+    {
+      "x": 4,
+      "y": 11,
+      "type": "chest",
+      "reward": {
+        "gold": 200,
+        "items": [
+          "shortsword_plus_1"
+        ]
+      }
+    },
+    {
+      "x": 11,
+      "y": 11,
+      "type": "chest",
+      "reward": {
+        "gold": 0,
+        "items": [
+          "longsword_plus_1"
+        ]
+      }
     }
   ]
 }
