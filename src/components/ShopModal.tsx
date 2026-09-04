@@ -10,6 +10,8 @@ interface Props {
 
 export const ShopModal: React.FC<Props> = ({ onClose }) => {
   const [tab, setTab] = useState<'buy' | 'sell'>('buy');
+  const [buyCategory, setBuyCategory] = useState<'all' | 'consumable' | 'weapon' | 'armor'>('all');
+  const [sellCategory, setSellCategory] = useState<'all' | 'consumable' | 'weapon' | 'armor'>('all');
   const gold = useGameStore((state) => state.gold);
   const inventory = useGameStore((state) => state.inventory);
   const party = useGameStore((state) => state.party);
@@ -17,7 +19,26 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
   const sellItem = useGameStore((state) => state.sellItem);
 
   // ショップで販売するアイテムのリスト (itemList のキー)
-  const shopCatalog = Object.keys(itemList);
+  const shopCatalog = Object.keys(itemList).filter((id) => {
+    const item = itemList[id];
+    if (!item) return false;
+    if (buyCategory === 'all') return true;
+    return item.type === buyCategory;
+  });
+
+  const sellCatalog = inventory.filter((inv) => {
+    const item = itemList[inv.itemId];
+    if (!item) return false;
+    if (sellCategory === 'all') return true;
+    return item.type === sellCategory;
+  });
+
+  const itemCategoryTabs: Array<{ key: 'all' | 'consumable' | 'weapon' | 'armor'; label: string }> = [
+    { key: 'all', label: '全て' },
+    { key: 'consumable', label: '道具' },
+    { key: 'weapon', label: '武器' },
+    { key: 'armor', label: '防具' },
+  ];
 
   return (
     <div className="shop-modal-overlay">
@@ -43,6 +64,21 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
             売却する
           </button>
         </div>
+
+        {(tab === 'buy' || tab === 'sell') && (
+          <div className="shop-modal-category-tabs">
+            {itemCategoryTabs.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => tab === 'buy' ? setBuyCategory(key) : setSellCategory(key)}
+                className={`shop-modal-category-button ${(tab === 'buy' ? buyCategory : sellCategory) === key ? 'active' : ''}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 商品一覧 / 売却一覧 */}
         <div className="shop-modal-content">
@@ -70,12 +106,12 @@ export const ShopModal: React.FC<Props> = ({ onClose }) => {
               );
             })
           ) : (
-            inventory.length === 0 ? (
+            sellCatalog.length === 0 ? (
               <div className="shop-modal-empty">
                 売却できるアイテムがありません
               </div>
             ) : (
-              inventory.map((inv) => {
+              sellCatalog.map((inv) => {
                 const item = itemList[inv.itemId];
                 if (!item) return null;
                 const sellPrice = Math.floor((item.value_gp || 10) / 2); // 定価の半額で売却

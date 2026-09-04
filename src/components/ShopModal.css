@@ -70,6 +70,31 @@
   border-bottom: 2px solid #f59e0b;
 }
 
+.shop-modal-category-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.shop-modal-category-button {
+  background: rgba(31, 41, 55, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shop-modal-category-button.active {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.8);
+  color: #fef3c7;
+}
+
 .shop-modal-content {
   max-height: 440px;
   overflow-y: auto;
