@@ -19,7 +19,8 @@
   width: 100%;
   max-width: 880px;
   height: auto;
-  max-height: calc(100vh - 40px);
+  min-height: 620px;
+  max-height: calc(100vh - 32px);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -70,7 +71,7 @@
 }
 
 .shop-modal-content {
-  max-height: 280px;
+  max-height: 440px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
