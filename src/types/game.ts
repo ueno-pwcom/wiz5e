@@ -43,6 +43,8 @@ export interface ItemData {
   heal_dice?: string;
   damage_dice?: string;
   damage_type?: DamageType;
+  attack_bonus?: number;
+  damage_bonus?: number;
   ac_bonus?: number;
 }
 

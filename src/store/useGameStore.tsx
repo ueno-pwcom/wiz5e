@@ -681,7 +681,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const isRanged = weapon?.weapon_category === 'ranged';
     const isFinesse = weapon?.weapon_property === 'finesse';
     const attackAbilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
-    const attackBonus = attackAbilityMod + 2;
+    const weaponAttackBonus = weapon?.attack_bonus ?? 0;
+    const attackBonus = attackAbilityMod + 2 + weaponAttackBonus;
 
     const isBacklineMelee = playerChar.position === 'back' && !isRanged;
     if (isBacklineMelee) {
@@ -727,7 +728,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       const weaponDice = weapon?.damage_dice || '1d8';
       const diceDamage = rollDiceString(weaponDice, isCriticalHit);
       const damageAbilityMod = isRanged ? dexMod : isFinesse ? Math.max(strMod, dexMod) : strMod;
-      const rawDamage = diceDamage + damageAbilityMod;
+      const weaponDamageBonus = weapon?.damage_bonus ?? 0;
+      const rawDamage = diceDamage + damageAbilityMod + weaponDamageBonus;
       const damageType = weapon?.damage_type ?? '殴打';
       const { adjustedDamage, modifierTag } = applyDamageTypeModifiers(rawDamage, damageType, target);
       target.hp.current = Math.max(0, target.hp.current - adjustedDamage);
@@ -755,10 +757,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }
 
-      const modifierLabel = damageAbilityMod >= 0 ? `+ ${damageAbilityMod}` : `${damageAbilityMod}`;
+      const totalDamageBonus = damageAbilityMod + weaponDamageBonus;
+      const modifierLabel = totalDamageBonus >= 0 ? `+ ${totalDamageBonus}` : `${totalDamageBonus}`;
+      const weaponBonusText = weaponDamageBonus !== 0 ? ` （武器修正 ${weaponDamageBonus >= 0 ? '+' : ''}${weaponDamageBonus}）` : '';
       const diceExpression = isCriticalHit ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
       addLog(
-        `${target.name} に ${adjustedDamage} のダメージ！${modifierTag} （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`, 
+        `${target.name} に ${adjustedDamage} のダメージ！${modifierTag}${weaponBonusText} （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`,
         isCriticalHit ? 'critical' : 'player_action'
       );
       playSoundForDamageType(damageType);
