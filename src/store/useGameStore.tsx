@@ -2241,8 +2241,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!currentTile) return;
 
     const wallStatus: WallType = currentTile.walls[checkDirection];
+    const isOneWayWall = wallStatus === 'one_way_N' || wallStatus === 'one_way_E' || wallStatus === 'one_way_S' || wallStatus === 'one_way_W';
+    const oneWayAllowedDirection = wallStatus === 'one_way_N'
+      ? 'N'
+      : wallStatus === 'one_way_E'
+        ? 'E'
+        : wallStatus === 'one_way_S'
+          ? 'S'
+          : wallStatus === 'one_way_W'
+            ? 'W'
+            : null;
 
-    if (wallStatus === 'wall' || wallStatus === 'locked_door') {
+    if (
+      wallStatus === 'wall'
+      || wallStatus === 'locked_door'
+      || (isOneWayWall && oneWayAllowedDirection !== checkDirection)
+    ) {
       playWallSound();
       addLog('壁にぶつかった！', 'system');
       return;

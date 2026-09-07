@@ -266,6 +266,13 @@
   background: rgba(168, 85, 247, 0.95);
 }
 
+.wall-kind-one_way_N,
+.wall-kind-one_way_E,
+.wall-kind-one_way_S,
+.wall-kind-one_way_W {
+  background: rgba(34, 197, 94, 0.95);
+}
+
 .wall-n {
   left: 2px;
   right: 2px;

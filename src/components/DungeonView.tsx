@@ -454,7 +454,7 @@ export const DungeonView: React.FC = () => {
   const getWallBorder = (wall: string) => {
     if (wall === 'door') return '2px solid #f59e0b';
     if (wall === 'locked_door') return '2px solid #f97316';
-    if (wall === 'wall' || wall === 'secret_door') return '2px solid #9ca3af';
+    if (wall === 'wall' || wall === 'secret_door' || wall.startsWith('one_way_')) return '2px solid #9ca3af';
     return '1px solid #374151';
   };
 

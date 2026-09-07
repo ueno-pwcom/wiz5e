@@ -71,7 +71,15 @@ const normalizeFacing = (value: string): DungeonMap['start_position']['facing'] 
 };
 
 const isValidWallType = (value: unknown): value is WallType =>
-  value === 'none' || value === 'wall' || value === 'door' || value === 'locked_door' || value === 'secret_door';
+  value === 'none'
+  || value === 'wall'
+  || value === 'door'
+  || value === 'locked_door'
+  || value === 'secret_door'
+  || value === 'one_way_N'
+  || value === 'one_way_E'
+  || value === 'one_way_S'
+  || value === 'one_way_W';
 
 const createEmptyGrid = (width: number, height: number): DungeonMap['grid'] => {
   const grid: DungeonMap['grid'] = [];
@@ -97,6 +105,17 @@ const createEmptyGrid = (width: number, height: number): DungeonMap['grid'] => {
   return grid;
 };
 
+const getOppositeDirection = (side: 'N' | 'E' | 'S' | 'W'): 'N' | 'E' | 'S' | 'W' =>
+  side === 'N' ? 'S' : side === 'S' ? 'N' : side === 'E' ? 'W' : 'E';
+
+const getOneWayDirection = (kind: WallType): 'N' | 'E' | 'S' | 'W' | null => {
+  if (kind === 'one_way_N') return 'N';
+  if (kind === 'one_way_E') return 'E';
+  if (kind === 'one_way_S') return 'S';
+  if (kind === 'one_way_W') return 'W';
+  return null;
+};
+
 const applyWallToTile = (grid: DungeonMap['grid'], x: number, y: number, side: 'N' | 'E' | 'S' | 'W', kind: WallType) => {
   const tile = grid[y]?.[x];
   if (!tile) {
@@ -107,11 +126,16 @@ const applyWallToTile = (grid: DungeonMap['grid'], x: number, y: number, side: '
 
   const dx = side === 'E' ? 1 : side === 'W' ? -1 : 0;
   const dy = side === 'S' ? 1 : side === 'N' ? -1 : 0;
-  const opposite = side === 'N' ? 'S' : side === 'S' ? 'N' : side === 'E' ? 'W' : 'E';
+  const opposite = getOppositeDirection(side);
   const neighbor = grid[y + dy]?.[x + dx];
-  if (neighbor) {
-    neighbor.walls[opposite] = kind;
+  if (!neighbor) return;
+
+  if (getOneWayDirection(kind)) {
+    neighbor.walls[opposite] = 'wall';
+    return;
   }
+
+  neighbor.walls[opposite] = kind;
 };
 
 const normalizeWallSegments = (definition: MapJsonDefinition): MapJsonWall[] => {

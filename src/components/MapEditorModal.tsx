@@ -13,16 +13,20 @@ const MAP_CATALOG: MapJsonDefinition[] = [
 ];
 
 type WallSide = 'N' | 'E' | 'S' | 'W';
-type WallKind = 'none' | 'wall' | 'door' | 'locked_door' | 'secret_door';
+type WallKind = 'none' | 'wall' | 'door' | 'locked_door' | 'secret_door' | 'one_way_N' | 'one_way_E' | 'one_way_S' | 'one_way_W';
 
 const wallSideOrder: WallSide[] = ['N', 'E', 'S', 'W'];
-const wallKindOptions: WallKind[] = ['none', 'wall', 'door', 'locked_door', 'secret_door'];
+const wallKindOptions: WallKind[] = ['none', 'wall', 'door', 'locked_door', 'secret_door', 'one_way_N', 'one_way_E', 'one_way_S', 'one_way_W'];
 const wallKindLabels: Record<WallKind, string> = {
   none: 'なし',
   wall: '通常壁',
   door: '扉',
   locked_door: '鍵扉',
   secret_door: '秘密扉',
+  one_way_N: '一方通行(N)',
+  one_way_E: '一方通行(E)',
+  one_way_S: '一方通行(S)',
+  one_way_W: '一方通行(W)',
 };
 
 const eventOptions = ['none', 'stairs_up', 'stairs_down', 'chest', 'trap', 'door', 'encounter', 'message'] as const;
@@ -156,9 +160,10 @@ export const MapEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     const neighborX = selectedCell.x + (side === 'E' ? 1 : side === 'W' ? -1 : 0);
     const neighborY = selectedCell.y + (side === 'S' ? 1 : side === 'N' ? -1 : 0);
 
+    const isOneWay = kind.startsWith('one_way_');
     tile[side] = kind;
     if (neighborY >= 0 && neighborY < selectedMap.height && neighborX >= 0 && neighborX < selectedMap.width) {
-      wallGrid[neighborY][neighborX][opposite] = kind;
+      wallGrid[neighborY][neighborX][opposite] = isOneWay ? 'wall' : kind;
     }
 
     const nextMap: MapJsonDefinition = {

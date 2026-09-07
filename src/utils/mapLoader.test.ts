@@ -56,3 +56,23 @@ if (maps[0].grid[2][2].event?.chest_id !== 'test_chest') {
 if (maps[0].grid[2][2].event?.reward?.gold !== 42 || maps[0].grid[2][2].event?.reward?.items?.join(',') !== 'potion_of_healing,dagger') {
   throw new Error('chest reward payload was not loaded');
 }
+
+const oneWayMaps = loadMapsFromJson({
+  maps: [{
+    map_id: 'dungeon_one_way_test',
+    name: '一方通行テスト',
+    width: 3,
+    height: 2,
+    start_position: { x: 1, y: 1, facing: 'N' },
+    encounter_table: { rate: 0, monsters: [] },
+    layout: {
+      horizontal: [
+        { y: 0, x1: 0, x2: 1, kind: 'one_way_N' }
+      ]
+    }
+  }]
+} as never);
+
+if (oneWayMaps[0].grid[0][0].walls.N !== 'one_way_N') {
+  throw new Error('one-way north wall should be loaded');
+}

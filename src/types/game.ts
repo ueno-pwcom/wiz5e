@@ -66,7 +66,16 @@ export interface EquipmentData {
 
 export type Direction = 'N' | 'E' | 'S' | 'W';
 
-export type WallType = 'none' | 'wall' | 'door' | 'locked_door' | 'secret_door';
+export type WallType =
+  | 'none'
+  | 'wall'
+  | 'door'
+  | 'locked_door'
+  | 'secret_door'
+  | 'one_way_N'
+  | 'one_way_E'
+  | 'one_way_S'
+  | 'one_way_W';
 
 export interface WallData {
   N: WallType;
