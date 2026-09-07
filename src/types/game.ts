@@ -34,6 +34,8 @@ export type GameScene = 'town' | 'dungeon' | 'battle' | 'camp';
 
 export type ItemType = 'consumable' | 'weapon' | 'armor';
 
+export type ArmorCategory = 'light' | 'medium' | 'heavy';
+
 export interface ItemData {
   id: string;
   name: string;
@@ -46,6 +48,7 @@ export interface ItemData {
   attack_bonus?: number;
   damage_bonus?: number;
   ac_bonus?: number;
+  armor_category?: ArmorCategory;
 }
 
 export interface EquipmentData {

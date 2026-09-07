@@ -1,6 +1,7 @@
 // src/data/items.ts
 
 export type ItemType = 'consumable' | 'weapon' | 'armor';
+export type ArmorCategory = 'light' | 'medium' | 'heavy';
 
 export interface ItemData {
   id: string;
@@ -8,7 +9,7 @@ export interface ItemData {
   type: ItemType;
   slot?: 'weapon' | 'armor' | 'shield';
   weapon_category?: 'melee' | 'ranged';
-  weapon_property?: 'finesse';
+  weapon_property?: 'finesse' | 'two_handed';
   description: string;
   value_gp: number;
   // 消費アイテム用
@@ -20,6 +21,7 @@ export interface ItemData {
   damage_bonus?: number;
   // 防具用
   ac_bonus?: number;
+  armor_category?: ArmorCategory;
 }
 
 export const itemList: Record<string, ItemData> = {
@@ -197,6 +199,7 @@ export const itemList: Record<string, ItemData> = {
     name: 'グレートソード',
     type: 'weapon',
     weapon_category: 'melee',
+    weapon_property: 'two_handed',
     description: '両手で振り回す大型の大剣。非常に高い威力を誇る。',
     value_gp: 50,
     damage_dice: '2d6',
@@ -207,6 +210,7 @@ export const itemList: Record<string, ItemData> = {
     name: 'グレートソード +1',
     type: 'weapon',
     weapon_category: 'melee',
+    weapon_property: 'two_handed',
     description: '呪文のような加護を受けた大剣。攻撃ロールとダメージに +1 の修正がつく。',
     value_gp: 1200,
     attack_bonus: 1,
@@ -219,6 +223,7 @@ export const itemList: Record<string, ItemData> = {
     name: 'グレートソード +2',
     type: 'weapon',
     weapon_category: 'melee',
+    weapon_property: 'two_handed',
     description: 'より強力な加護を受けた大剣。攻撃ロールとダメージに +2 の修正がつく。',
     value_gp: 4000,
     attack_bonus: 2,
@@ -258,6 +263,43 @@ export const itemList: Record<string, ItemData> = {
     attack_bonus: 2,
     damage_bonus: 2,
     damage_dice: '1d8',
+    damage_type: '斬撃',
+  },
+  greataxe: {
+    id: 'greataxe',
+    name: 'グレートアックス',
+    type: 'weapon',
+    weapon_category: 'melee',
+    weapon_property: 'two_handed',
+    description: '両手で振るう大型の戦斧。圧倒的な威力を持つ。',
+    value_gp: 30,
+    damage_dice: '1d12',
+    damage_type: '斬撃',
+  },
+  greataxe_plus_1: {
+    id: 'greataxe_plus_1',
+    name: 'グレートアックス +1',
+    type: 'weapon',
+    weapon_category: 'melee',
+    weapon_property: 'two_handed',
+    description: '呪文のような加護を受けた巨大な戦斧。攻撃ロールとダメージに +1 の修正がつく。',
+    value_gp: 1100,
+    attack_bonus: 1,
+    damage_bonus: 1,
+    damage_dice: '1d12',
+    damage_type: '斬撃',
+  },
+  greataxe_plus_2: {
+    id: 'greataxe_plus_2',
+    name: 'グレートアックス +2',
+    type: 'weapon',
+    weapon_category: 'melee',
+    weapon_property: 'two_handed',
+    description: 'より強力な加護を受けた巨大な戦斧。攻撃ロールとダメージに +2 の修正がつく。',
+    value_gp: 3600,
+    attack_bonus: 2,
+    damage_bonus: 2,
+    damage_dice: '1d12',
     damage_type: '斬撃',
   },
   mace: {
@@ -371,7 +413,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'レザー・アーマー',
     type: 'armor',
     slot: 'armor',
-    description: '煮固めた革で作られた軽装鎧（ベースAC 11）。',
+    armor_category: 'light',
+    description: '煮固めた革で作られた軽装鎧（AC 11 + DEX修正値）。',
     value_gp: 10,
     ac_bonus: 11,
   },
@@ -380,7 +423,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'レザー・アーマー +1',
     type: 'armor',
     slot: 'armor',
-    description: '加護を受けた革鎧。AC に +1 の修正がつく。',
+    armor_category: 'light',
+    description: '加護を受けた革鎧。AC に +1 の修正と DEX 修正値が加算される。',
     value_gp: 700,
     ac_bonus: 12,
   },
@@ -389,7 +433,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'レザー・アーマー +2',
     type: 'armor',
     slot: 'armor',
-    description: '強力な加護を受けた革鎧。AC に +2 の修正がつく。',
+    armor_category: 'light',
+    description: '強力な加護を受けた革鎧。AC に +2 の修正と DEX 修正値が加算される。',
     value_gp: 2500,
     ac_bonus: 13,
   },
@@ -398,7 +443,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'スタデッド・レザー',
     type: 'armor',
     slot: 'armor',
-    description: '鋲を打って補強した高品質な革鎧（ベースAC 12）。',
+    armor_category: 'light',
+    description: '鋲を打って補強した高品質な革鎧（AC 12 + DEX修正値）。',
     value_gp: 45,
     ac_bonus: 12,
   },
@@ -407,7 +453,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'スタデッド・レザー +1',
     type: 'armor',
     slot: 'armor',
-    description: '加護を受けた補強革鎧。AC に +1 の修正がつく。',
+    armor_category: 'light',
+    description: '加護を受けた補強革鎧。AC に +1 の修正と DEX 修正値が加算される。',
     value_gp: 800,
     ac_bonus: 13,
   },
@@ -416,7 +463,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'スタデッド・レザー +2',
     type: 'armor',
     slot: 'armor',
-    description: '強力な加護を受けた補強革鎧。AC に +2 の修正がつく。',
+    armor_category: 'light',
+    description: '強力な加護を受けた補強革鎧。AC に +2 の修正と DEX 修正値が加算される。',
     value_gp: 2800,
     ac_bonus: 14,
   },
@@ -425,7 +473,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'スケイル・メイル',
     type: 'armor',
     slot: 'armor',
-    description: '金属のうろこを重ね合わせた中装鎧（ベースAC 14）。',
+    armor_category: 'medium',
+    description: '金属のうろこを重ね合わせた中装鎧（AC 14 + DEX修正値（最大 +2））。',
     value_gp: 50,
     ac_bonus: 14,
   },
@@ -434,7 +483,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'スケイル・メイル +1',
     type: 'armor',
     slot: 'armor',
-    description: '加護を受けたうろこ鎧。AC に +1 の修正がつく。',
+    armor_category: 'medium',
+    description: '加護を受けたうろこ鎧。AC に +1 の修正と DEX 修正値（最大 +2）が加算される。',
     value_gp: 1000,
     ac_bonus: 15,
   },
@@ -443,7 +493,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'スケイル・メイル +2',
     type: 'armor',
     slot: 'armor',
-    description: '強力な加護を受けたうろこ鎧。AC に +2 の修正がつく。',
+    armor_category: 'medium',
+    description: '強力な加護を受けたうろこ鎧。AC に +2 の修正と DEX 修正値（最大 +2）が加算される。',
     value_gp: 3200,
     ac_bonus: 16,
   },
@@ -452,7 +503,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'チェイン・メイル',
     type: 'armor',
     slot: 'armor',
-    description: '金属環を編み込んだ重装鎧（AC 16）。',
+    armor_category: 'heavy',
+    description: '金属環を編み込んだ重装鎧（AC 16、DEX加算なし）。',
     value_gp: 75,
     ac_bonus: 16,
   },
@@ -461,7 +513,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'チェイン・メイル +1',
     type: 'armor',
     slot: 'armor',
-    description: '加護を受けた鎖帷子。AC に +1 の修正がつく。',
+    armor_category: 'heavy',
+    description: '加護を受けた鎖帷子。AC に +1 の修正、DEX加算なし。',
     value_gp: 1200,
     ac_bonus: 17,
   },
@@ -470,7 +523,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'チェイン・メイル +2',
     type: 'armor',
     slot: 'armor',
-    description: '強力な加護を受けた鎖帷子。AC に +2 の修正がつく。',
+    armor_category: 'heavy',
+    description: '強力な加護を受けた鎖帷子。AC に +2 の修正、DEX加算なし。',
     value_gp: 3600,
     ac_bonus: 18,
   },
@@ -479,7 +533,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'プレート・アーマー',
     type: 'armor',
     slot: 'armor',
-    description: '全身を包み込む最高峰の金属板甲冑（AC 18）。',
+    armor_category: 'heavy',
+    description: '全身を包み込む最高峰の金属板甲冑（AC 18、DEX加算なし）。',
     value_gp: 1500,
     ac_bonus: 18,
   },
@@ -488,7 +543,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'プレート・アーマー +1',
     type: 'armor',
     slot: 'armor',
-    description: '加護を受けた最高級の金属鎧。AC に +1 の修正がつく。',
+    armor_category: 'heavy',
+    description: '加護を受けた最高級の金属鎧。AC に +1 の修正、DEX加算なし。',
     value_gp: 1600,
     ac_bonus: 19,
   },
@@ -497,7 +553,8 @@ export const itemList: Record<string, ItemData> = {
     name: 'プレート・アーマー +2',
     type: 'armor',
     slot: 'armor',
-    description: '強力な加護を受けた最高級の金属鎧。AC に +2 の修正がつく。',
+    armor_category: 'heavy',
+    description: '強力な加護を受けた最高級の金属鎧。AC に +2 の修正、DEX加算なし。',
     value_gp: 5000,
     ac_bonus: 20,
   },

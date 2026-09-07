@@ -77,6 +77,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
             const isEquippedShield = targetChar?.equipped_shield_id === itemId;
             const isEquipped = isEquippedWeapon || isEquippedArmor || isEquippedShield;
             const itemSlot: 'weapon' | 'armor' | 'shield' = item.type === 'weapon' ? 'weapon' : item.slot === 'shield' ? 'shield' : 'armor';
+            const equippedTwoHandedWeapon = !!targetChar && !!targetChar.equipped_weapon_id && itemList[targetChar.equipped_weapon_id]?.weapon_property === 'two_handed';
+            const isShieldBlocked = item.type === 'armor' && item.slot === 'shield' && equippedTwoHandedWeapon;
 
             return (
               <div key={itemId} className={`inventory-view-item-card ${isEquipped ? 'equipped' : ''}`}>
@@ -110,10 +112,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
                       </button>
                     ) : (
                       <button
-                        onClick={() => equipItem(selectedTargetId, itemId)}
+                        onClick={() => !isShieldBlocked && equipItem(selectedTargetId, itemId)}
                         className="inventory-view-button equip"
+                        disabled={isShieldBlocked}
+                        title={isShieldBlocked ? '両手持ち武器を装備中のため盾は装備できません。' : undefined}
                       >
-                        装備する
+                        {isShieldBlocked ? '装備不可' : '装備する'}
                       </button>
                     )
                   )}

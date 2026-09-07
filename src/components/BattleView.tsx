@@ -29,9 +29,11 @@ export const BattleView: React.FC = () => {
   const nextTurn = useGameStore((state) => state.nextTurn);
   const isPlayerTurn = currentCombatant?.is_player ?? false;
   const playerChar = isPlayerTurn ? (currentCombatant.ref as Character) : null;
+  const currentCombatantPosition = currentCombatant?.position ?? playerChar?.position ?? 'front';
   const weapon = playerChar?.equipped_weapon_id ? itemList[playerChar.equipped_weapon_id] : null;
   const isCurrentWeaponRanged = weapon?.weapon_category === 'ranged';
-  const cannotPerformMeleeAttack = isPlayerTurn && !isCurrentWeaponRanged && playerChar?.position === 'back';
+  const isRangedAttackDisadvantage = isPlayerTurn && isCurrentWeaponRanged && currentCombatantPosition === 'front';
+  const cannotPerformMeleeAttack = isPlayerTurn && !isCurrentWeaponRanged && currentCombatantPosition === 'back';
   const enemyShakeTargetId = useGameStore((state) => state.enemyShakeTargetId);
   const [isEntering, setIsEntering] = useState(true);
   const [isBlinkingInitiative, setIsBlinkingInitiative] = useState(true);
@@ -214,7 +216,7 @@ export const BattleView: React.FC = () => {
               ⚔️ 攻撃{weapon ? ` (${weapon.name})` : ''}
             </button>
 
-            {selectedAction === 'attack' && isPlayerTurn && playerChar && isCurrentWeaponRanged && playerChar.position === 'front' && (
+            {selectedAction === 'attack' && isRangedAttackDisadvantage && (
               <div className="battle-view-target-hint">前衛の遠隔武器攻撃は不利判定になります。</div>
             )}
 

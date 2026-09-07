@@ -25,12 +25,22 @@ const calculateCharacterAc = (character: Character, armorId: string | null | und
   const shield = shieldId ? itemList[shieldId] : null;
   const dexMod = Math.floor((character.stats.dex - 10) / 2);
   const baseAc = 10 + dexMod;
+
   let ac = armor && armor.ac_bonus ? armor.ac_bonus : baseAc;
+  if (armor?.armor_category === 'light') {
+    ac += dexMod;
+  } else if (armor?.armor_category === 'medium') {
+    ac += Math.min(dexMod, 2);
+  }
+
   if (shield && shield.ac_bonus) {
     ac += shield.ac_bonus;
   }
   return ac;
 };
+
+const isTwoHandedWeapon = (item: { weapon_property?: string } | null | undefined): boolean =>
+  item?.weapon_property === 'two_handed';
 
 const DAMAGE_TYPE_SOUND_MAP: Record<string, string> = {
   '殴打': new URL('../assets/sounds/殴打.mp3', import.meta.url).href,
@@ -773,8 +783,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     const attackAbilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
     const weaponAttackBonus = weapon?.attack_bonus ?? 0;
     const attackBonus = attackAbilityMod + 2 + weaponAttackBonus;
+    const attackerPosition = attacker.position ?? playerChar.position ?? 'front';
 
-    const isBacklineMelee = playerChar.position === 'back' && !isRanged;
+    const isBacklineMelee = attackerPosition === 'back' && !isRanged;
     if (isBacklineMelee) {
       addLog(`${attacker.name} は後衛のため近接攻撃ができない。`, 'system');
       return;
@@ -784,7 +795,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const targetIsUnconscious = targetStatusEffects.includes('unconscious');
     const attackRoll = targetIsUnconscious
       ? rollD20WithAdvantage(attackBonus + attackBlessBonus)
-      : isRanged && playerChar.position === 'front'
+      : isRanged && attackerPosition === 'front'
         ? rollD20WithDisadvantage(attackBonus + attackBlessBonus)
         : rollD20(attackBonus + attackBlessBonus);
     const attackBonusText = attackBlessBonus > 0 ? `${attackBonus} + ${attackBlessBonus}` : `${attackBonus}`;
@@ -1920,11 +1931,30 @@ export const useGameStore = create<GameState>((set, get) => ({
       if (m.id !== characterId) return m;
 
       if (item.type === 'weapon') {
+        const currentShieldId = m.equipped_shield_id ?? null;
+        const wasShieldEquipped = !!currentShieldId;
+        const shieldRemoved = isTwoHandedWeapon(item) && wasShieldEquipped;
+
+        if (shieldRemoved) {
+          addLog(`${m.name} は ${item.name} を装備した。盾を外した。`, 'info');
+          return {
+            ...m,
+            equipped_weapon_id: itemId,
+            equipped_shield_id: null,
+            ac: calculateCharacterAc(m, m.equipped_armor_id ?? null, null)
+          };
+        }
+
         addLog(`${m.name} は ${item.name} を装備した。`, 'info');
         return { ...m, equipped_weapon_id: itemId };
       }
 
       if (item.type === 'armor' && item.slot === 'shield') {
+        if (isTwoHandedWeapon(itemList[m.equipped_weapon_id ?? ''])) {
+          addLog(`${m.name} は ${item.name} を装備できない。両手持ち武器を装備しているためだ。`, 'info');
+          return m;
+        }
+
         addLog(`${m.name} は ${item.name} を装備した。`, 'info');
         return {
           ...m,
