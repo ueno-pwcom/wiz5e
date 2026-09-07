@@ -610,6 +610,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     };
 
     window.localStorage.setItem('wiz5e-save', JSON.stringify(saveData));
+    get().addLog('セーブしました。', 'info');
   },
 
   loadGame: () => {
@@ -640,6 +641,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         activeFixedEncounterId: null,
         showResultModal: false,
       });
+
+      get().addLog('ロードしました。', 'info');
     } catch {
       // セーブデータが壊れている場合は無視して開始を継続する
     }
