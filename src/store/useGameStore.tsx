@@ -11,7 +11,7 @@ import type { DungeonEvent, EventOption } from '../data/dungeonEvents';
 import { monstersData, spellsData } from '../utils/srdData';
 import { classesData } from '../utils/srdData';
 import { XP_TABLE, SPELL_SLOTS_TABLE } from '../data/levelTable';
-import { getAbilityModifier, rollD20, rollD20WithAdvantage, rollD20WithDisadvantage, rollDiceString } from '../utils/dice';
+import { formatDiceRollBreakdown, getAbilityModifier, rollD20, rollD20WithAdvantage, rollD20WithDisadvantage, rollDiceString, rollDiceStringWithBreakdown } from '../utils/dice';
 
 /**
  * @brief 装備と敏捷値からキャラクターのアーマークラス（AC）を計算する。
@@ -804,7 +804,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const isFinesse = weapon?.weapon_property === 'finesse';
     const attackAbilityMod = isFinesse ? Math.max(strMod, dexMod) : isRanged ? dexMod : strMod;
     const weaponAttackBonus = weapon?.attack_bonus ?? 0;
-    const attackBonus = attackAbilityMod + 2 + weaponAttackBonus;
+    const proficiencyBonus = getProficiencyBonus(playerChar.level);
+    const attackBonus = attackAbilityMod + proficiencyBonus + weaponAttackBonus;
     const attackerPosition = attacker.position ?? playerChar.position ?? 'front';
 
     const isBacklineMelee = attackerPosition === 'back' && !isRanged;
@@ -820,10 +821,17 @@ export const useGameStore = create<GameState>((set, get) => ({
       : isRanged && attackerPosition === 'front'
         ? rollD20WithDisadvantage(attackBonus + attackBlessBonus)
         : rollD20(attackBonus + attackBlessBonus);
-    const attackBonusText = attackBlessBonus > 0 ? `${attackBonus} + ${attackBlessBonus}` : `${attackBonus}`;
+    const weaponNameText = weapon ? weapon.name.replace(/\s+/g, '') : '武器';
+    const attackParts = [
+      String(attackRoll.natural),
+      String(attackAbilityMod),
+      String(proficiencyBonus),
+      String(weaponAttackBonus),
+      ...(attackBlessBonus > 0 ? [String(attackBlessBonus)] : []),
+    ].filter((part) => Number(part) !== 0);
 
     addLog(
-      `${attacker.name} の攻撃！ (出目: ${attackRoll.natural} + ${attackBonusText} = ${attackRoll.total})`,
+      `${attacker.name} の${weaponNameText}による攻撃！ (${attackParts.join(' + ')} = ${attackRoll.total})`,
       'player_action'
     );
 
@@ -840,7 +848,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else if (attackRoll.total >= target.ac) {
       isHit = true;
     } else {
-      addLog(`ミス！ ${target.name} の AC ${target.ac} に届かなかった。`, 'system');
+      addLog(`ミス！ ${target.name} にヒットしなかった。`, 'player_action');
       playMissSound();
     }
 
@@ -849,7 +857,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         addLog('クリティカルヒット！', 'critical');
       }
       const weaponDice = weapon?.damage_dice || '1d8';
-      const diceDamage = rollDiceString(weaponDice, isCriticalHit);
+      const diceRollBreakdown = rollDiceStringWithBreakdown(weaponDice, isCriticalHit);
+      const diceDamage = diceRollBreakdown.total;
       const damageAbilityMod = isRanged ? dexMod : isFinesse ? Math.max(strMod, dexMod) : strMod;
       const weaponDamageBonus = weapon?.damage_bonus ?? 0;
       const rawDamage = diceDamage + damageAbilityMod + weaponDamageBonus;
@@ -880,12 +889,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }
 
-      const totalDamageBonus = damageAbilityMod + weaponDamageBonus;
-      const modifierLabel = totalDamageBonus >= 0 ? `+ ${totalDamageBonus}` : `${totalDamageBonus}`;
-      const weaponBonusText = weaponDamageBonus !== 0 ? ` （武器修正 ${weaponDamageBonus >= 0 ? '+' : ''}${weaponDamageBonus}）` : '';
-      const diceExpression = isCriticalHit ? weaponDice.replace(/^(\d+)d(\d+)/, (_, count, sides) => `${Number(count) * 2}d${sides}`) : weaponDice;
+      const diceSides = weaponDice.match(/d(\d+)/)?.[1];
+      const critDiceCount = isCriticalHit ? diceRollBreakdown.rolls.length : 0;
+      const diceDisplayText = diceSides && critDiceCount > 0 ? `${critDiceCount}d${diceSides}（${diceRollBreakdown.rolls.join(' + ')}）` : diceRollBreakdown.rolls.join(' + ');
+      const damageParts = [
+        diceDisplayText,
+        String(damageAbilityMod),
+        String(weaponDamageBonus),
+      ].filter((part) => part !== '' && !(typeof part === 'string' && Number(part) === 0));
       addLog(
-        `${target.name} に ${adjustedDamage} のダメージ！${modifierTag}${weaponBonusText} （${diceExpression} ${modifierLabel} = ${diceDamage} ${modifierLabel}）`,
+        `${target.name} に ${adjustedDamage} のダメージ！${modifierTag} （${damageParts.join(' + ')}）`,
         isCriticalHit ? 'critical' : 'player_action'
       );
       playSoundForDamageType(damageType);
@@ -1170,19 +1183,20 @@ export const useGameStore = create<GameState>((set, get) => ({
             } else {
               const attackRoll = rollD20(spellAttackMod);
               const attackBonusText = `${spellAttackMod >= 0 ? '+ ' : ''}${spellAttackMod}`;
+              const attackRollText = `攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}`;
               if (attackRoll.isCritical) {
                 spellAttackCritical = true;
                 damage = sharedDamage ?? rollDiceString(spell.damage_dice, true);
-                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}（クリティカル）`;
+                detailText = ` ${attackRollText}（クリティカル）`;
               } else if (attackRoll.isFumble) {
                 hitOrAffected = false;
-                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total}（ファンブル）`;
+                detailText = ` ${attackRollText}（ファンブル）`;
               } else if (attackRoll.total >= c.ac) {
                 damage = sharedDamage ?? rollDiceString(spell.damage_dice);
-                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total} vs AC ${c.ac}`;
+                detailText = ` ${attackRollText}`;
               } else {
                 hitOrAffected = false;
-                detailText = ` 攻撃ロール ${attackRoll.natural} ${attackBonusText} = ${attackRoll.total} vs AC ${c.ac}`;
+                detailText = ` ${attackRollText}`;
               }
             }
           } else {
@@ -1208,28 +1222,45 @@ export const useGameStore = create<GameState>((set, get) => ({
           }
 
           if (!hitOrAffected) {
-            spellLogEntries.push({
-              message: `${attacker.name} は ${spell.name} を唱えたが、効果がなかった。${detailText}`,
-              type: 'system'
-            });
+            const missEntry = `${attacker.name} は ${spell.name} を唱えた！${detailText}（ミス！ ${c.name} にヒットしなかった。）`;
+            if (isMultiTargetSpell) {
+              multiTargetDetails.push(missEntry);
+            } else {
+              spellLogEntries.push({
+                message: missEntry,
+                type: 'player_action'
+              });
+            }
             return c;
           }
 
           const damageType = spell.damage_type ?? null;
           const { adjustedDamage, modifierTag } = applyDamageTypeModifiers(damage, damageType, c);
           const newHp = Math.max(0, c.hp.current - adjustedDamage);
-          const entryMessage = `${c.name} に ${adjustedDamage} の${spell.damage_type || ''}ダメージ！${modifierTag}${detailText}`;
+          const attackRollEntry = spell.save_type === null && !spell.auto_hit
+            ? `${attacker.name} は ${spell.name} を唱えた！ ${detailText}`
+            : null;
+          const spellDamageBreakdown = formatDiceRollBreakdown(spell.damage_dice, spellAttackCritical, 0, [], { total: damage, rolls: [], bonus: 0 });
+          const damageEntry = `${c.name} に ${adjustedDamage} の${spell.damage_type || ''}ダメージ！${modifierTag} （${spellDamageBreakdown}）`;
           const entryType = spell.auto_hit ? 'player_action' : spellAttackCritical ? 'critical' : 'player_action';
+
           if (isMultiTargetSpell) {
-            multiTargetDetails.push(entryMessage);
+            if (attackRollEntry) multiTargetDetails.push(attackRollEntry);
+            multiTargetDetails.push(damageEntry);
             if (entryType === 'critical') {
               multiTargetLogType = 'critical';
             } else if (multiTargetLogType !== 'critical') {
               multiTargetLogType = entryType;
             }
           } else {
+            if (attackRollEntry) {
+              spellLogEntries.push({
+                message: attackRollEntry,
+                type: entryType
+              });
+            }
             spellLogEntries.push({
-              message: `${spellMessagePrefix}${entryMessage}`,
+              message: damageEntry,
               type: entryType
             });
           }
@@ -1360,7 +1391,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     if (isHit) {
-      const damage = rollDiceString(action.damage_dice, attackRoll.isCritical);
+      const damageBreakdown = rollDiceStringWithBreakdown(action.damage_dice, attackRoll.isCritical);
+      const damage = damageBreakdown.total;
       target.hp.current = Math.max(0, target.hp.current - damage);
 
       if ((target.ref.status_effects ?? []).includes('concentrating')) {
@@ -1395,7 +1427,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
 
       playSoundForDamageType(action.damage_type ?? '殴打');
-      addLog(`${target.name} は ${damage} のダメージを受けた！`, attackRoll.isCritical ? 'critical' : 'enemy_action');
+      const enemyDamageBreakdown = formatDiceRollBreakdown(action.damage_dice, attackRoll.isCritical, 0, [], damageBreakdown);
+      addLog(`${target.name} は ${damage} のダメージを受けた！ （${enemyDamageBreakdown}）`, attackRoll.isCritical ? 'critical' : 'enemy_action');
       set({ battleShake: true });
       setTimeout(() => set({ battleShake: false }), 150);
     }

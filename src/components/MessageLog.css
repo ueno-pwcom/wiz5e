@@ -8,6 +8,7 @@
   line-height: 1.2;
   overflow-y: auto;
   text-align: left;
+  color: #60a5fa;
 }
 
 .message-log-entry {
@@ -19,7 +20,7 @@
 }
 
 .message-log-enemy_action {
-  color: #f87171;
+  color: #a78bfa;
 }
 
 .message-log-heal {
@@ -34,6 +35,10 @@
   color: #a78bfa;
 }
 
-.message-log {
-  color: #fdfeff;
+.message-log-info {
+  color: #ffffff;
+}
+
+.message-log-damage {
+  color: #f87171;
 }

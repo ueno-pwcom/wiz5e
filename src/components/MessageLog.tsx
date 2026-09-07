@@ -15,10 +15,44 @@ export const MessageLog: React.FC<Props> = ({ logs }) => {
     container.scrollTop = container.scrollHeight;
   }, [logs]);
 
+  const getLogClassName = (log: LogMessage): string => {
+    const text = log.text;
+
+    if (text.includes('を倒した！') || text.includes('が倒れた') || text.includes('を倒した。')) {
+      return 'message-log-info';
+    }
+
+    if (text.includes('ダメージを受けた')) {
+      return 'message-log-damage';
+    }
+
+    if (log.type === 'critical') {
+      return 'message-log-critical';
+    }
+
+    if (log.type === 'enemy_action') {
+      return 'message-log-enemy_action';
+    }
+
+    if (log.type === 'player_action') {
+      return 'message-log-player_action';
+    }
+
+    if (log.type === 'heal') {
+      return 'message-log-heal';
+    }
+
+    if (log.type === 'system') {
+      return 'message-log-system';
+    }
+
+    return 'message-log-info';
+  };
+
   return (
     <div ref={containerRef} className="message-log">
       {logs.map((log) => (
-        <div key={log.id} className={`message-log-entry message-log-${log.type ?? 'default'}`}>
+        <div key={log.id} className={`message-log-entry ${getLogClassName(log)}`}>
           &gt; {log.text.split('\n').map((line, index, arr) => (
             <React.Fragment key={index}>
               {line}

@@ -40,13 +40,25 @@ export const getAbilityModifier = (score: number): number => {
   return Math.floor((score - 10) / 2);
 };
 
+export interface DiceRollBreakdown {
+  total: number;
+  rolls: number[];
+  bonus: number;
+}
+
 // ダイス文字列 (例: "1d6+2", "2d8", "1d8+MOD") を解釈してダメージを計算
 export const rollDiceString = (diceStr: string, isCritical: boolean = false, modifier: number = 0): number => {
+  return rollDiceStringWithBreakdown(diceStr, isCritical, modifier).total;
+};
+
+export const rollDiceStringWithBreakdown = (diceStr: string, isCritical: boolean = false, modifier: number = 0): DiceRollBreakdown => {
   const normalizedDiceStr = diceStr.replace(/\s+/g, '').toLowerCase();
   // 例: "1d6+2" -> ["1", "6", "+", "2"]
   // 例: "1d8+mod" -> ["1", "8", "+", "mod"]
   const match = normalizedDiceStr.match(/^(\d+)d(\d+)(?:([+-])((?:\d+)|mod))?$/);
-  if (!match) return 0;
+  if (!match) {
+    return { total: 0, rolls: [], bonus: 0 };
+  }
 
   const count = parseInt(match[1], 10);
   const sides = parseInt(match[2], 10);
@@ -57,11 +69,36 @@ export const rollDiceString = (diceStr: string, isCritical: boolean = false, mod
 
   // クリティカルヒット時はダイスの個数を2倍にする (D&D 5eルール)
   const totalDiceCount = isCritical ? count * 2 : count;
+  const rolls: number[] = [];
 
-  let total = 0;
   for (let i = 0; i < totalDiceCount; i++) {
-    total += Math.floor(Math.random() * sides) + 1;
+    rolls.push(Math.floor(Math.random() * sides) + 1);
   }
 
-  return total + bonus;
+  return {
+    total: rolls.reduce((sum, roll) => sum + roll, 0) + bonus,
+    rolls,
+    bonus,
+  };
+};
+
+export const formatDiceRollBreakdown = (
+  diceStr: string,
+  isCritical: boolean = false,
+  modifier: number = 0,
+  extraParts: number[] = [],
+  existingBreakdown?: DiceRollBreakdown
+): string => {
+  const breakdown = existingBreakdown ?? rollDiceStringWithBreakdown(diceStr, isCritical, modifier);
+  const match = diceStr.replace(/\s+/g, '').toLowerCase().match(/^(\d+)d(\d+)(?:([+-])((?:\d+)|mod))?$/);
+  const diceText = match
+    ? `${breakdown.rolls.length}d${match[2]}（${breakdown.rolls.join(' + ')}）`
+    : breakdown.rolls.join(' + ');
+
+  const bonusText = [
+    ...extraParts.filter((value) => value !== 0).map((value) => String(value)),
+    ...(breakdown.bonus !== 0 ? [String(breakdown.bonus)] : []),
+  ];
+
+  return bonusText.length > 0 ? `${diceText} + ${bonusText.join(' + ')}` : diceText;
 };
