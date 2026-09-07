@@ -42,6 +42,25 @@ const calculateCharacterAc = (character: Character, armorId: string | null | und
 const isTwoHandedWeapon = (item: { weapon_property?: string } | null | undefined): boolean =>
   item?.weapon_property === 'two_handed';
 
+const getArmorProficiencyRequirement = (item: (typeof itemList)[string] | null | undefined): string | null => {
+  if (!item || item.type !== 'armor') return null;
+  if (item.slot === 'shield') return 'Shields';
+  if (item.armor_category === 'light') return 'Light Armor';
+  if (item.armor_category === 'medium') return 'Medium Armor';
+  if (item.armor_category === 'heavy') return 'All armor';
+  return null;
+};
+
+const hasArmorProficiency = (character: Pick<Character, 'class_id'>, item: (typeof itemList)[string] | null | undefined): boolean => {
+  const requiredProficiency = getArmorProficiencyRequirement(item);
+  if (!requiredProficiency) return true;
+
+  const classData = classesData[character.class_id];
+  const proficiencies = classData?.proficiencies ?? [];
+
+  return proficiencies.includes('All armor') || proficiencies.includes(requiredProficiency);
+};
+
 const DAMAGE_TYPE_SOUND_MAP: Record<string, string> = {
   '殴打': new URL('../assets/sounds/殴打.mp3', import.meta.url).href,
   '斬撃': new URL('../assets/sounds/斬撃.mp3', import.meta.url).href,
@@ -1949,27 +1968,35 @@ export const useGameStore = create<GameState>((set, get) => ({
         return { ...m, equipped_weapon_id: itemId };
       }
 
-      if (item.type === 'armor' && item.slot === 'shield') {
-        if (isTwoHandedWeapon(itemList[m.equipped_weapon_id ?? ''])) {
-          addLog(`${m.name} は ${item.name} を装備できない。両手持ち武器を装備しているためだ。`, 'info');
+      if (item.type === 'armor') {
+        if (!hasArmorProficiency(m, item)) {
+          const requiredProficiency = getArmorProficiencyRequirement(item);
+          addLog(`${m.name} は ${item.name} を装備できない。${requiredProficiency} に習熟していない。`, 'info');
           return m;
         }
 
-        addLog(`${m.name} は ${item.name} を装備した。`, 'info');
-        return {
-          ...m,
-          equipped_shield_id: itemId,
-          ac: calculateCharacterAc(m, m.equipped_armor_id ?? null, itemId)
-        };
-      }
+        if (item.slot === 'shield') {
+          if (isTwoHandedWeapon(itemList[m.equipped_weapon_id ?? ''])) {
+            addLog(`${m.name} は ${item.name} を装備できない。両手持ち武器を装備しているためだ。`, 'info');
+            return m;
+          }
 
-      if (item.type === 'armor' && item.ac_bonus) {
-        addLog(`${m.name} は ${item.name} を装備し、ACが ${item.ac_bonus} になった。`, 'info');
-        return {
-          ...m,
-          equipped_armor_id: itemId,
-          ac: calculateCharacterAc(m, itemId, m.equipped_shield_id ?? null)
-        };
+          addLog(`${m.name} は ${item.name} を装備した。`, 'info');
+          return {
+            ...m,
+            equipped_shield_id: itemId,
+            ac: calculateCharacterAc(m, m.equipped_armor_id ?? null, itemId)
+          };
+        }
+
+        if (item.ac_bonus) {
+          addLog(`${m.name} は ${item.name} を装備し、ACが ${item.ac_bonus} になった。`, 'info');
+          return {
+            ...m,
+            equipped_armor_id: itemId,
+            ac: calculateCharacterAc(m, itemId, m.equipped_shield_id ?? null)
+          };
+        }
       }
 
       return m;

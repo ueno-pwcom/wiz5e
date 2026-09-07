@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { itemList } from '../data/items';
+import { classesData } from '../utils/srdData';
+import { getAbilityModifier } from '../utils/dice';
 import './InventoryView.css';
 
 interface InventoryViewProps {
@@ -26,11 +28,53 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
     onChangeTargetId(selectedTargetId);
   }, [selectedTargetId, onChangeTargetId]);
 
+  const targetChar = party.find((m) => m.id === selectedTargetId);
+  const equippedWeapon = targetChar?.equipped_weapon_id ? itemList[targetChar.equipped_weapon_id] : null;
+  const strMod = targetChar ? getAbilityModifier(targetChar.stats.str) : 0;
+  const dexMod = targetChar ? getAbilityModifier(targetChar.stats.dex) : 0;
+  const isRanged = equippedWeapon?.weapon_category === 'ranged';
+  const isFinesse = equippedWeapon?.weapon_property === 'finesse';
+  const attackAbilityMod = !equippedWeapon
+    ? 0
+    : isFinesse
+      ? Math.max(strMod, dexMod)
+      : isRanged
+        ? dexMod
+        : strMod;
+  const attackBonus = equippedWeapon ? attackAbilityMod + 2 + (equippedWeapon.attack_bonus ?? 0) : 0;
+  const damageAbilityMod = !equippedWeapon
+    ? 0
+    : isRanged
+      ? dexMod
+      : isFinesse
+        ? Math.max(strMod, dexMod)
+        : strMod;
+  const damageBonus = equippedWeapon ? damageAbilityMod + (equippedWeapon.damage_bonus ?? 0) : 0;
+  const attackFormula = equippedWeapon ? `1d20${attackBonus >= 0 ? '+' : ''}${attackBonus}` : '—';
+  const damageFormula = equippedWeapon ? `${equippedWeapon.damage_dice ?? '1d8'}${damageBonus >= 0 ? '+' : ''}${damageBonus}` : '—';
+
   return (
     <div className="inventory-view">
       <h2 className="inventory-view-title">
         🎒 所持品・装備（インベントリ）
       </h2>
+
+      {targetChar && (
+        <div className="inventory-view-summary">
+          <div className="inventory-view-summary-item">
+            <span className="inventory-view-summary-label">AC</span>
+            <strong className="inventory-view-summary-value">{targetChar.ac}</strong>
+          </div>
+          <div className="inventory-view-summary-item">
+            <span className="inventory-view-summary-label">攻撃</span>
+            <strong className="inventory-view-summary-value">{attackFormula}</strong>
+          </div>
+          <div className="inventory-view-summary-item">
+            <span className="inventory-view-summary-label">ダメージ</span>
+            <strong className="inventory-view-summary-value">{damageFormula}</strong>
+          </div>
+        </div>
+      )}
 
       {/* 対象キャラクター選択 */}
       {/* <div className="inventory-view-target-row">
@@ -55,7 +99,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
         ) : (
           inventory.map(({ itemId, quantity }) => {
             const item = itemList[itemId];
-            const targetChar = party.find((m) => m.id === selectedTargetId);
             if (!item) return null;
 
             const otherEquippedCount = party.reduce((count, m) => {
@@ -79,6 +122,22 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
             const itemSlot: 'weapon' | 'armor' | 'shield' = item.type === 'weapon' ? 'weapon' : item.slot === 'shield' ? 'shield' : 'armor';
             const equippedTwoHandedWeapon = !!targetChar && !!targetChar.equipped_weapon_id && itemList[targetChar.equipped_weapon_id]?.weapon_property === 'two_handed';
             const isShieldBlocked = item.type === 'armor' && item.slot === 'shield' && equippedTwoHandedWeapon;
+            const requiredProficiency = item.type === 'armor'
+              ? item.slot === 'shield'
+                ? 'Shields'
+                : item.armor_category === 'light'
+                  ? 'Light Armor'
+                  : item.armor_category === 'medium'
+                    ? 'Medium Armor'
+                    : item.armor_category === 'heavy'
+                      ? 'All armor'
+                      : null
+              : null;
+            const hasProficiency = !requiredProficiency || !targetChar || !classesData[targetChar.class_id]?.proficiencies
+              ? true
+              : classesData[targetChar.class_id].proficiencies.includes('All armor')
+                || classesData[targetChar.class_id].proficiencies.includes(requiredProficiency);
+            const isEquipDisabled = isShieldBlocked || (item.type === 'armor' && !hasProficiency);
 
             return (
               <div key={itemId} className={`inventory-view-item-card ${isEquipped ? 'equipped' : ''}`}>
@@ -112,12 +171,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({ selectedTargetId: 
                       </button>
                     ) : (
                       <button
-                        onClick={() => !isShieldBlocked && equipItem(selectedTargetId, itemId)}
+                        onClick={() => !isEquipDisabled && equipItem(selectedTargetId, itemId)}
                         className="inventory-view-button equip"
-                        disabled={isShieldBlocked}
-                        title={isShieldBlocked ? '両手持ち武器を装備中のため盾は装備できません。' : undefined}
+                        disabled={isEquipDisabled}
+                        title={isShieldBlocked ? '両手持ち武器を装備中のため盾は装備できません。' : requiredProficiency && !hasProficiency ? `${requiredProficiency} に習熟していないため装備できません。` : undefined}
                       >
-                        {isShieldBlocked ? '装備不可' : '装備する'}
+                        {isEquipDisabled ? '装備不可' : '装備する'}
                       </button>
                     )
                   )}
