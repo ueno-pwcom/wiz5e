@@ -87,7 +87,7 @@ export const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({ char
   const equippedShield = character.equipped_shield_id ? itemList[character.equipped_shield_id] : null;
 
   const availableSpells = Object.values(spellsData)
-    .filter((spell) => spell.classes.includes(character.class_id))
+    .filter((spell) => spell.classes.includes(character.class_id) && character.spell_slots?.[spell.level] !== undefined)
     .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
 
   const spellsByLevel = availableSpells.reduce<Record<number, SpellData[]>>((acc, spell) => {
